@@ -200,6 +200,21 @@ public class Artifact {
 
   /**
    * <p>
+   * Returns the artifact MetaData JSON file name. This does not include any path information at all and would look
+   * something like this:
+   * </p>
+   * <pre>
+   * common-collections-2.1.jar.amd.json
+   * </pre>
+   *
+   * @return The MetaData JSON file name.
+   */
+  public String getArtifactMetaDataJSONFile() {
+    return prefix() + "." + id.type + ".amd.json";
+  }
+
+  /**
+   * <p>
    * Returns the artifact source file name in the alternative (Maven style) format with the non-semantic version. This
    * does not include any path information at all and would look something like this:
    * </p>
