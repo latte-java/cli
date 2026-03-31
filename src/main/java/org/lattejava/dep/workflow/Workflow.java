@@ -112,8 +112,8 @@ public class Workflow {
     // Defined here in case an exception is thrown in the catch block below
     ResolvableItem item = new ResolvableItem(
         artifact.id.group, artifact.id.project, artifact.id.name,
-        artifact.version.toString(), artifact.getArtifactMetaDataFile(),
-        List.of(artifact.getArtifactPOMFile())
+        artifact.version.toString(), artifact.getArtifactMetaDataJSONFile(),
+        List.of(artifact.getArtifactMetaDataFile(), artifact.getArtifactPOMFile())
     );
 
     // Try the non-semantic version first since the POM lives under the real version directory on disk
@@ -140,7 +140,9 @@ public class Workflow {
       // Fall back to semantic version — try AMD (primary) with POM as alternative
       FetchResult result = fetchWorkflow.fetchItem(item, publishWorkflow);
       if (result != null) {
-        if (result.item().item.endsWith(".amd")) {
+        if (result.item().item.endsWith(".amd.json")) {
+          return ArtifactTools.parseArtifactMetaDataJSON(result.file(), mappings);
+        } else if (result.item().item.endsWith(".amd")) {
           return ArtifactTools.parseArtifactMetaData(result.file(), mappings);
         } else {
           // POM was found as alternative — process it through the POM pipeline
