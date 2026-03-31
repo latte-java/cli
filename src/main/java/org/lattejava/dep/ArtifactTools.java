@@ -166,6 +166,56 @@ public class ArtifactTools {
   }
 
   /**
+   * Generates a temporary file that contains ArtifactMetaData JSON.
+   *
+   * @param artifactMetaData The MetaData object to serialize to JSON.
+   * @return The temp file and never null.
+   * @throws IOException If the temp could not be created or the JSON could not be written.
+   */
+  public static Path generateJSON(ArtifactMetaData artifactMetaData) throws IOException {
+    File tmp = File.createTempFile("latte", "amd.json");
+    tmp.deleteOnExit();
+
+    List<AMDJsonLicense> licenses = new ArrayList<>();
+    for (License license : artifactMetaData.licenses) {
+      licenses.add(new AMDJsonLicense(license.identifier, license.customText ? license.text : null));
+    }
+
+    Map<String, List<AMDJsonDependency>> dependencyGroups = null;
+    Dependencies dependencies = artifactMetaData.dependencies;
+    if (dependencies != null) {
+      dependencyGroups = new java.util.LinkedHashMap<>();
+      for (Map.Entry<String, DependencyGroup> entry : dependencies.groups.entrySet()) {
+        DependencyGroup group = entry.getValue();
+        if (!group.export) {
+          continue;
+        }
+
+        List<AMDJsonDependency> jsonDeps = new ArrayList<>();
+        for (Artifact artifact : group.dependencies) {
+          String version = artifact.nonSemanticVersion != null ? artifact.nonSemanticVersion : artifact.version.toString();
+          String id = artifact.id.group + ":" + artifact.id.project + ":" + artifact.id.name + ":" + version + ":" + artifact.id.type;
+          List<String> exclusions = null;
+          if (!artifact.exclusions.isEmpty()) {
+            exclusions = new ArrayList<>();
+            for (ArtifactID exclusion : artifact.exclusions) {
+              exclusions.add(exclusion.group + ":" + exclusion.project + ":" + exclusion.name + ":" + exclusion.type);
+            }
+          }
+          jsonDeps.add(new AMDJsonDependency(id, exclusions));
+        }
+        dependencyGroups.put(entry.getKey(), jsonDeps);
+      }
+    }
+
+    AMDJson amdJson = new AMDJson(licenses, dependencyGroups);
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.writerWithDefaultPrettyPrinter().writeValue(tmp, amdJson);
+
+    return tmp.toPath();
+  }
+
+  /**
    * Generates a temporary file that contains ArtifactMetaData XML which includes all the artifacts in the
    * ArtifactMetaData given.
    *

@@ -136,6 +136,57 @@ public class ArtifactToolsTest extends BaseUnitTest {
     assertEquals(amd.dependencies.groups.get("compile").dependencies.get(3).version, new Version("1.0.0"));
   }
 
+  @Test
+  public void json() throws Exception {
+    Artifact d1 = new Artifact("group_name:project_name:name:1.0.0:type");
+    Artifact d2 = new Artifact("group_name2:project_name2:name2:2.0.0:type2");
+    Artifact d3 = new Artifact("group_name3:project_name3:name3:3.0.0:type3");
+    Artifact d4 = new Artifact("group_name4:project_name4:name4:4.0.0:type4", null, false, Arrays.asList(
+        new ArtifactID("org.example:exclude-1"),
+        new ArtifactID("org.example:exclude-2:zip"),
+        new ArtifactID("org.example:exclude-3:exclude-4:xml")
+    ));
+    Artifact d5 = new Artifact("badver:badver:badver:6.0.0:jar", "6.0.0.Final", false, Collections.emptyList());
+
+    DependencyGroup compile = new DependencyGroup("compile", true);
+    compile.dependencies.add(d1);
+    compile.dependencies.add(d2);
+
+    DependencyGroup runtime = new DependencyGroup("runtime", true);
+    runtime.dependencies.add(d3);
+    runtime.dependencies.add(d5);
+
+    DependencyGroup compileOptional = new DependencyGroup("compile-optional", true);
+    compileOptional.dependencies.add(d4);
+
+    // Not exported — should be excluded from output
+    DependencyGroup test = new DependencyGroup("test", false);
+    test.dependencies.add(new Artifact("test:test:test:1.0.0:jar"));
+
+    Dependencies deps = new Dependencies();
+    deps.groups.put("compile", compile);
+    deps.groups.put("runtime", runtime);
+    deps.groups.put("compile-optional", compileOptional);
+    deps.groups.put("test", test);
+
+    ArtifactMetaData amd = new ArtifactMetaData(deps, License.Licenses.get("ApacheV2_0"), License.parse("BSD-1-Clause", "Override the license."));
+    Path tmp = ArtifactTools.generateJSON(amd);
+    assertNotNull(tmp);
+    assertTrue(Files.isRegularFile(tmp));
+
+    // Remove the non-exported group before comparing
+    deps.groups.remove("test");
+
+    // Round-trip: parse back and compare
+    Map<String, Version> mappings = new HashMap<>();
+    mappings.put("badver:badver:6.0.0.Final", new Version("6.0.0"));
+
+    ArtifactMetaData amdOut = ArtifactTools.parseArtifactMetaDataJSON(tmp, mappings);
+    assertEquals(amd, amdOut);
+
+    Files.delete(tmp);
+  }
+
   /**
    * Tests that the XML generation works correctly.
    */
