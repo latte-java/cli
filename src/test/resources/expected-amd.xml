@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artifact-meta-data>
+  <license type="Apache-2.0"/>
+  <license type="BSD-2-Clause"/>
+  <license type="BSD-1-Clause"><![CDATA[Override the license.]]></license>
+  <dependencies>
+    <dependency-group name="compile">
+      <dependency group="group_name&quot;quoted&quot;" project="project_name" name="name&quot;quoted&quot;" version="1.0.0" type="type">
+      </dependency>
+      <dependency group="group_name2" project="project_name2&quot;quoted&quot;" name="name2" version="2.0.0" type="type2">
+      </dependency>
+    </dependency-group>
+    <dependency-group name="runtime">
+      <dependency group="group_name3" project="project_name3" name="name3" version="3.0.0+&quot;quoted&quot;" type="type3&quot;quoted&quot;">
+      </dependency>
+      <dependency group="badver" project="badver" name="badver" version="6.0.0.Final" type="jar">
+      </dependency>
+    </dependency-group>
+    <dependency-group name="compile-optional">
+      <dependency group="group_name4" project="project_name4" name="name4" version="4.0.0" type="type4">
+        <exclusion group="org.example" project="exclude-1" name="exclude-1" type="jar"/>
+        <exclusion group="org.example" project="exclude-2" name="exclude-2" type="zip"/>
+        <exclusion group="org.example" project="exclude-3" name="exclude-4" type="xml"/>
+      </dependency>
+    </dependency-group>
+  </dependencies>
+</artifact-meta-data>

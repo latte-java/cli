@@ -1,0 +1,37 @@
+<!--
+  ~ Copyright (c) 2024, Inversoft Inc., All Rights Reserved
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ~ either express or implied. See the License for the specific
+  ~ language governing permissions and limitations under the License.
+  -->
+<artifact-meta-data>
+  <license type="ApacheV2_0"/>
+  <license type="BSD_2_Clause">
+    <![CDATA[Override the BSD license.]]>
+  </license>
+  <dependencies>
+    <dependency-group name="runtime">
+      <dependency group="org.example.test" project="test-project" name="test-project" version="1.0.0" type="jar"/>
+      <dependency group="org.example.test" project="test-project2" name="test-project2" version="2.0.0" type="jar">
+        <exclusion group="org.example" project="exclude-1" name="exclude-1" type="jar"/>
+        <exclusion group="org.example" project="exclude-2" name="exclude-2" type="xml"/>
+        <exclusion group="org.example" project="exclude-3" name="exclude-4" type="zip"/>
+      </dependency>
+    </dependency-group>
+    <dependency-group name="compile">
+      <dependency group="org.example.test" project="test-project3" name="test-project3" version="3.0.0" type="jar"/>
+      <dependency group="org.example.test" project="test-project4" name="test-project4" version="4.0.0" type="jar"/>
+      <dependency group="org.example.test" project="badver" name="badver" version="1.0.0.Final" type="jar"/>
+      <dependency group="org.example.test" project="short-badver" name="short-badver" version="1.0" type="jar"/>
+    </dependency-group>
+  </dependencies>
+</artifact-meta-data>

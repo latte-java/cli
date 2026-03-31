@@ -1,0 +1,7 @@
+This file contains %TOKEN1% and %TOKEN2%
+It should be replaced with %TOKEN3% and %TOKEN4%
+Also the next line
+@Token5(foo)
+this line
+@Token5(bar)
+this one should be one line

@@ -1,0 +1,166 @@
+/*
+ * Copyright (c) 2013-2024, Inversoft Inc., All Rights Reserved
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+package org.lattejava.cli.parser.groovy;
+
+import org.lattejava.dep.domain.Dependencies;
+import org.lattejava.dep.workflow.FetchWorkflow;
+import org.lattejava.dep.workflow.PublishWorkflow;
+import org.lattejava.dep.workflow.Workflow;
+import org.lattejava.cli.domain.Project;
+import org.lattejava.cli.domain.Publications;
+import org.lattejava.output.Output;
+import org.lattejava.cli.parser.groovy.WorkflowDelegate.ProcessDelegate;
+import org.lattejava.cli.runtime.BuildFailureException;
+
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
+
+/**
+ * Groovy delegate that captures the Project configuration from the project build file. The methods on this class
+ * capture the configuration from the DSL.
+ *
+ * @author Brian Pontarelli
+ */
+public class ProjectDelegate {
+  public final Output output;
+
+  public final Project project;
+
+  public ProjectDelegate(Output output, Project project) {
+    this.output = output;
+    this.project = project;
+  }
+
+  /**
+   * <p>
+   * Configures the project dependencies. This method is called with a closure that contains the dependencies
+   * definition. It should look like:
+   * </p>
+   * <pre>
+   *   dependencies {
+   *     group(name: "compile") {
+   *       dependency("org.example:compile:1.0")
+   *     }
+   *     group(name: "test-compile") {
+   *       dependency("org.example:test:1.0")
+   *     }
+   *   }
+   * </pre>
+   *
+   * @param closure The closure that is called to setup the Dependencies configuration. This closure uses the delegate
+   *                class {@link DependenciesDelegate}.
+   * @return The Dependencies.
+   */
+  public Dependencies dependencies(@DelegatesTo(DependenciesDelegate.class) Closure<?> closure) {
+    if (!project.publications.allPublications().isEmpty()) {
+      throw new BuildFailureException("It looks like your project has defined its dependencies after its publications. " +
+          "Because Savant parses the [project() {}] definition linearly, you need to define your publications AFTER your dependencies.");
+    }
+
+    if (project.workflow == null) {
+      throw new BuildFailureException("It looks like your project has defined its dependencies before its workflows (or the workflow definition is missing). " +
+          "Because Savant parses the [project() {}] definition linearly, you need to define your dependencies AFTER your workflows.");
+    }
+
+    project.dependencies = new Dependencies();
+    closure.setDelegate(new DependenciesDelegate(project.dependencies, project.workflow.mappings));
+    closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+    closure.run();
+    return project.dependencies;
+  }
+
+  /**
+   * <p>
+   * Configures the project publications. This method is called with a closure that contains the publication
+   * definitions. It should look like:
+   * </p>
+   * <pre>
+   *   publications {
+   *     main {
+   *       publication(name: "foo", file: "build/jars/foo-${project.version}.jar", source: "build/jars/foo-${project.version}-src.jar")
+   *       publication(name: "foo-test", file: "build/jars/foo-test-${project.version}.jar", source: "build/jars/foo-test${project.version}-src.jar")
+   *     }
+   *   }
+   * </pre>
+   *
+   * @param closure The closure that is called to setup the publications. This closure uses the delegate class
+   *                {@link PublicationsDelegate}.
+   * @return The list of Publications.
+   */
+  public Publications publications(@DelegatesTo(PublicationsDelegate.class) Closure<?> closure) {
+    closure.setDelegate(new PublicationsDelegate(project, project.publications));
+    closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+    closure.run();
+    return project.publications;
+  }
+
+  /**
+   * <p>
+   * Configures the project publish workflow. This method is called with a closure that contains the public workflow
+   * definition. It should look like:
+   * </p>
+   * <pre>
+   *   publishWorkflow {
+   *     subversion(repository: "http://svn.example.com/")
+   *   }
+   * </pre>
+   *
+   * @param closure The closure that is called to setup the publish workflow configuration. This closure uses the
+   *                delegate class {@link ProcessDelegate}.
+   * @return The workflow.
+   */
+  public Workflow publishWorkflow(@DelegatesTo(ProcessDelegate.class) Closure<?> closure) {
+    project.publishWorkflow = new PublishWorkflow();
+    closure.setDelegate(new ProcessDelegate(output, project.publishWorkflow.processes));
+    closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+    closure.run();
+    return project.workflow;
+  }
+
+  /**
+   * <p>
+   * Configures the project workflow. This method is called with a closure that contains the workflow definition. It
+   * should look like:
+   * </p>
+   * <pre>
+   *   workflow {
+   *     fetch {
+   *       cache()
+   *       url(url: "https://repository.savantbuild.org")
+   *     }
+   *     publish {
+   *       cache()
+   *     }
+   *   }
+   * </pre>
+   *
+   * @param closure The closure that is called to set up the workflow configuration. This closure uses the delegate
+   *                class {@link WorkflowDelegate}.
+   * @return The workflow.
+   */
+  public Workflow workflow(@DelegatesTo(WorkflowDelegate.class) Closure<?> closure) {
+    if (project.dependencies != null && !project.dependencies.getAllArtifacts().isEmpty()) {
+      throw new BuildFailureException("It looks like your project has defined its workflows after its dependencies. " +
+          "Because Savant parses the [project() {}] definition linearly, you need to define your workflows BEFORE your dependencies.");
+    }
+
+    project.workflow = new Workflow(new FetchWorkflow(output), new PublishWorkflow(), output);
+    closure.setDelegate(new WorkflowDelegate(output, project.workflow));
+    closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+    closure.run();
+    return project.workflow;
+  }
+}
