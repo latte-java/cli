@@ -101,6 +101,41 @@ public class ArtifactToolsTest extends BaseUnitTest {
     assertEquals(amd.dependencies.groups.get("compile").dependencies.get(3).id.type, "jar");
   }
 
+  @Test
+  public void parseJSON() throws Exception {
+    Map<String, Version> mappings = new HashMap<>();
+    mappings.put("org.example.test:badver:1.0.0.Final", new Version("1.0.0"));
+    mappings.put("org.example.test:short-badver:1.0", new Version("1.0.0"));
+
+    ArtifactMetaData amd = ArtifactTools.parseArtifactMetaDataJSON(projectDir.resolve("src/test/resources/amd.json"), mappings);
+    assertEquals(amd.licenses, Arrays.asList(License.Licenses.get("ApacheV2_0"), License.parse("BSD_2_Clause", "Override the BSD license.")));
+    assertEquals(amd.dependencies.groups.size(), 2);
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.size(), 2);
+    assertEquals(amd.dependencies.groups.get("runtime").name, "runtime");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(0).id.group, "org.example.test");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(0).id.project, "test-project");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(0).id.name, "test-project");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(0).version, new Version("1.0.0"));
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(0).id.type, "jar");
+
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(1).id.group, "org.example.test");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(1).id.project, "test-project2");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(1).id.name, "test-project2");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(1).version, new Version("2.0.0"));
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(1).id.type, "jar");
+    assertEquals(amd.dependencies.groups.get("runtime").dependencies.get(1).exclusions, Arrays.asList(
+        new ArtifactID("org.example", "exclude-1", "exclude-1", "jar"),
+        new ArtifactID("org.example", "exclude-2", "exclude-2", "xml"),
+        new ArtifactID("org.example", "exclude-3", "exclude-4", "zip")
+    ));
+
+    assertEquals(amd.dependencies.groups.get("compile").dependencies.size(), 4);
+    assertEquals(amd.dependencies.groups.get("compile").dependencies.get(2).nonSemanticVersion, "1.0.0.Final");
+    assertEquals(amd.dependencies.groups.get("compile").dependencies.get(2).version, new Version("1.0.0"));
+    assertEquals(amd.dependencies.groups.get("compile").dependencies.get(3).nonSemanticVersion, "1.0");
+    assertEquals(amd.dependencies.groups.get("compile").dependencies.get(3).version, new Version("1.0.0"));
+  }
+
   /**
    * Tests that the XML generation works correctly.
    */

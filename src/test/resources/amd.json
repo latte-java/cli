@@ -1,0 +1,35 @@
+{
+  "licenses": [
+    {"type": "ApacheV2_0"},
+    {"type": "BSD_2_Clause", "text": "Override the BSD license."}
+  ],
+  "dependencyGroups": {
+    "runtime": [
+      {
+        "id": "org.example.test:test-project:test-project:1.0.0:jar"
+      },
+      {
+        "id": "org.example.test:test-project2:test-project2:2.0.0:jar",
+        "exclusions": [
+          "org.example:exclude-1:exclude-1:jar",
+          "org.example:exclude-2:exclude-2:xml",
+          "org.example:exclude-3:exclude-4:zip"
+        ]
+      }
+    ],
+    "compile": [
+      {
+        "id": "org.example.test:test-project3:test-project3:3.0.0:jar"
+      },
+      {
+        "id": "org.example.test:test-project4:test-project4:4.0.0:jar"
+      },
+      {
+        "id": "org.example.test:badver:badver:1.0.0.Final:jar"
+      },
+      {
+        "id": "org.example.test:short-badver:short-badver:1.0:jar"
+      }
+    ]
+  }
+}

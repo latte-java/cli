@@ -34,8 +34,12 @@ import org.lattejava.dep.domain.ArtifactSpec;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.domain.License;
+import org.lattejava.dep.domain.json.AMDJson;
+import org.lattejava.dep.domain.json.AMDJsonDependency;
+import org.lattejava.dep.domain.json.AMDJsonLicense;
 import org.lattejava.domain.Version;
 import org.lattejava.domain.VersionException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -99,6 +103,66 @@ public class ArtifactTools {
         throw new VersionException(String.format(VersionError, spec.mavenSpec));
       }
     }
+  }
+
+  /**
+   * Parses the MetaData from the given JSON .amd.json file.
+   *
+   * @param file     The file to read the JSON MetaData information from.
+   * @param mappings The semantic version mappings used when the JSON contains non-semantic versions.
+   * @return The MetaData parsed.
+   * @throws IOException If the parse operation failed because of an IO error.
+   * @throws VersionException If any of the version strings could not be parsed.
+   */
+  public static ArtifactMetaData parseArtifactMetaDataJSON(Path file, Map<String, Version> mappings)
+      throws IOException, VersionException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    AMDJson amdJson = objectMapper.readValue(file.toFile(), AMDJson.class);
+
+    // Convert licenses
+    List<License> licenses = new ArrayList<>();
+    if (amdJson.licenses != null) {
+      for (AMDJsonLicense jsonLicense : amdJson.licenses) {
+        licenses.add(License.parse(jsonLicense.type, jsonLicense.text));
+      }
+    }
+
+    // Convert dependency groups
+    Dependencies dependencies = null;
+    if (amdJson.dependencyGroups != null) {
+      dependencies = new Dependencies();
+      for (Map.Entry<String, List<AMDJsonDependency>> entry : amdJson.dependencyGroups.entrySet()) {
+        DependencyGroup group = new DependencyGroup(entry.getKey(), true);
+        for (AMDJsonDependency jsonDep : entry.getValue()) {
+          ArtifactSpec spec = new ArtifactSpec(jsonDep.id);
+          List<ArtifactID> exclusions = new ArrayList<>();
+          if (jsonDep.exclusions != null) {
+            for (String exclusionSpec : jsonDep.exclusions) {
+              exclusions.add(new ArtifactID(exclusionSpec));
+            }
+          }
+
+          Version version;
+          String nonSemanticVersion = null;
+          if (!isStrictSemanticVersion(spec.version)) {
+            nonSemanticVersion = spec.version;
+            version = determineSemanticVersion(spec, mappings);
+          } else {
+            try {
+              version = new Version(spec.version);
+            } catch (VersionException e) {
+              nonSemanticVersion = spec.version;
+              version = determineSemanticVersion(spec, mappings);
+            }
+          }
+
+          group.dependencies.add(new Artifact(spec.id, version, nonSemanticVersion, exclusions));
+        }
+        dependencies.groups.put(entry.getKey(), group);
+      }
+    }
+
+    return new ArtifactMetaData(dependencies, licenses);
   }
 
   /**
@@ -179,6 +243,27 @@ public class ArtifactTools {
     ArtifactMetaDataHandler handler = new ArtifactMetaDataHandler(mappings);
     parser.parse(file.toFile(), handler);
     return new ArtifactMetaData(handler.dependencies, handler.licenses);
+  }
+
+  /**
+   * Returns true if the version string is a strict semantic version (has at least major.minor.patch, i.e. at least 2
+   * dots before any pre-release or metadata separator).
+   *
+   * @param version The version string to check.
+   * @return True if the version has at least two dots before any - or + character.
+   */
+  private static boolean isStrictSemanticVersion(String version) {
+    int dots = 0;
+    for (int i = 0; i < version.length(); i++) {
+      char c = version.charAt(i);
+      if (c == '-' || c == '+') {
+        break;
+      }
+      if (c == '.') {
+        dots++;
+      }
+    }
+    return dots >= 2;
   }
 
   private static void print(PrintWriter writer, String message, Object... args) {
