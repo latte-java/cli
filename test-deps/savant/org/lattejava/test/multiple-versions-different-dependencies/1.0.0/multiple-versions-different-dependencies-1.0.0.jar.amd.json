@@ -1,0 +1,17 @@
+{
+  "licenses": [
+    {"type": "ApacheV2_0"}
+  ],
+  "dependencyGroups": {
+    "compile": [
+      {
+        "id": "org.lattejava.test:leaf1:leaf1:1.0.0:jar"
+      }
+    ],
+    "runtime": [
+      {
+        "id": "org.lattejava.test:leaf:leaf2:1.0.0:jar"
+      }
+    ]
+  }
+}
