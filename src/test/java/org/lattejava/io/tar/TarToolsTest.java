@@ -51,8 +51,8 @@ public class TarToolsTest extends BaseUnitTest {
     Path untarDir = projectDir.resolve("build/test/untar");
     TarTools.untar(testFile, untarDir, true, true);
 
-    assertFilesEquals(projectDir.resolve("src/main/java/org/savantbuild/io/ArchiveFileSet.java"), untarDir.resolve("org/savantbuild/io/ArchiveFileSet.java"), null);
-    assertFilesEquals(projectDir.resolve("src/test/java/org/savantbuild/io/ArchiveFileSetTest.java"), untarDir.resolve("test-files/org/savantbuild/io/ArchiveFileSetTest.java"), 0x755);
+    assertFilesEquals(projectDir.resolve("src/main/java/org/lattejava/io/ArchiveFileSet.java"), untarDir.resolve("org/lattejava/io/ArchiveFileSet.java"), null);
+    assertFilesEquals(projectDir.resolve("src/test/java/org/lattejava/io/ArchiveFileSetTest.java"), untarDir.resolve("test-files/org/lattejava/io/ArchiveFileSetTest.java"), 0x755);
     assertDirectory(untarDir.resolve("test-directory/nested/dir"), 0x777);
 
     // Do it again and ensure things don't blow up

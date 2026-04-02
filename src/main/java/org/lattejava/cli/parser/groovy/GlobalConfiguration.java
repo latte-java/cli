@@ -22,13 +22,13 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import org.lattejava.cli.runtime.BuildFailureException;
-import org.lattejava.util.SavantPaths;
+import org.lattejava.util.LattePaths;
 
 import groovy.lang.GroovyObjectSupport;
 
 /**
  * This class loads an optional global configuration file named config.properties in the XDG config directory
- * ($XDG_CONFIG_HOME/savant/ or ~/.config/savant/). This is a dynamic Groovy object that fails if lookups fail. This
+ * ($XDG_CONFIG_HOME/latte/ or ~/.config/latte/). This is a dynamic Groovy object that fails if lookups fail. This
  * ensures that values from the configuration that the project depends on exist.
  *
  * @author Brian Pontarelli
@@ -37,7 +37,7 @@ public class GlobalConfiguration extends GroovyObjectSupport {
   public final Properties properties = new Properties();
 
   public GlobalConfiguration() {
-    Path configFile = SavantPaths.get().configDir().resolve("config.properties");
+    Path configFile = LattePaths.get().configDir().resolve("config.properties");
     if (Files.isRegularFile(configFile)) {
       try (InputStream is = Files.newInputStream(configFile)) {
         properties.load(is);
@@ -51,7 +51,7 @@ public class GlobalConfiguration extends GroovyObjectSupport {
   public Object getProperty(String property) {
     String value = properties.getProperty(property);
     if (value == null) {
-      Path configFile = SavantPaths.get().configDir().resolve("config.properties");
+      Path configFile = LattePaths.get().configDir().resolve("config.properties");
       throw new BuildFailureException("Missing global configuration property [" + property + "]. You must define this " +
           "property in the global configuration file " + configFile);
     }

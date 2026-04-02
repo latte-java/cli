@@ -41,12 +41,12 @@ public class FileToolsTest extends BaseUnitTest {
         FileTools.extensionMapper(".java", ".class"));
     assertEquals(modifiedFiles.size(), 0);
 
-    FileTools.touch(projectDir.resolve("src/main/java/org/savantbuild/io/FileTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileSet.java"));
+    FileTools.touch(projectDir.resolve("src/main/java/org/lattejava/io/FileTools.java"),
+        projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
     modifiedFiles = FileTools.modifiedFiles(projectDir.resolve("src/main/java"), projectDir.resolve("build/classes/main"),
         FileTools.extensionFilter(".java"),
         FileTools.extensionMapper(".java", ".class"));
-    assertEquals(modifiedFiles, asList(Paths.get("org/savantbuild/io/FileSet.java"), Paths.get("org/savantbuild/io/FileTools.java")));
+    assertEquals(modifiedFiles, asList(Paths.get("org/lattejava/io/FileSet.java"), Paths.get("org/lattejava/io/FileTools.java")));
   }
 
   @Test

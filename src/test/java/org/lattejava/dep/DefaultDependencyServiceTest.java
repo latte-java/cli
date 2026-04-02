@@ -181,14 +181,14 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         )
     );
 
-    resolvedIntermediate = new ResolvedArtifact("org.lattejava.test:intermediate:1.0.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/savantbuild/test/intermediate/1.0.0/intermediate-1.0.0.jar").toAbsolutePath(), null);
-    resolvedMultipleVersions = new ResolvedArtifact("org.lattejava.test:multiple-versions:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/savantbuild/test/multiple-versions/1.1.0/multiple-versions-1.1.0.jar").toAbsolutePath(), null);
-    resolvedMultipleVersionsDifferentDeps = new ResolvedArtifact("org.lattejava.test:multiple-versions-different-dependencies:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/savantbuild/test/multiple-versions-different-dependencies/1.1.0/multiple-versions-different-dependencies-1.1.0.jar").toAbsolutePath(), null);
-    resolvedLeaf1 = new ResolvedArtifact("org.lattejava.test:leaf:leaf1:1.0.0:jar", Collections.singletonList(License.Licenses.get("GPLV2_0")), cache.resolve("org/savantbuild/test/leaf/1.0.0/leaf1-1.0.0.jar").toAbsolutePath(), null);
-    resolvedLeaf1_1 = new ResolvedArtifact("org.lattejava.test:leaf1:1.0.0", Collections.singletonList(License.parse("Commercial", "Commercial license")), cache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar").toAbsolutePath(), null);
-    resolvedLeaf2_2 = new ResolvedArtifact("org.lattejava.test:leaf2:1.0.0", Collections.singletonList(License.parse("OtherNonDistributableOpenSource", "Open source")), cache.resolve("org/savantbuild/test/leaf2/1.0.0/leaf2-1.0.0.jar").toAbsolutePath(), null);
-    resolvedLeaf3_3 = new ResolvedArtifact("org.lattejava.test:leaf3:1.0.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/savantbuild/test/leaf3/1.0.0/leaf3-1.0.0.jar").toAbsolutePath(), null);
-    resolvedIntegrationBuild = new ResolvedArtifact("org.lattejava.test:integration-build:2.1.1-{integration}", Collections.singletonList(License.Licenses.get("ApacheV2_0")), integration.resolve("org/savantbuild/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar").toAbsolutePath(), null);
+    resolvedIntermediate = new ResolvedArtifact("org.lattejava.test:intermediate:1.0.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/lattejava/test/intermediate/1.0.0/intermediate-1.0.0.jar").toAbsolutePath(), null);
+    resolvedMultipleVersions = new ResolvedArtifact("org.lattejava.test:multiple-versions:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/lattejava/test/multiple-versions/1.1.0/multiple-versions-1.1.0.jar").toAbsolutePath(), null);
+    resolvedMultipleVersionsDifferentDeps = new ResolvedArtifact("org.lattejava.test:multiple-versions-different-dependencies:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/lattejava/test/multiple-versions-different-dependencies/1.1.0/multiple-versions-different-dependencies-1.1.0.jar").toAbsolutePath(), null);
+    resolvedLeaf1 = new ResolvedArtifact("org.lattejava.test:leaf:leaf1:1.0.0:jar", Collections.singletonList(License.Licenses.get("GPLV2_0")), cache.resolve("org/lattejava/test/leaf/1.0.0/leaf1-1.0.0.jar").toAbsolutePath(), null);
+    resolvedLeaf1_1 = new ResolvedArtifact("org.lattejava.test:leaf1:1.0.0", Collections.singletonList(License.parse("Commercial", "Commercial license")), cache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar").toAbsolutePath(), null);
+    resolvedLeaf2_2 = new ResolvedArtifact("org.lattejava.test:leaf2:1.0.0", Collections.singletonList(License.parse("OtherNonDistributableOpenSource", "Open source")), cache.resolve("org/lattejava/test/leaf2/1.0.0/leaf2-1.0.0.jar").toAbsolutePath(), null);
+    resolvedLeaf3_3 = new ResolvedArtifact("org.lattejava.test:leaf3:1.0.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/lattejava/test/leaf3/1.0.0/leaf3-1.0.0.jar").toAbsolutePath(), null);
+    resolvedIntegrationBuild = new ResolvedArtifact("org.lattejava.test:integration-build:2.1.1-{integration}", Collections.singletonList(License.Licenses.get("ApacheV2_0")), integration.resolve("org/lattejava/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar").toAbsolutePath(), null);
 
     PathTools.prune(cache);
     PathTools.prune(mavenCache);
@@ -200,7 +200,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), integration.toString(), null),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null)
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null)
         ),
         new PublishWorkflow(
             new CacheProcess(output, cache.toString(), integration.toString(), null)
@@ -222,7 +222,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
       service.buildGraph(project, dependencies, workflow);
       fail("Should have failed");
     } catch (MD5Exception e) {
-      assertEquals(e.getMessage(), "MD5 mismatch when fetching item from [http://localhost:7042/test-deps/savant/org/savantbuild/test/bad-amd-md5/1.0.0/bad-amd-md5-1.0.0.jar.amd]");
+      assertEquals(e.getMessage(), "MD5 mismatch when fetching item from [http://localhost:7042/test-deps/latte/org/lattejava/test/bad-amd-md5/1.0.0/bad-amd-md5-1.0.0.jar.amd]");
     }
   }
 
@@ -332,7 +332,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), null, mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "https://repo1.maven.org/maven2", null, null)
         ),
         new PublishWorkflow(
@@ -390,7 +390,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), null, mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "http://localhost:7042/test-deps/maven", null, null)
         ),
         new PublishWorkflow(
@@ -420,9 +420,9 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
 
   @Test
   public void nonSemanticVersions_publishRouting() {
-    // Resolves the same mixed Savant + Maven dependency tree as nonSemanticVersions,
+    // Resolves the same mixed Latte + Maven dependency tree as nonSemanticVersions,
     // then verifies publish routing: Maven-sourced items only in maven cache,
-    // Savant-sourced items only in savant cache, no re-published semantic-version copies.
+    // Latte-sourced items only in latte cache, no re-published semantic-version copies.
 
     dependencies = new Dependencies(
         new DependencyGroup("compile", true,
@@ -434,7 +434,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), integration.toString(), mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "http://localhost:7042/test-deps/maven", null, null)
         ),
         new PublishWorkflow(
@@ -447,34 +447,32 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     buildAndResolve();
 
     // Maven-sourced "badver" JAR and POM should be in maven cache only
-    assertTrue(Files.isRegularFile(mavenCache.resolve("org/savantbuild/test/badver/1.0.0.Final/badver-1.0.0.Final.jar")));
-    assertTrue(Files.isRegularFile(mavenCache.resolve("org/savantbuild/test/badver/1.0.0.Final/badver-1.0.0.Final.pom")));
+    assertTrue(Files.isRegularFile(mavenCache.resolve("org/lattejava/test/badver/1.0.0.Final/badver-1.0.0.Final.jar")));
+    assertTrue(Files.isRegularFile(mavenCache.resolve("org/lattejava/test/badver/1.0.0.Final/badver-1.0.0.Final.pom")));
     // No re-published copy at the semantic version path
-    assertFalse(Files.exists(mavenCache.resolve("org/savantbuild/test/badver/1.0.0/badver-1.0.0.jar")));
-    assertFalse(Files.exists(cache.resolve("org/savantbuild/test/badver/1.0.0/badver-1.0.0.jar")));
-    // Maven-sourced items should NOT be in savant cache
-    assertFalse(Files.exists(cache.resolve("org/savantbuild/test/badver/1.0.0.Final/badver-1.0.0.Final.jar")));
-    assertFalse(Files.exists(cache.resolve("org/savantbuild/test/badver/1.0.0.Final/badver-1.0.0.Final.pom")));
+    assertFalse(Files.exists(mavenCache.resolve("org/lattejava/test/badver/1.0.0/badver-1.0.0.jar")));
+    assertFalse(Files.exists(cache.resolve("org/lattejava/test/badver/1.0.0/badver-1.0.0.jar")));
+    // Maven-sourced items should NOT be in latte cache
+    assertFalse(Files.exists(cache.resolve("org/lattejava/test/badver/1.0.0.Final/badver-1.0.0.Final.jar")));
+    assertFalse(Files.exists(cache.resolve("org/lattejava/test/badver/1.0.0.Final/badver-1.0.0.Final.pom")));
 
-    // Savant-sourced "has-non-semantic-versioned-dep" should be in savant cache only
-    assertTrue(Files.isRegularFile(cache.resolve("org/savantbuild/test/has-non-semantic-versioned-dep/1.0.0/has-non-semantic-versioned-dep-1.0.0.jar")));
-    assertTrue(Files.isRegularFile(cache.resolve("org/savantbuild/test/has-non-semantic-versioned-dep/1.0.0/has-non-semantic-versioned-dep-1.0.0.jar.amd")));
-    assertFalse(Files.exists(mavenCache.resolve("org/savantbuild/test/has-non-semantic-versioned-dep/1.0.0/has-non-semantic-versioned-dep-1.0.0.jar")));
+    // Latte-sourced "has-non-semantic-versioned-dep" should be in latte cache only
+    assertTrue(Files.isRegularFile(cache.resolve("org/lattejava/test/has-non-semantic-versioned-dep/1.0.0/has-non-semantic-versioned-dep-1.0.0.jar")));
+    assertTrue(Files.isRegularFile(cache.resolve("org/lattejava/test/has-non-semantic-versioned-dep/1.0.0/has-non-semantic-versioned-dep-1.0.0.jar.amd")));
+    assertFalse(Files.exists(mavenCache.resolve("org/lattejava/test/has-non-semantic-versioned-dep/1.0.0/has-non-semantic-versioned-dep-1.0.0.jar")));
 
-    // Savant-sourced "leaf1" should be in savant cache only
-    assertTrue(Files.isRegularFile(cache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
-    assertFalse(Files.exists(mavenCache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
+    // Latte-sourced "leaf1" should be in latte cache only
+    assertTrue(Files.isRegularFile(cache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
+    assertFalse(Files.exists(mavenCache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
 
     // No AMD files generated for Maven-sourced "badver"
-    assertFalse(Files.exists(cache.resolve("org/savantbuild/test/badver/1.0.0/badver-1.0.0.jar.amd")));
-    assertFalse(Files.exists(mavenCache.resolve("org/savantbuild/test/badver/1.0.0.Final/badver-1.0.0.Final.jar.amd")));
+    assertFalse(Files.exists(cache.resolve("org/lattejava/test/badver/1.0.0/badver-1.0.0.jar.amd")));
+    assertFalse(Files.exists(mavenCache.resolve("org/lattejava/test/badver/1.0.0.Final/badver-1.0.0.Final.jar.amd")));
   }
 
   @Test
-  public void publishRouting_savantOnly() {
-    // Resolves a Savant-only dependency tree and verifies all items go to savant cache,
-    // nothing goes to maven cache.
-
+  public void publishRouting_latteOnly() {
+    // Resolves a Latte-only dependency tree and verifies all items go to the latte cache, nothing goes to maven cache.
     dependencies = new Dependencies(
         new DependencyGroup("compile", true,
             new Artifact("org.lattejava.test:leaf1:1.0.0")
@@ -485,7 +483,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), integration.toString(), mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "http://localhost:7042/test-deps/maven", null, null)
         ),
         new PublishWorkflow(
@@ -496,12 +494,12 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
 
     buildAndResolve();
 
-    // Savant-sourced items in savant cache
-    assertTrue(Files.isRegularFile(cache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
-    assertTrue(Files.isRegularFile(cache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar.amd")));
+    // Latte-sourced items in latte cache
+    assertTrue(Files.isRegularFile(cache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
+    assertTrue(Files.isRegularFile(cache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar.amd")));
     // Nothing in maven cache
-    assertFalse(Files.exists(mavenCache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
-    assertFalse(Files.exists(mavenCache.resolve("org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar.amd")));
+    assertFalse(Files.exists(mavenCache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar")));
+    assertFalse(Files.exists(mavenCache.resolve("org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar.amd")));
   }
 
   @Test
@@ -522,7 +520,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
   public void publishMissingSourceFile() {
     Artifact artifact = new Artifact("org.lattejava.test:publication-with-source:1.0.0");
     ArtifactMetaData amd = new ArtifactMetaData(dependencies, License.Licenses.get("BSD_2_Clause"));
-    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/savantbuild/dep/TestFile.txt"), Paths.get("MissingFile.txt"));
+    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/lattejava/dep/TestFile.txt"), Paths.get("MissingFile.txt"));
     Path cache = projectDir.resolve("build/test/publish");
     PublishWorkflow workflow = new PublishWorkflow(new CacheProcess(output, cache.toString(), null, null));
     try {
@@ -545,22 +543,22 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
 
     Artifact artifact = new Artifact("org.lattejava.test:publication-with-source:1.0.0");
     ArtifactMetaData amd = new ArtifactMetaData(dependencies, License.Licenses.get("BSD_2_Clause"));
-    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/savantbuild/dep/TestFile.txt"), projectDir.resolve("src/test/java/org/savantbuild/dep/TestFile.txt"));
+    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/lattejava/dep/TestFile.txt"), projectDir.resolve("src/test/java/org/lattejava/dep/TestFile.txt"));
     PublishWorkflow workflow = new PublishWorkflow(new CacheProcess(output, cache.toString(), null, null));
     service.publish(publication, workflow);
 
-    Path amdFile = projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd");
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5")));
+    Path amdFile = projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd");
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5")));
     assertTrue(Files.isRegularFile(amdFile));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar")));
 
     // Ensure the MD5 files are correct (these methods throw exceptions if they aren't
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5"));
 
     Map<String, Version> mappings = new HashMap<>();
     mappings.put("org.badver:badver:1.0.0.Borked", new Version("1.0.0"));
@@ -577,21 +575,21 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
 
     Artifact artifact = new Artifact("org.lattejava.test:publication-with-source:1.0.0");
     ArtifactMetaData amd = new ArtifactMetaData(dependencies, License.Licenses.get("BSD_2_Clause"));
-    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/savantbuild/dep/TestFile.txt"), projectDir.resolve("src/test/java/org/savantbuild/dep/TestFile.txt"));
+    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/lattejava/dep/TestFile.txt"), projectDir.resolve("src/test/java/org/lattejava/dep/TestFile.txt"));
     PublishWorkflow workflow = new PublishWorkflow(new CacheProcess(output, cache.toString(), null, null));
     service.publish(publication, workflow);
 
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar")));
 
     // Ensure the MD5 files are correct (these methods throw exceptions if they aren't
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5"));
   }
 
   @Test
@@ -601,20 +599,20 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
 
     Artifact artifact = new Artifact("org.lattejava.test:publication-without-source:1.0.0");
     ArtifactMetaData amd = new ArtifactMetaData(dependencies, License.Licenses.get("BSD_2_Clause"));
-    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/savantbuild/dep/TestFile.txt"), null);
+    Publication publication = new Publication(artifact, amd, projectDir.resolve("src/test/java/org/lattejava/dep/TestFile.txt"), null);
     PublishWorkflow workflow = new PublishWorkflow(new CacheProcess(output, cache.toString(), null, null));
     service.publish(publication, workflow);
 
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.md5")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar")));
-    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar.md5")));
-    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar")));
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar.md5")));
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar")));
 
     // Ensure the MD5 files are correct (these methods throw exceptions if they aren't
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/savantbuild/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.md5"));
+    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.md5"));
   }
 
   /**
@@ -956,37 +954,51 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
    *              |                                                                        (1.0.0)
    *              |                                                                           ^
    *              |-------------> (1.1.0)B(1.0.0) -----------> (1.0.0)D(1.0.0)----------------|
-   *              |                   (1.0.0)
+   *              |
    *              |                      C
    *              |                   (1.0.0)
    *              |----------------------|
    * </pre>
    * <p>
+   * Notice that Project depends on version 1.1.0 of B but version 1.0.0 is the version that depends on D, therefore
+   * D is pruned because it was not a dependency of the newer version of B (1.1.0). This is an upgrade of a dependency
+   * that dropped one of its dependencies.
    */
   @Test
   public void reduceLastPathIsPruned() {
-    ReifiedArtifact a = new ReifiedArtifact(new ArtifactID("org.lattejava.test", "a", "a", "jar"), new Version("1.0.0"));
-    ReifiedArtifact aChild = new ReifiedArtifact(new ArtifactID("org.lattejava.test", "a-child", "a-child", "jar"), new Version("1.0.0"));
-    ReifiedArtifact b = new ReifiedArtifact(new ArtifactID("org.lattejava.test", "b", "b", "jar"), new Version("1.1.0"));
-    ReifiedArtifact c = new ReifiedArtifact(new ArtifactID("org.lattejava.test", "c", "c", "jar"), new Version("1.0.0"));
-    ReifiedArtifact d = new ReifiedArtifact(new ArtifactID("org.lattejava.test", "d", "d", "jar"), new Version("1.1.0"));
+    // Try many different group names to ensure we hit a HashSet ordering where `a-child` is iterated before `a`, which is
+    // a bug from Latte that we are fixing here
+    String[] groups = {
+            "org.test.aaa", "org.test.bbb", "org.test.ccc", "org.test.ddd",
+            "org.test.eee", "org.test.fff", "org.test.ggg", "org.test.hhh",
+            "org.test.iii", "org.test.jjj", "org.test.kkk", "org.test.lll",
+            "org.test.mmm", "org.test.nnn", "org.test.ooo", "org.test.ppp"
+    };
 
-    DependencyGraph graph = new DependencyGraph(project);
-    graph.addEdge(new Dependency(project.id), new Dependency(a.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
-    graph.addEdge(new Dependency(project.id), new Dependency(b.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.1.0"), "compile"));
-    graph.addEdge(new Dependency(project.id), new Dependency(c.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
-    graph.addEdge(new Dependency(a.id), new Dependency(aChild.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
-    graph.addEdge(new Dependency(b.id), new Dependency(d.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
-    graph.addEdge(new Dependency(d.id), new Dependency(a.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
+    for (String group : groups) {
+      ReifiedArtifact a = new ReifiedArtifact(new ArtifactID(group, "a", "a", "jar"), new Version("1.0.0"));
+      ReifiedArtifact aChild = new ReifiedArtifact(new ArtifactID(group, "a-child", "a-child", "jar"), new Version("1.0.0"));
+      ReifiedArtifact b = new ReifiedArtifact(new ArtifactID(group, "b", "b", "jar"), new Version("1.1.0"));
+      ReifiedArtifact c = new ReifiedArtifact(new ArtifactID(group, "c", "c", "jar"), new Version("1.0.0"));
+      ReifiedArtifact d = new ReifiedArtifact(new ArtifactID(group, "d", "d", "jar"), new Version("1.1.0"));
 
-    ArtifactGraph expected = new ArtifactGraph(project);
-    expected.addEdge(project, a, "compile");
-    expected.addEdge(project, b, "compile");
-    expected.addEdge(project, c, "compile");
-    expected.addEdge(a, aChild, "compile");
+      DependencyGraph graph = new DependencyGraph(project);
+      graph.addEdge(new Dependency(project.id), new Dependency(a.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
+      graph.addEdge(new Dependency(project.id), new Dependency(b.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.1.0"), "compile"));
+      graph.addEdge(new Dependency(project.id), new Dependency(c.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
+      graph.addEdge(new Dependency(a.id), new Dependency(aChild.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
+      graph.addEdge(new Dependency(b.id), new Dependency(d.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
+      graph.addEdge(new Dependency(d.id), new Dependency(a.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile"));
 
-    ArtifactGraph actual = service.reduce(graph);
-    assertEquals(actual, expected);
+      ArtifactGraph expected = new ArtifactGraph(project);
+      expected.addEdge(project, a, "compile");
+      expected.addEdge(project, b, "compile");
+      expected.addEdge(project, c, "compile");
+      expected.addEdge(a, aChild, "compile");
+
+      ArtifactGraph actual = service.reduce(graph);
+      assertEquals(actual, expected);
+    }
   }
 
   @Test
@@ -1047,7 +1059,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
       ArtifactGraph artifactGraph = service.reduce(graph);
       service.resolve(artifactGraph, workflow, new TraversalRules().with("compile", new GroupTraversalRule(true, true)));
     } catch (MD5Exception e) {
-      assertEquals(e.getMessage(), "MD5 mismatch when fetching item from [http://localhost:7042/test-deps/savant/org/savantbuild/test/bad-md5/1.0.0/bad-md5-1.0.0.jar]");
+      assertEquals(e.getMessage(), "MD5 mismatch when fetching item from [http://localhost:7042/test-deps/latte/org/lattejava/test/bad-md5/1.0.0/bad-md5-1.0.0.jar]");
     }
   }
 
@@ -1070,8 +1082,8 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     );
 
     ResolvedArtifactGraph expected = new ResolvedArtifactGraph(projectResolved);
-    ResolvedArtifact multipleVersions = new ResolvedArtifact("org.lattejava.test:multiple-versions:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/savantbuild/test/multiple-versions/1.1.0/multiple-versions-1.1.0.jar").toAbsolutePath(), null);
-    ResolvedArtifact multipleVersionsDifferentDeps = new ResolvedArtifact("org.lattejava.test:multiple-versions-different-dependencies:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/savantbuild/test/multiple-versions-different-dependencies/1.1.0/multiple-versions-different-dependencies-1.1.0.jar").toAbsolutePath(), null);
+    ResolvedArtifact multipleVersions = new ResolvedArtifact("org.lattejava.test:multiple-versions:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/lattejava/test/multiple-versions/1.1.0/multiple-versions-1.1.0.jar").toAbsolutePath(), null);
+    ResolvedArtifact multipleVersionsDifferentDeps = new ResolvedArtifact("org.lattejava.test:multiple-versions-different-dependencies:1.1.0", Collections.singletonList(License.Licenses.get("ApacheV2_0")), cache.resolve("org/lattejava/test/multiple-versions-different-dependencies/1.1.0/multiple-versions-different-dependencies-1.1.0.jar").toAbsolutePath(), null);
 
     expected.addEdge(projectResolved, multipleVersions, "compile");
     expected.addEdge(projectResolved, multipleVersionsDifferentDeps, "compile");
@@ -1148,7 +1160,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), null, mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "http://localhost:7042/test-deps/maven", null, null)
         ),
         new PublishWorkflow(
@@ -1188,7 +1200,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), null, mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "http://localhost:7042/test-deps/maven", null, null)
         ),
         new PublishWorkflow(
@@ -1226,7 +1238,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
         new FetchWorkflow(
             output,
             new CacheProcess(output, cache.toString(), null, mavenCache.toString()),
-            new URLProcess(output, "http://localhost:7042/test-deps/savant", null, null),
+            new URLProcess(output, "http://localhost:7042/test-deps/latte", null, null),
             new MavenProcess(output, "http://localhost:7042/test-deps/maven", null, null)
         ),
         new PublishWorkflow(

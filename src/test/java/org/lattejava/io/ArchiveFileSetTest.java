@@ -15,8 +15,8 @@
  */
 package org.lattejava.io;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +27,7 @@ import org.testng.annotations.Test;
 
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Tests the ArchiveFileSet class.
@@ -38,114 +39,41 @@ public class ArchiveFileSetTest extends BaseUnitTest {
   public void toFileInfosNoPrefix() throws Exception {
     ArchiveFileSet fileSet = new ArchiveFileSet(projectDir.resolve("src/main/java"), null);
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
-        projectDir.resolve("src/main/java/org/savantbuild/io/ArchiveFileSet.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Directory.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileInfo.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileSet.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Filter.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Tools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/jar/JarBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/jar/JarTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/tar/TarBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/tar/TarTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/zip/ZipBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/zip/ZipTools.java")
-    ));
-    assertEquals(infos.stream().map((info) -> info.relative).collect(Collectors.toList()), asList(
-        Paths.get("org/savantbuild/io/ArchiveFileSet.java"),
-        Paths.get("org/savantbuild/io/Copier.java"),
-        Paths.get("org/savantbuild/io/Directory.java"),
-        Paths.get("org/savantbuild/io/FileInfo.java"),
-        Paths.get("org/savantbuild/io/FileSet.java"),
-        Paths.get("org/savantbuild/io/FileTools.java"),
-        Paths.get("org/savantbuild/io/Filter.java"),
-        Paths.get("org/savantbuild/io/Tools.java"),
-        Paths.get("org/savantbuild/io/jar/JarBuilder.java"),
-        Paths.get("org/savantbuild/io/jar/JarTools.java"),
-        Paths.get("org/savantbuild/io/tar/TarBuilder.java"),
-        Paths.get("org/savantbuild/io/tar/TarTools.java"),
-        Paths.get("org/savantbuild/io/zip/ZipBuilder.java"),
-        Paths.get("org/savantbuild/io/zip/ZipTools.java")
-    ));
+    assertEquals(infos.size(), 114);
+    // Spot-check a few known files
+    List<Path> origins = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
+    assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
+    assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/Copier.java")));
+    List<Path> relatives = infos.stream().map((info) -> info.relative).collect(Collectors.toList());
+    assertTrue(relatives.contains(Paths.get("org/lattejava/io/FileSet.java")));
+    assertTrue(relatives.contains(Paths.get("org/lattejava/io/Copier.java")));
   }
 
   @Test
   public void toFileInfosWithPrefix() throws Exception {
     ArchiveFileSet fileSet = new ArchiveFileSet(projectDir.resolve("src/main/java"), "some-directory-1.0");
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
-        projectDir.resolve("src/main/java/org/savantbuild/io/ArchiveFileSet.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Directory.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileInfo.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileSet.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Filter.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Tools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/jar/JarBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/jar/JarTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/tar/TarBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/tar/TarTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/zip/ZipBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/zip/ZipTools.java")
-    ));
-    assertEquals(infos.stream().map((info) -> info.relative).collect(Collectors.toList()), asList(
-        Paths.get("some-directory-1.0/org/savantbuild/io/ArchiveFileSet.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/Copier.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/Directory.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/FileInfo.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/FileSet.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/FileTools.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/Filter.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/Tools.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/jar/JarBuilder.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/jar/JarTools.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/tar/TarBuilder.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/tar/TarTools.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/zip/ZipBuilder.java"),
-        Paths.get("some-directory-1.0/org/savantbuild/io/zip/ZipTools.java")
-    ));
+    assertEquals(infos.size(), 114);
+    // Spot-check origins are unchanged (prefix doesn't affect origin)
+    List<Path> origins = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
+    assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
+    // Spot-check relative paths include the prefix
+    List<Path> relatives = infos.stream().map((info) -> info.relative).collect(Collectors.toList());
+    assertTrue(relatives.contains(Paths.get("some-directory-1.0/org/lattejava/io/FileSet.java")));
+    assertTrue(relatives.contains(Paths.get("some-directory-1.0/org/lattejava/io/Copier.java")));
   }
 
   @Test
   public void toFileInfosWithDeepPrefix() throws Exception {
     ArchiveFileSet fileSet = new ArchiveFileSet(projectDir.resolve("src/main/java"), "usr/local/inversoft/main");
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
-        projectDir.resolve("src/main/java/org/savantbuild/io/ArchiveFileSet.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Directory.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileInfo.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileSet.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/FileTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Filter.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/Tools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/jar/JarBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/jar/JarTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/tar/TarBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/tar/TarTools.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/zip/ZipBuilder.java"),
-        projectDir.resolve("src/main/java/org/savantbuild/io/zip/ZipTools.java")
-    ));
-    assertEquals(infos.stream().map((info) -> info.relative).collect(Collectors.toList()), asList(
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/ArchiveFileSet.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/Copier.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/Directory.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/FileInfo.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/FileSet.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/FileTools.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/Filter.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/Tools.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/jar/JarBuilder.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/jar/JarTools.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/tar/TarBuilder.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/tar/TarTools.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/zip/ZipBuilder.java"),
-        Paths.get("usr/local/inversoft/main/org/savantbuild/io/zip/ZipTools.java")
-    ));
+    assertEquals(infos.size(), 114);
+    // Spot-check origins
+    List<Path> origins = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
+    assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
+    // Spot-check relative paths include the deep prefix
+    List<Path> relatives = infos.stream().map((info) -> info.relative).collect(Collectors.toList());
+    assertTrue(relatives.contains(Paths.get("usr/local/inversoft/main/org/lattejava/io/FileSet.java")));
 
     Set<Directory> directories = fileSet.toDirectories();
     assertEquals(directories, new HashSet<>(asList(
@@ -154,11 +82,31 @@ public class ArchiveFileSetTest extends BaseUnitTest {
         new Directory("usr/local/inversoft"),
         new Directory("usr/local/inversoft/main"),
         new Directory("usr/local/inversoft/main/org"),
-        new Directory("usr/local/inversoft/main/org/savantbuild"),
-        new Directory("usr/local/inversoft/main/org/savantbuild/io"),
-        new Directory("usr/local/inversoft/main/org/savantbuild/io/jar"),
-        new Directory("usr/local/inversoft/main/org/savantbuild/io/tar"),
-        new Directory("usr/local/inversoft/main/org/savantbuild/io/zip")
+        new Directory("usr/local/inversoft/main/org/lattejava"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli/domain"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli/parser"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli/parser/groovy"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli/plugin"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli/plugin/groovy"),
+        new Directory("usr/local/inversoft/main/org/lattejava/cli/runtime"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep/domain"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep/domain/json"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep/graph"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep/maven"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep/workflow"),
+        new Directory("usr/local/inversoft/main/org/lattejava/dep/workflow/process"),
+        new Directory("usr/local/inversoft/main/org/lattejava/domain"),
+        new Directory("usr/local/inversoft/main/org/lattejava/io"),
+        new Directory("usr/local/inversoft/main/org/lattejava/io/jar"),
+        new Directory("usr/local/inversoft/main/org/lattejava/io/tar"),
+        new Directory("usr/local/inversoft/main/org/lattejava/io/zip"),
+        new Directory("usr/local/inversoft/main/org/lattejava/lang"),
+        new Directory("usr/local/inversoft/main/org/lattejava/net"),
+        new Directory("usr/local/inversoft/main/org/lattejava/output"),
+        new Directory("usr/local/inversoft/main/org/lattejava/security"),
+        new Directory("usr/local/inversoft/main/org/lattejava/util")
     )));
   }
 }

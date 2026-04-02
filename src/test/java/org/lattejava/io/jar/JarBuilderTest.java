@@ -96,12 +96,12 @@ public class JarBuilderTest extends BaseUnitTest {
                        .directory(new Directory("test/directory", 0x755, "root", "root", null))
                        .build();
     assertTrue(Files.isReadable(file));
-    assertJarContains(new JarFile(file.toFile()), "org/savantbuild/io/Copier.java", "org/savantbuild/io/CopierTest.java",
-        "org/savantbuild/io/FileSet.java", "org/savantbuild/io/FileTools.java");
-    assertJarFileEquals(file, "org/savantbuild/io/Copier.java", projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"));
-    assertJarContainsDirectories(file, "META-INF/", "test/directory/", "org/", "org/savantbuild/", "org/savantbuild/io/",
-        "org/savantbuild/io/jar/", "org/savantbuild/io/tar/", "org/savantbuild/io/zip/");
-    assertEquals(count, 35);
+    assertJarContains(new JarFile(file.toFile()), "org/lattejava/io/Copier.java", "org/lattejava/io/CopierTest.java",
+        "org/lattejava/io/FileSet.java", "org/lattejava/io/FileTools.java");
+    assertJarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
+    assertJarContainsDirectories(file, "META-INF/", "test/directory/", "org/", "org/lattejava/", "org/lattejava/io/",
+        "org/lattejava/io/jar/", "org/lattejava/io/tar/", "org/lattejava/io/zip/");
+    assertEquals(count, 194);
   }
 
   @Test
@@ -132,12 +132,12 @@ public class JarBuilderTest extends BaseUnitTest {
                        .optionalFileSet("doesNotExist")
                        .build();
     assertTrue(Files.isReadable(file));
-    assertJarContains(new JarFile(file.toFile()), "org/savantbuild/io/Copier.java", "org/savantbuild/io/CopierTest.java",
-        "org/savantbuild/io/FileSet.java", "org/savantbuild/io/FileTools.java");
-    assertJarFileEquals(file, "org/savantbuild/io/Copier.java", projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"));
-    assertJarContainsDirectories(file, "META-INF/", "org/", "org/savantbuild/", "org/savantbuild/io/",
-        "org/savantbuild/io/jar/", "org/savantbuild/io/tar/", "org/savantbuild/io/zip/");
-    assertEquals(count, 34);
+    assertJarContains(new JarFile(file.toFile()), "org/lattejava/io/Copier.java", "org/lattejava/io/CopierTest.java",
+        "org/lattejava/io/FileSet.java", "org/lattejava/io/FileTools.java");
+    assertJarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
+    assertJarContainsDirectories(file, "META-INF/", "org/", "org/lattejava/", "org/lattejava/io/",
+        "org/lattejava/io/jar/", "org/lattejava/io/tar/", "org/lattejava/io/zip/");
+    assertEquals(count, 193);
   }
 
   @Test
@@ -156,11 +156,11 @@ public class JarBuilderTest extends BaseUnitTest {
                        .fileSet(new FileSet(projectDir.resolve("build/test/resources")))
                        .build();
     assertTrue(Files.isReadable(file));
-    assertJarContains(new JarFile(file.toFile()), "org/savantbuild/io/Copier.java", "org/savantbuild/io/CopierTest.java",
-        "org/savantbuild/io/FileSet.java", "org/savantbuild/io/FileTools.java", "META-INF/information.txt");
-    assertJarFileEquals(file, "org/savantbuild/io/Copier.java", projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"));
-    assertJarContainsDirectories(file, "META-INF/", "org/", "org/savantbuild/", "org/savantbuild/io/",
-        "org/savantbuild/io/jar/", "org/savantbuild/io/tar/", "org/savantbuild/io/zip/");
-    assertEquals(count, 35);
+    assertJarContains(new JarFile(file.toFile()), "org/lattejava/io/Copier.java", "org/lattejava/io/CopierTest.java",
+        "org/lattejava/io/FileSet.java", "org/lattejava/io/FileTools.java", "META-INF/information.txt");
+    assertJarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
+    assertJarContainsDirectories(file, "META-INF/", "org/", "org/lattejava/", "org/lattejava/io/",
+        "org/lattejava/io/jar/", "org/lattejava/io/tar/", "org/lattejava/io/zip/");
+    assertEquals(count, 194);
   }
 }

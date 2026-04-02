@@ -34,7 +34,6 @@ import org.lattejava.dep.domain.Publication;
 import org.lattejava.dep.domain.ReifiedArtifact;
 import org.lattejava.dep.workflow.process.CacheProcess;
 import org.lattejava.dep.workflow.process.MavenProcess;
-import org.lattejava.dep.workflow.process.SVNProcess;
 import org.lattejava.dep.workflow.process.URLProcess;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.domain.Publications;
@@ -45,7 +44,7 @@ import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.util.Graph;
 import org.lattejava.util.HashGraph;
-import org.lattejava.util.SavantPaths;
+import org.lattejava.util.LattePaths;
 import org.testng.annotations.Test;
 
 import groovy.lang.MissingPropertyException;
@@ -64,7 +63,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
   @Test
   public void parse() {
     GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
-    Path buildFile = projectDir.resolve("src/test/java/org/savantbuild/parser/groovy/simple.savant");
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/simple.latte");
     Project project = parser.parse(buildFile, new RuntimeConfiguration());
     assertEquals(project.group, "group");
     assertEquals(project.name, "name");
@@ -99,24 +98,24 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
     // Verify the workflow
     assertEquals(project.workflow.fetchWorkflow.processes.size(), 4);
     assertTrue(project.workflow.fetchWorkflow.processes.get(0) instanceof CacheProcess);
-    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).savantDir, SavantPaths.get().cacheDir().toString());
-    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).integrationDir, SavantPaths.get().cacheDir().toString());
+    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).latteDir, LattePaths.get().cacheDir().toString());
+    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).integrationDir, LattePaths.get().cacheDir().toString());
     assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
     assertTrue(project.workflow.fetchWorkflow.processes.get(1) instanceof CacheProcess);
     assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(1)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
-    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(1)).integrationDir, SavantPaths.get().cacheDir().toString());
-    assertEquals(((URLProcess) project.workflow.fetchWorkflow.processes.get(2)).url, "https://repository.savantbuild.org");
+    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(1)).integrationDir, LattePaths.get().cacheDir().toString());
+    assertEquals(((URLProcess) project.workflow.fetchWorkflow.processes.get(2)).url, "https://repository.lattejava.org");
     assertEquals(((URLProcess) project.workflow.fetchWorkflow.processes.get(2)).username, "username");
     assertEquals(((URLProcess) project.workflow.fetchWorkflow.processes.get(2)).password, "password");
     assertEquals(((MavenProcess) project.workflow.fetchWorkflow.processes.get(3)).url, "https://repo1.maven.org/maven2");
     assertEquals(((MavenProcess) project.workflow.fetchWorkflow.processes.get(3)).username, "username");
     assertEquals(((MavenProcess) project.workflow.fetchWorkflow.processes.get(3)).password, "password");
     assertEquals(project.workflow.publishWorkflow.processes.size(), 2);
-    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).savantDir, SavantPaths.get().cacheDir().toString());
-    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).integrationDir, SavantPaths.get().cacheDir().toString());
+    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).latteDir, LattePaths.get().cacheDir().toString());
+    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).integrationDir, LattePaths.get().cacheDir().toString());
     assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
     assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(1)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
-    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(1)).integrationDir, SavantPaths.get().cacheDir().toString());
+    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(1)).integrationDir, LattePaths.get().cacheDir().toString());
 
     // Version mappings
     Map<String, Version> expectedMappings = new HashMap<>();
@@ -124,12 +123,8 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
     expectedMappings.put("org.example:short-non-semantic-version:1.0", new Version("1.0.0"));
     assertEquals(project.workflow.mappings, expectedMappings);
 
-    // Verify the PublishWorkflow
-    assertEquals(project.publishWorkflow.processes.size(), 1);
-    assertTrue(project.publishWorkflow.processes.get(0) instanceof SVNProcess);
-    assertEquals(((SVNProcess) project.publishWorkflow.processes.get(0)).repository, "https://svn.example.com");
-    assertEquals(((SVNProcess) project.publishWorkflow.processes.get(0)).username, "svn-username");
-    assertEquals(((SVNProcess) project.publishWorkflow.processes.get(0)).password, "svn-password");
+    // Verify the PublishWorkflow (removed — no publishWorkflow block in simple.latte)
+    assertNull(project.publishWorkflow);
 
     // Verify the dependencies
     final List<ArtifactID> exclusions = asList(
@@ -187,7 +182,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
   @Test
   public void parseMissingPlugin() {
     GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
-    Path buildFile = projectDir.resolve("src/test/java/org/savantbuild/parser/groovy/missing-plugin.savant");
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/missing-plugin.latte");
     Project project = parser.parse(buildFile, new RuntimeConfiguration());
 
     try {
@@ -201,7 +196,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
   @Test
   public void parseNonSemanticVersion() {
     GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
-    Path buildFile = projectDir.resolve("src/test/java/org/savantbuild/parser/groovy/non-semantic-version.savant");
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/non-semantic-version.latte");
     try {
       parser.parse(buildFile, new RuntimeConfiguration());
     } catch (ParseException e) {
@@ -214,7 +209,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
   @Test
   public void parseShortNonSemanticVersion() {
     GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
-    Path buildFile = projectDir.resolve("src/test/java/org/savantbuild/parser/groovy/short-non-semantic-version.savant");
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/short-non-semantic-version.latte");
     Project project = parser.parse(buildFile, new RuntimeConfiguration());
 
     // Verify the dependencies
@@ -236,7 +231,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
   @Test
   public void parseWithSwitches() {
     GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
-    Path buildFile = projectDir.resolve("src/test/java/org/savantbuild/parser/groovy/simple.savant");
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/simple.latte");
     RuntimeConfiguration runtimeConfiguration = new RuntimeConfiguration();
     runtimeConfiguration.switches.add("skip");
     Project project = parser.parse(buildFile, runtimeConfiguration);

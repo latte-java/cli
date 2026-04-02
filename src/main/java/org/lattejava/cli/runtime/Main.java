@@ -38,12 +38,12 @@ import org.lattejava.cli.parser.groovy.GroovyBuildFileParser;
 import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.security.MD5Exception;
 import org.lattejava.util.CyclicException;
-import org.lattejava.util.SavantPaths;
+import org.lattejava.util.LattePaths;
 
 import static java.util.Arrays.asList;
 
 /**
- * Main entry point for Savant CLI runtime.
+ * Main entry point for Latte CLI runtime.
  *
  * @author Brian Pontarelli
  */
@@ -63,9 +63,7 @@ public class Main {
       output.enableDebug();
     }
 
-    SavantPaths.get().migrate(output);
-
-    Path buildFile = projectDir.resolve("build.savant");
+    Path buildFile = projectDir.resolve("build.latte");
     if (!Files.isRegularFile(buildFile) || !Files.isReadable(buildFile)) {
       if (runtimeConfiguration.printVersion) {
         printVersion(output);
@@ -74,7 +72,7 @@ public class Main {
         printHelp(output);
         return;
       } else {
-        output.errorln("Build file [build.savant] is missing or not readable.");
+        output.errorln("Build file [build.latte] is missing or not readable.");
         System.exit(1);
       }
     }
@@ -121,11 +119,11 @@ public class Main {
     output.infoln("");
     output.infoln("Switches:");
     output.infoln("");
-    output.infoln("   --noColor      Disables the colorized output of Savant");
+    output.infoln("   --noColor      Disables the colorized output of Latte");
     output.infoln("   --debug        Enables debug output");
     output.infoln("   --help         Displays the help message");
     output.infoln("   --listTargets  Lists the build targets");
-    output.infoln("   --version      Prints the version of Savant");
+    output.infoln("   --version      Prints the version of Latte");
     output.infoln("");
     output.infoln("NOTE: If any other argument starts with '--' then it is considered a switch. Switches can optionally have values using the equals sign like this:");
     output.infoln("");
@@ -136,7 +134,7 @@ public class Main {
 
   public static void printVersion(Output output) {
     String version = Main.class.getPackage().getImplementationVersion();
-    output.infoln("Savant Build System Version [" + version + "]");
+    output.infoln("Latte Build System Version [" + version + "]");
     output.infoln("");
   }
 

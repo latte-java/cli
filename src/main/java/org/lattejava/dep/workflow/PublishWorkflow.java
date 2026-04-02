@@ -69,7 +69,7 @@ public class PublishWorkflow {
   }
 
   /**
-   * Publishes a negative file for the item. This file is empty, but signals Savant not to attempt to fetch that
+   * Publishes a negative file for the item. This file is empty, but signals Latte not to attempt to fetch that
    * specific item again, since it doesn't exist.
    *
    * @param item   The item that the negative is being published for.
@@ -78,7 +78,7 @@ public class PublishWorkflow {
   public void publishNegative(ResolvableItem item, ItemSource source) {
     Path itemFile;
     try {
-      File tempFile = File.createTempFile("savant-item", "neg");
+      File tempFile = File.createTempFile("latte-item", "neg");
       tempFile.deleteOnExit();
       itemFile = tempFile.toPath();
     } catch (IOException e) {

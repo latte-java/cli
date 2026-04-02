@@ -18,7 +18,7 @@ package org.lattejava.dep.domain;
 import static java.util.Arrays.stream;
 
 /**
- * An artifact specification that complies with Savant and Maven definitions.
+ * An artifact specification that complies with Latte and Maven definitions.
  *
  * @author Brady Wied
  * @author Brian Pontarelli

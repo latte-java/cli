@@ -19,15 +19,11 @@ project(group: "group", name: "name", version: "1.1", licenses: ["ApacheV2_0"]) 
   workflow {
     fetch {
       cache()
-      url(url: "http://repository.savantbuild.org", username: "${global.savantTestRepositoryUsername}", password: "${global.savantTestRepositoryPassword}")
+      url(url: "http://repository.lattejava.org", username: "${global.latteTestRepositoryUsername}", password: "${global.latteTestRepositoryPassword}")
     }
     publish {
       cache()
     }
-  }
-
-  publishWorkflow {
-    subversion(repository: "http://svn.example.com", username: "${global.savantTestSVNUsername}", password: "${global.savantTestSVNPassword}")
   }
 
   dependencies {

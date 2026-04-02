@@ -67,12 +67,12 @@ public class ProjectDelegate {
   public Dependencies dependencies(@DelegatesTo(DependenciesDelegate.class) Closure<?> closure) {
     if (!project.publications.allPublications().isEmpty()) {
       throw new BuildFailureException("It looks like your project has defined its dependencies after its publications. " +
-          "Because Savant parses the [project() {}] definition linearly, you need to define your publications AFTER your dependencies.");
+          "Because Latte parses the [project() {}] definition linearly, you need to define your publications AFTER your dependencies.");
     }
 
     if (project.workflow == null) {
       throw new BuildFailureException("It looks like your project has defined its dependencies before its workflows (or the workflow definition is missing). " +
-          "Because Savant parses the [project() {}] definition linearly, you need to define your dependencies AFTER your workflows.");
+          "Because Latte parses the [project() {}] definition linearly, you need to define your dependencies AFTER your workflows.");
     }
 
     project.dependencies = new Dependencies();
@@ -114,7 +114,7 @@ public class ProjectDelegate {
    * </p>
    * <pre>
    *   publishWorkflow {
-   *     subversion(repository: "http://svn.example.com/")
+   *     cache()
    *   }
    * </pre>
    *
@@ -139,7 +139,7 @@ public class ProjectDelegate {
    *   workflow {
    *     fetch {
    *       cache()
-   *       url(url: "https://repository.savantbuild.org")
+   *       url(url: "https://repository.lattejava.org")
    *     }
    *     publish {
    *       cache()
@@ -154,7 +154,7 @@ public class ProjectDelegate {
   public Workflow workflow(@DelegatesTo(WorkflowDelegate.class) Closure<?> closure) {
     if (project.dependencies != null && !project.dependencies.getAllArtifacts().isEmpty()) {
       throw new BuildFailureException("It looks like your project has defined its workflows after its dependencies. " +
-          "Because Savant parses the [project() {}] definition linearly, you need to define your workflows BEFORE your dependencies.");
+          "Because Latte parses the [project() {}] definition linearly, you need to define your workflows BEFORE your dependencies.");
     }
 
     project.workflow = new Workflow(new FetchWorkflow(output), new PublishWorkflow(), output);

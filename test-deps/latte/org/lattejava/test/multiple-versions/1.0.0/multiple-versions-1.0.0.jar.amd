@@ -1,0 +1,11 @@
+{
+  "licenses": [
+    {"type": "ApacheV1_0"}
+  ],
+  "dependencyGroups": {
+    "compile": [
+      {"id": "org.lattejava.test:leaf:leaf1:1.0.0:jar"},
+      {"id": "org.lattejava.test:integration-build:integration-build:2.1.1-{integration}:jar"}
+    ]
+  }
+}

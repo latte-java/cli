@@ -16,6 +16,6 @@
 package org.lattejava.dep.workflow.process;
 
 public enum ItemSource {
-  SAVANT,
+  LATTE,
   MAVEN
 }

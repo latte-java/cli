@@ -41,13 +41,13 @@ import static org.testng.Assert.fail;
 public class CacheProcessTest extends BaseUnitTest {
   @Test
   public void fetch() {
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
     FetchResult result = process.fetch(item, null);
     assertNotNull(result);
-    assertTrue(result.file().toAbsolutePath().toString().replace('\\', '/').endsWith("test-deps/savant/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar"));
+    assertTrue(result.file().toAbsolutePath().toString().replace('\\', '/').endsWith("test-deps/latte/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar"));
     assertTrue(Files.isRegularFile(result.file()));
   }
 
@@ -59,7 +59,7 @@ public class CacheProcessTest extends BaseUnitTest {
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
     FetchResult result = process.fetch(item, null);
     assertNotNull(result);
-    assertTrue(result.file().toAbsolutePath().toString().replace('\\', '/').endsWith("test-deps/integration/org/savantbuild/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar"));
+    assertTrue(result.file().toAbsolutePath().toString().replace('\\', '/').endsWith("test-deps/integration/org/lattejava/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar"));
     assertTrue(Files.isRegularFile(result.file()));
   }
 
@@ -71,11 +71,11 @@ public class CacheProcessTest extends BaseUnitTest {
     CacheProcess process = new CacheProcess(output, cache.toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path artFile = projectDir.resolve("test-deps/savant/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
+    Path artFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
-    Path file = process.publish(new FetchResult(artFile, ItemSource.SAVANT, item));
+    Path file = process.publish(new FetchResult(artFile, ItemSource.LATTE, item));
     assertNotNull(file);
-    assertTrue(file.toAbsolutePath().toString().replace('\\', '/').endsWith("build/test/deps/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar"));
+    assertTrue(file.toAbsolutePath().toString().replace('\\', '/').endsWith("build/test/deps/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar"));
     assertTrue(Files.isRegularFile(file));
   }
 
@@ -87,7 +87,7 @@ public class CacheProcessTest extends BaseUnitTest {
     CacheProcess process = new CacheProcess(output, cache.toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path artFile = projectDir.resolve("test-deps/savant/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
+    Path artFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
     Path result = process.publish(new FetchResult(artFile, ItemSource.MAVEN, item));
     assertNull(result);
@@ -101,7 +101,7 @@ public class CacheProcessTest extends BaseUnitTest {
     CacheProcess process = new CacheProcess(output, null, null, mavenCache.toString());
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path artFile = projectDir.resolve("test-deps/savant/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
+    Path artFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
     Path result = process.publish(new FetchResult(artFile, ItemSource.MAVEN, item));
     assertNotNull(result);
@@ -109,16 +109,16 @@ public class CacheProcessTest extends BaseUnitTest {
   }
 
   @Test
-  public void store_mavenDir_rejectsSavant() throws Exception {
+  public void store_mavenDir_rejectsLatte() throws Exception {
     Path mavenCache = projectDir.resolve("build/test/maven-deps");
     PathTools.prune(mavenCache);
 
     CacheProcess process = new CacheProcess(output, null, null, mavenCache.toString());
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path artFile = projectDir.resolve("test-deps/savant/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
+    Path artFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar");
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
-    Path result = process.publish(new FetchResult(artFile, ItemSource.SAVANT, item));
+    Path result = process.publish(new FetchResult(artFile, ItemSource.LATTE, item));
     assertNull(result);
   }
 
@@ -130,18 +130,18 @@ public class CacheProcessTest extends BaseUnitTest {
     CacheProcess process = new CacheProcess(output, cache.toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:integration-build:integration-build:2.1.1-{integration}:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path artFile = projectDir.resolve("test-deps/integration/org/savantbuild/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar");
+    Path artFile = projectDir.resolve("test-deps/integration/org/lattejava/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar");
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name, artifact.version.toString(), artifact.getArtifactFile());
-    Path file = process.publish(new FetchResult(artFile, ItemSource.SAVANT, item));
+    Path file = process.publish(new FetchResult(artFile, ItemSource.LATTE, item));
     assertNotNull(file);
-    assertTrue(file.toAbsolutePath().toString().replace('\\', '/').endsWith("build/test/deps/org/savantbuild/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar"));
+    assertTrue(file.toAbsolutePath().toString().replace('\\', '/').endsWith("build/test/deps/org/lattejava/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar"));
     assertTrue(Files.isRegularFile(file));
   }
 
   @Test
   public void fetch_withAlternative_primaryHit() {
     // When the primary item exists, alternatives should not be checked and the primary item name is returned
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name,
@@ -157,7 +157,7 @@ public class CacheProcessTest extends BaseUnitTest {
   @Test
   public void fetch_withAlternative_primaryMissAlternativeHit() {
     // When primary (-src.jar) doesn't exist but alternative (-sources.jar) does, the alternative is returned
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name,
@@ -173,10 +173,10 @@ public class CacheProcessTest extends BaseUnitTest {
   @Test
   public void fetch_negativeCache() throws Exception {
     // When a .neg marker exists for the item, NegativeCacheException is thrown
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path negFile = projectDir.resolve("test-deps/savant/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0-src.jar.neg");
+    Path negFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0-src.jar.neg");
     Files.createFile(negFile);
     try {
       ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name,
@@ -200,7 +200,7 @@ public class CacheProcessTest extends BaseUnitTest {
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
     // Create the directory and .neg marker
-    Path negFile = mavenCache.resolve("org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0-src.jar.neg");
+    Path negFile = mavenCache.resolve("org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0-src.jar.neg");
     Files.createDirectories(negFile.getParent());
     Files.createFile(negFile);
     try {
@@ -218,7 +218,7 @@ public class CacheProcessTest extends BaseUnitTest {
   @Test
   public void fetch_noNegativeCache() {
     // When no .neg marker exists and the item is missing, null is returned (not an exception)
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name,
@@ -245,10 +245,10 @@ public class CacheProcessTest extends BaseUnitTest {
   @Test
   public void fetch_withAlternative_negativeCache() throws Exception {
     // When a .neg marker exists for the primary item, NegativeCacheException is thrown before checking alternatives
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.1.0:jar", License.Licenses.get("ApacheV2_0"));
 
-    Path negFile = projectDir.resolve("test-deps/savant/org/savantbuild/test/multiple-versions/1.1.0/multiple-versions-1.1.0-src.jar.neg");
+    Path negFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.1.0/multiple-versions-1.1.0-src.jar.neg");
     Files.createDirectories(negFile.getParent());
     Files.createFile(negFile);
     try {
@@ -267,7 +267,7 @@ public class CacheProcessTest extends BaseUnitTest {
   @Test
   public void fetch_withAlternative_noNegativeCache() {
     // When no .neg marker exists, primary is missing, and alternative is missing, null is returned
-    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/savant").toString(), null, null);
+    CacheProcess process = new CacheProcess(output, projectDir.resolve("test-deps/latte").toString(), null, null);
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.0.0:jar", License.Licenses.get("ApacheV2_0"));
 
     ResolvableItem item = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name,

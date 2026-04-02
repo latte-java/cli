@@ -44,35 +44,35 @@ import static org.testng.Assert.fail;
 public class DefaultPluginLoaderTest extends BaseUnitTest {
   @BeforeClass
   public void generateMD5Files() throws Exception {
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-class/0.1.0/bad-class-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-class/0.1.0/bad-class-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd.md5"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd.md5"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd.md5"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/good/0.1.0/good-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/good/0.1.0/good-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/good/0.1.0/good-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/good/0.1.0/good-0.1.0.jar.amd.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.amd.md5"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-class/0.1.0/missing-class-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-class/0.1.0/missing-class-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd.md5"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/savantbuild/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.md5"));
+    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd.md5"));
   }
 
   @Test
@@ -115,7 +115,7 @@ public class DefaultPluginLoaderTest extends BaseUnitTest {
       loader.load(new Artifact("org.lattejava.test:bad-manifest:0.1.0"));
       fail("Should have thrown an exception");
     } catch (PluginLoadException e) {
-      assertTrue(e.getMessage().contains("The JAR file does not contain a valid Manifest entry for Savant-Plugin-Class"));
+      assertTrue(e.getMessage().contains("The JAR file does not contain a valid Manifest entry for Latte-Plugin-Class"));
       assertNull(e.getCause());
     }
   }
@@ -156,7 +156,7 @@ public class DefaultPluginLoaderTest extends BaseUnitTest {
       loader.load(new Artifact("org.lattejava.test:missing-manifest:0.1.0"));
       fail("Should have thrown an exception");
     } catch (PluginLoadException e) {
-      assertTrue(e.getMessage().contains("The JAR file does not contain a valid Manifest entry for Savant-Plugin-Class"));
+      assertTrue(e.getMessage().contains("The JAR file does not contain a valid Manifest entry for Latte-Plugin-Class"));
       assertNull(e.getCause());
     }
   }

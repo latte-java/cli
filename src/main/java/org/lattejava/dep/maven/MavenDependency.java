@@ -33,7 +33,7 @@ public class MavenDependency extends POM {
 
   public String optional;
 
-  public ReifiedArtifact savantArtifact;
+  public ReifiedArtifact latteArtifact;
 
   public String scope;
 

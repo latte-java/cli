@@ -28,7 +28,7 @@ public class DefaultRuntimeConfigurationParser implements RuntimeConfigurationPa
    * Parses the command-line arguments. There are currently 4 fixed arguments:
    * </p>
    * <pre>
-   *   --noColor = Disables the colorized output of Savant
+   *   --noColor = Disables the colorized output of Latte
    *   --debug = Enables debug output
    *   --version = Displays the version
    *   --help = Displays the help message

@@ -34,7 +34,7 @@ import org.lattejava.domain.Version.PreRelease.PreReleasePart.StringPreReleasePa
  * <p>
  * <a href="http://semver.org">http://semver.org</a>
  * <p>
- * The only notable except to this scheme is that Savant supports integration builds, which are not released versions,
+ * The only notable except to this scheme is that Latte supports integration builds, which are not released versions,
  * but are local versions to a single developer or a team. Integration builds are always denoted by an additional
  * version specifier of <code>-{integration}</code>. For example, 1.0.0-{integration} denotes an integration build.
  *

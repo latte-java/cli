@@ -39,10 +39,10 @@ public class DefaultBuildRunnerTest extends BaseUnitTest {
     Files.createDirectories(projectDir.resolve("test-project/build"));
 
     BuildRunner runner = new DefaultBuildRunner(output, new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-    runner.run(projectDir.resolve("test-project/build.savant"), new RuntimeConfiguration(false, "write"));
+    runner.run(projectDir.resolve("test-project/build.latte"), new RuntimeConfiguration(false, "write"));
     assertEquals(new String(Files.readAllBytes(projectDir.resolve("test-project/build/test-file.txt")), StandardCharsets.UTF_8), "File contents");
 
-    runner.run(projectDir.resolve("test-project/build.savant"), new RuntimeConfiguration(true, "delete"));
+    runner.run(projectDir.resolve("test-project/build.latte"), new RuntimeConfiguration(true, "delete"));
     assertFalse(Files.isDirectory(projectDir.resolve("test-project/build")));
   }
 
@@ -52,10 +52,10 @@ public class DefaultBuildRunnerTest extends BaseUnitTest {
     Files.createDirectories(projectDir.resolve("test-project-licenses/build"));
 
     BuildRunner runner = new DefaultBuildRunner(output, new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-    runner.run(projectDir.resolve("test-project-licenses/build.savant"), new RuntimeConfiguration(false, "write"));
+    runner.run(projectDir.resolve("test-project-licenses/build.latte"), new RuntimeConfiguration(false, "write"));
     assertEquals(new String(Files.readAllBytes(projectDir.resolve("test-project-licenses/build/test-file.txt")), StandardCharsets.UTF_8), "File contents");
 
-    runner.run(projectDir.resolve("test-project-licenses/build.savant"), new RuntimeConfiguration(true, "delete"));
+    runner.run(projectDir.resolve("test-project-licenses/build.latte"), new RuntimeConfiguration(true, "delete"));
     assertFalse(Files.isDirectory(projectDir.resolve("test-project-licenses/build")));
   }
 }

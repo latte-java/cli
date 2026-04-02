@@ -27,7 +27,7 @@ import org.lattejava.output.Output;
 
 /**
  * This is an implementation of the Process that uses local caches to fetch and publish artifacts.
- * It manages up to three cache directories: one for Savant-sourced artifacts, one for integration-version
+ * It manages up to three cache directories: one for Latte-sourced artifacts, one for integration-version
  * artifacts, and one for Maven-sourced artifacts. Any directory can be null to disable that cache.
  *
  * @author Brian Pontarelli
@@ -39,19 +39,19 @@ public class CacheProcess implements Process {
 
   public final Output output;
 
-  public final String savantDir;
+  public final String latteDir;
 
   private record CacheHit(Path file, String matchedItem) {}
 
-  public CacheProcess(Output output, String savantDir, String integrationDir, String mavenDir) {
+  public CacheProcess(Output output, String latteDir, String integrationDir, String mavenDir) {
     this.output = output;
-    this.savantDir = savantDir;
+    this.latteDir = latteDir;
     this.integrationDir = integrationDir;
     this.mavenDir = mavenDir;
   }
 
   /**
-   * Checks the cache directories for the item. Tries the Savant cache first (tagging hits as SAVANT),
+   * Checks the cache directories for the item. Tries the Latte cache first (tagging hits as LATTE),
    * then the Maven cache (tagging hits as MAVEN). If found in either, the result is returned.
    * If not found in either, null is returned.
    *
@@ -68,16 +68,16 @@ public class CacheProcess implements Process {
       CacheHit hit = tryFetchCandidate(item, integrationDir);
       if (hit != null) {
         ResolvableItem matchedItem = hit.matchedItem.equals(item.item) ? item : new ResolvableItem(item, hit.matchedItem);
-        return new FetchResult(hit.file, ItemSource.SAVANT, matchedItem);
+        return new FetchResult(hit.file, ItemSource.LATTE, matchedItem);
       }
     }
 
-    // Try Savant cache for non-integration versions
-    if (savantDir != null) {
-      CacheHit hit = tryFetchCandidate(item, savantDir);
+    // Try Latte cache for non-integration versions
+    if (latteDir != null) {
+      CacheHit hit = tryFetchCandidate(item, latteDir);
       if (hit != null) {
         ResolvableItem matchedItem = hit.matchedItem.equals(item.item) ? item : new ResolvableItem(item, hit.matchedItem);
-        return new FetchResult(hit.file, ItemSource.SAVANT, matchedItem);
+        return new FetchResult(hit.file, ItemSource.LATTE, matchedItem);
       }
     }
 
@@ -95,7 +95,7 @@ public class CacheProcess implements Process {
 
   /**
    * Publishes the given artifact item into the appropriate cache. Items are routed based on the
-   * FetchResult's source: SAVANT items go to savantDir, MAVEN items go to mavenDir. Returns null
+   * FetchResult's source: LATTE items go to latteDir, MAVEN items go to mavenDir. Returns null
    * if the relevant directory is null or the source doesn't match either cache.
    *
    * @param fetchResult The fetch result containing the item, file, and source.
@@ -108,8 +108,8 @@ public class CacheProcess implements Process {
     ResolvableItem item = fetchResult.item();
     if (integrationDir != null && item.version.endsWith(Version.INTEGRATION)) {
       dir = integrationDir;
-    } else if (fetchResult.source() == ItemSource.SAVANT) {
-      dir = savantDir;
+    } else if (fetchResult.source() == ItemSource.LATTE) {
+      dir = latteDir;
     } else if (fetchResult.source() == ItemSource.MAVEN) {
       dir = mavenDir;
     } else {
@@ -163,7 +163,7 @@ public class CacheProcess implements Process {
 
   @Override
   public String toString() {
-    return "Cache(savant=" + savantDir + ", integration=" + integrationDir + ", maven=" + mavenDir + ")";
+    return "Cache(latte=" + latteDir + ", integration=" + integrationDir + ", maven=" + mavenDir + ")";
   }
 
   private CacheHit tryFetchCandidate(ResolvableItem item, String cacheDir) {

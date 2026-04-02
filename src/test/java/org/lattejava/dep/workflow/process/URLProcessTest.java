@@ -55,10 +55,10 @@ public class URLProcessTest extends BaseUnitTest {
   @DataProvider(name = "fetchData")
   public Object[][] fetchData() {
     return new Object[][]{
-        {makeLocalURL(), "multiple-versions", "1.0.0", projectDir.resolve("build/test/cache/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar").toString()},
-        {makeLocalURL(), "leaf1", "1.0.0", projectDir.resolve("build/test/cache/org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar").toString()},
-        {"http://localhost:7042/test-deps/savant", "multiple-versions", "1.0.0", projectDir.resolve("build/test/cache/org/savantbuild/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar").toString()},
-        {"http://localhost:7042/test-deps/savant", "leaf1", "1.0.0", projectDir.resolve("build/test/cache/org/savantbuild/test/leaf1/1.0.0/leaf1-1.0.0.jar").toString()}
+        {makeLocalURL(), "multiple-versions", "1.0.0", projectDir.resolve("build/test/cache/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar").toString()},
+        {makeLocalURL(), "leaf1", "1.0.0", projectDir.resolve("build/test/cache/org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar").toString()},
+        {"http://localhost:7042/test-deps/latte", "multiple-versions", "1.0.0", projectDir.resolve("build/test/cache/org/lattejava/test/multiple-versions/1.0.0/multiple-versions-1.0.0.jar").toString()},
+        {"http://localhost:7042/test-deps/latte", "leaf1", "1.0.0", projectDir.resolve("build/test/cache/org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar").toString()}
     };
   }
 
@@ -131,11 +131,11 @@ public class URLProcessTest extends BaseUnitTest {
   public Object[][] urls() {
     return new Object[][]{
         {makeLocalURL()},
-        {"http://localhost:7042/test-deps/savant"}
+        {"http://localhost:7042/test-deps/latte"}
     };
   }
 
   private String makeLocalURL() {
-    return projectDir.toAbsolutePath().toUri() + "/test-deps/savant";
+    return projectDir.toAbsolutePath().toUri() + "/test-deps/latte";
   }
 }

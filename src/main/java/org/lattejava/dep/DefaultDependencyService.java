@@ -19,14 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.lattejava.dep.DependencyService.TraversalRules.GroupTraversalRule;
@@ -102,7 +95,7 @@ public class DefaultDependencyService implements DependencyService {
     ResolvableItem item = new ResolvableItem(publication.artifact.id.group, publication.artifact.id.project, publication.artifact.id.name,
         publication.artifact.version.toString(), publication.artifact.getArtifactMetaDataFile());
     try {
-      Path amdFile = ArtifactTools.generateXML(publication.metaData);
+      Path amdFile = ArtifactTools.generate(publication.metaData);
       publishItem(item, amdFile, workflow);
 
       item = new ResolvableItem(item, publication.artifact.getArtifactFile());
@@ -112,7 +105,7 @@ public class DefaultDependencyService implements DependencyService {
         item = new ResolvableItem(item, publication.artifact.getArtifactSourceFile());
         publishItem(item, publication.sourceFile, workflow);
       } else {
-        workflow.publishNegative(item, ItemSource.SAVANT);
+        workflow.publishNegative(item, ItemSource.LATTE);
       }
     } catch (IOException e) {
       throw new PublishException(publication, e);
@@ -135,7 +128,7 @@ public class DefaultDependencyService implements DependencyService {
     Map<ArtifactID, ReifiedArtifact> artifacts = new HashMap<>();
     artifacts.put(graph.root.id, graph.root);
 
-    Set<Dependency> seenAtLeastOnce = new HashSet<>();
+    Set<Dependency> seenButNotProcessed = new HashSet<>();
 
     graph.traverse(new Dependency(graph.root.id), false, null, (origin, destination, edgeValue, depth, isLast) -> {
       List<Edge<Dependency, DependencyEdgeValue>> inboundEdges = graph.getInboundEdges(destination);
@@ -143,23 +136,35 @@ public class DefaultDependencyService implements DependencyService {
       if (alreadyCheckedAllParents) {
         output.debugln("Already checked all parents so we know the versions of them at this point. Working on node [%s]", destination);
 
-        // Remove from seenAtLeastOnce
-        seenAtLeastOnce.remove(destination);
+        // Remove from seenButNotProcessed because we are now processing it
+        seenButNotProcessed.remove(destination);
 
         return checkCompatibilityAndAddToGraph(graph, artifacts, destination, inboundEdges, artifactGraph);
       } else {
         output.debugln("Skipping dependency [%s] for now. Not all its parents have been checked", destination);
-        seenAtLeastOnce.add(destination);
+        seenButNotProcessed.add(destination);
       }
 
-      return true; // Always continue traversal
+      return true; // Always continue traversal if we hit a node that can't be processed
     });
 
-    // Go through the seenAtLeastOnce set and determine if we should add any of the nodes to the graph
-    seenAtLeastOnce.forEach((dependency) -> {
-      List<Edge<Dependency, DependencyEdgeValue>> inboundEdges = graph.getInboundEdges(dependency);
-      checkCompatibilityAndAddToGraph(graph, artifacts, dependency, inboundEdges, artifactGraph);
-    });
+    // Go through the seenButNotProcessed set and determine if we should add any of the nodes to the graph. This continues
+    // working through the set multiple times until all the dependencies in the set have parents that have not been
+    // checked. This means those nodes can all be pruned.
+    boolean processing;
+    do {
+      processing = false;
+      for (Iterator<Dependency> iter = seenButNotProcessed.iterator(); iter.hasNext(); ) {
+        Dependency next = iter.next();
+        List<Edge<Dependency, DependencyEdgeValue>> inboundEdges = graph.getInboundEdges(next);
+        boolean alreadyCheckedAllParents = !inboundEdges.isEmpty() && inboundEdges.stream().anyMatch((edge) -> artifacts.containsKey(edge.getOrigin().id));
+        if (alreadyCheckedAllParents) {
+          checkCompatibilityAndAddToGraph(graph, artifacts, next, inboundEdges, artifactGraph);
+          iter.remove();
+          processing = true;
+        }
+      }
+    } while (processing);
 
     return artifactGraph;
   }
@@ -352,9 +357,9 @@ public class DefaultDependencyService implements DependencyService {
     Path md5File = tempFile.toPath();
     MD5.writeMD5(md5, md5File);
     ResolvableItem md5Item = new ResolvableItem(item, item.item + ".md5");
-    workflow.publish(new FetchResult(md5File, ItemSource.SAVANT, md5Item));
+    workflow.publish(new FetchResult(md5File, ItemSource.LATTE, md5Item));
 
     // Now publish the item itself
-    workflow.publish(new FetchResult(file, ItemSource.SAVANT, item));
+    workflow.publish(new FetchResult(file, ItemSource.LATTE, item));
   }
 }

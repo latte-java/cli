@@ -32,7 +32,7 @@ import groovy.lang.GroovyObjectSupport;
 
 /**
  * Abstract base class for plugins. This defines some helper methods that all plugins will need and it also allows
- * Savant to pass the {@link Project} and {@link Output} objects to plugins.
+ * Latte to pass the {@link Project} and {@link Output} objects to plugins.
  *
  * @author Brian Pontarelli
  */
@@ -71,7 +71,7 @@ public class BaseGroovyPlugin extends GroovyObjectSupport implements Plugin {
    * The location pattern is as follows:
    * </p>
    * <pre>
-   *   $XDG_CONFIG_HOME/savant/plugins/&lt;id.group&gt;.&lt;id.name&gt;.properties
+   *   $XDG_CONFIG_HOME/latte/plugins/&lt;id.group&gt;.&lt;id.name&gt;.properties
    * </pre>
    *
    * @param id           The artifact Id that is used to load the configuration file.

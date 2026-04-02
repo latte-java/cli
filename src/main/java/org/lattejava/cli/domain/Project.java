@@ -34,7 +34,7 @@ import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
 import org.lattejava.cli.plugin.Plugin;
 import org.lattejava.util.Graph;
-import org.lattejava.util.SavantPaths;
+import org.lattejava.util.LattePaths;
 
 /**
  * This class defines the project.
@@ -62,7 +62,7 @@ public class Project {
 
   public String name;
 
-  public Path pluginConfigurationDirectory = SavantPaths.get().configDir().resolve("plugins");
+  public Path pluginConfigurationDirectory = LattePaths.get().configDir().resolve("plugins");
 
   public Map<Artifact, Plugin> plugins = new HashMap<>();
 

@@ -39,7 +39,7 @@ import org.lattejava.cli.runtime.BuildFailureException;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 
 /**
- * Default plugin loader that uses the Savant dependency service and a URLClassLoader to load the plugin.
+ * Default plugin loader that uses the Latte dependency service and a URLClassLoader to load the plugin.
  *
  * @author Brian Pontarelli
  */
@@ -81,8 +81,8 @@ public class DefaultPluginLoader implements PluginLoader {
     }
 
     // This doesn't use the project as the root because the project might be in the graph and that would cause failures.
-    // This is how Savant is self building
-    ReifiedArtifact root = new ReifiedArtifact("__savantLoadPluginGroup__:__savantLoadPluginName__:0.0.0", License.Licenses.get("ApacheV2_0"));
+    // This is how Latte is self building
+    ReifiedArtifact root = new ReifiedArtifact("__latteLoadPluginGroup__:__latteLoadPluginName__:0.0.0", License.Licenses.get("ApacheV2_0"));
     Dependencies dependencies = new Dependencies(new DependencyGroup("runtime", false, pluginDependency));
     DependencyGraph dependencyGraph = project.dependencyService.buildGraph(root, dependencies, project.workflow);
     ArtifactGraph artifactGraph = project.dependencyService.reduce(dependencyGraph);
@@ -93,18 +93,18 @@ public class DefaultPluginLoader implements PluginLoader {
     try (JarFile pluginJarFile = new JarFile(pluginJarFilePath.toFile())) {
       Manifest manifest = pluginJarFile.getManifest();
       if (manifest == null) {
-        throw new PluginLoadException("Invalid plugin [" + pluginDependency + "]. The JAR file does not contain a valid Manifest entry for Savant-Plugin-Class");
+        throw new PluginLoadException("Invalid plugin [" + pluginDependency + "]. The JAR file does not contain a valid Manifest entry for Latte-Plugin-Class");
       }
 
-      pluginClassName = manifest.getMainAttributes().getValue("Savant-Plugin-Class");
+      pluginClassName = manifest.getMainAttributes().getValue("Latte-Plugin-Class");
       if (pluginClassName == null) {
-        throw new PluginLoadException("Invalid plugin [" + pluginDependency + "]. The JAR file does not contain a valid Manifest entry for Savant-Plugin-Class");
+        throw new PluginLoadException("Invalid plugin [" + pluginDependency + "]. The JAR file does not contain a valid Manifest entry for Latte-Plugin-Class");
       }
 
       Classpath classpath = resolvedArtifactGraph.toClasspath();
       output.debugln("Classpath for plugin [%s] is [%s]", pluginDependency, classpath);
 
-      // URLClassLoader is closeable, but we need to keep it open while Savant is running. Therefore, we do not wrap this
+      // URLClassLoader is closeable, but we need to keep it open while Latte is running. Therefore, we do not wrap this
       // in a try-with-resource block
       @SuppressWarnings("resource") URLClassLoader pluginClassLoader = classpath.toURLClassLoader();
       Class<?> pluginClass = pluginClassLoader.loadClass(pluginClassName);

@@ -172,7 +172,7 @@ public abstract class ProjectBuildFile extends Script {
     try {
       project.version = new Version(versionStr);
     } catch (VersionException e) {
-      throw new ParseException("Invalid project version [" + versionStr + "]. You must specify a valid Savant version (semantic version).");
+      throw new ParseException("Invalid project version [" + versionStr + "]. You must specify a valid Latte version (semantic version).");
     }
 
     closure.setDelegate(new ProjectDelegate(output, project));

@@ -43,9 +43,9 @@ public class CopierTest extends BaseUnitTest {
     copier.fileSet(BaseUnitTest.projectDir.resolve("src/main/java"))
           .copy();
 
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/Copier.java")));
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/FileTools.java")));
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/FileSet.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/Copier.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/FileTools.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/FileSet.java")));
   }
 
   @Test
@@ -60,11 +60,11 @@ public class CopierTest extends BaseUnitTest {
           .filter("\n.*\\@Token5\\(\\w*\\)\n", " and ")
           .copy();
 
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/CopierTest.java")));
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/FileToolsTest.java")));
-    assertFalse(Files.isRegularFile(toDir.resolve("org/savantbuild/io/FileSetTest.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/CopierTest.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/FileToolsTest.java")));
+    assertFalse(Files.isRegularFile(toDir.resolve("org/lattejava/io/FileSetTest.java")));
 
-    assertEquals(new String(Files.readAllBytes(toDir.resolve("org/savantbuild/io/TestFilterFile.txt"))),
+    assertEquals(new String(Files.readAllBytes(toDir.resolve("org/lattejava/io/TestFilterFile.txt"))),
         "This file contains token1 and %TOKEN2%\n" +
             "It should be replaced with %TOKEN3% and token4\n" +
             "Also the next line and this line and this one should be one line");
@@ -79,8 +79,8 @@ public class CopierTest extends BaseUnitTest {
     copier.fileSet(new FileSet(BaseUnitTest.projectDir.resolve("src/main/java"), asList(Pattern.compile(".*/io/.*")), asList(Pattern.compile(".*FileSet.*"))))
           .copy();
 
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/Copier.java")));
-    assertTrue(Files.isRegularFile(toDir.resolve("org/savantbuild/io/FileTools.java")));
-    assertFalse(Files.isRegularFile(toDir.resolve("org/savantbuild/io/FileSet.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/Copier.java")));
+    assertTrue(Files.isRegularFile(toDir.resolve("org/lattejava/io/FileTools.java")));
+    assertFalse(Files.isRegularFile(toDir.resolve("org/lattejava/io/FileSet.java")));
   }
 }

@@ -15,7 +15,6 @@
  */
 package org.lattejava.dep.workflow;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -37,7 +36,7 @@ import org.lattejava.domain.Version;
 import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
 import org.lattejava.security.MD5Exception;
-import org.xml.sax.SAXException;
+
 
 /**
  * This class models a grouping of a fetch and publish workflow.
@@ -64,7 +63,7 @@ public class Workflow {
   }
 
   /**
-   * Fetches the artifact itself. Every artifact in a Savant dependency graph is required to exist. Therefore, Savant
+   * Fetches the artifact itself. Every artifact in a Latte dependency graph is required to exist. Therefore, Latte
    * never negative caches artifact files and this method will always return the artifact file or throw an
    * ArtifactMissingException.
    *
@@ -97,8 +96,8 @@ public class Workflow {
   }
 
   /**
-   * Fetches the artifact metadata. Every artifact in Savant is required to have an AMD file. Otherwise, it is
-   * considered a missing artifact entirely. Therefore, Savant never negative caches AMD files and this method will
+   * Fetches the artifact metadata. Every artifact in Latte is required to have an AMD file. Otherwise, it is
+   * considered a missing artifact entirely. Therefore, Latte never negative caches AMD files and this method will
    * always return an AMD file or throw an ArtifactMetaDataMissingException.
    *
    * @param artifact The artifact to fetch the metadata for.
@@ -112,12 +111,12 @@ public class Workflow {
     // Defined here in case an exception is thrown in the catch block below
     ResolvableItem item = new ResolvableItem(
         artifact.id.group, artifact.id.project, artifact.id.name,
-        artifact.version.toString(), artifact.getArtifactMetaDataJSONFile(),
-        List.of(artifact.getArtifactMetaDataFile(), artifact.getArtifactPOMFile())
+        artifact.version.toString(), artifact.getArtifactMetaDataFile(),
+        List.of(artifact.getArtifactPOMFile())
     );
 
     // Try the non-semantic version first since the POM lives under the real version directory on disk
-    // (AMD files don't exist under non-semantic version directories since AMD is a Savant concept)
+    // (AMD files don't exist under non-semantic version directories since AMD is a Latte concept)
     try {
       if (artifact.nonSemanticVersion != null) {
         ResolvableItem nonSemanticItem = new ResolvableItem(
@@ -140,9 +139,7 @@ public class Workflow {
       // Fall back to semantic version — try AMD (primary) with POM as alternative
       FetchResult result = fetchWorkflow.fetchItem(item, publishWorkflow);
       if (result != null) {
-        if (result.item().item.endsWith(".amd.json")) {
-          return ArtifactTools.parseArtifactMetaDataJSON(result.file(), mappings);
-        } else if (result.item().item.endsWith(".amd")) {
+        if (result.item().item.endsWith(".amd")) {
           return ArtifactTools.parseArtifactMetaData(result.file(), mappings);
         } else {
           // POM was found as alternative — process it through the POM pipeline
@@ -158,8 +155,7 @@ public class Workflow {
       }
 
       throw new ArtifactMetaDataMissingException(artifact);
-    } catch (IllegalArgumentException | NullPointerException | SAXException | ParserConfigurationException |
-             IOException | VersionException e) {
+    } catch (IllegalArgumentException | NullPointerException | IOException | VersionException e) {
       throw new ProcessFailureException(item, e);
     }
   }
@@ -185,7 +181,7 @@ public class Workflow {
         result = fetchWorkflow.fetchItem(item, publishWorkflow);
       }
 
-      // Fall back to Savant-style source (-src.jar) with Maven-style alternative (-sources.jar)
+      // Fall back to Latte-style source (-src.jar) with Maven-style alternative (-sources.jar)
       if (result == null) {
         ResolvableItem item = new ResolvableItem(
             artifact.id.group, artifact.id.project, artifact.id.name,
@@ -199,7 +195,7 @@ public class Workflow {
       if (result == null) {
         ResolvableItem negItem = new ResolvableItem(artifact.id.group, artifact.id.project, artifact.id.name,
             artifact.version.toString(), artifact.getArtifactSourceFile());
-        publishWorkflow.publishNegative(negItem, ItemSource.SAVANT);
+        publishWorkflow.publishNegative(negItem, ItemSource.LATTE);
       }
 
       return result != null ? result.file() : null;
@@ -303,6 +299,6 @@ public class Workflow {
   }
 
   private ArtifactMetaData translatePOM(POM pom) {
-    return new ArtifactMetaData(MavenTools.toSavantDependencies(pom, mappings), MavenTools.toSavantLicenses(pom));
+    return new ArtifactMetaData(MavenTools.toLatteDependencies(pom, mappings), MavenTools.toLatteLicenses(pom));
   }
 }

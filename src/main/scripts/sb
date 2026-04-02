@@ -30,4 +30,4 @@ if [[ ${#} -gt 1 && ${1} == "--suspend" ]]; then
 fi
 
 # shellcheck disable=SC2068
-exec "${JAVA_HOME}/bin/java" ${JVM_ARGS} -cp "${CLASSPATH}" org.savantbuild.runtime.Main ${@}
+exec "${JAVA_HOME}/bin/java" ${JVM_ARGS} -cp "${CLASSPATH}" org.lattejava.runtime.Main ${@}

@@ -103,7 +103,7 @@ public class WorkflowTest extends BaseUnitTest {
 
     // assert
     // Source file is fetched from Maven (tagged MAVEN) and published to the Maven cache — no renaming
-    assertEquals(sourcePath.toString(), "../savant-dependency-management/build/test/maven-cache/org/apache/groovy/groovy/4.0.5/groovy-4.0.5-sources.jar");
+    assertEquals(sourcePath.toString(), "build/test/maven-cache/org/apache/groovy/groovy/4.0.5/groovy-4.0.5-sources.jar");
   }
 
   @Test
@@ -136,7 +136,7 @@ public class WorkflowTest extends BaseUnitTest {
 
     // assert
     // Source file is fetched from Maven using non-semantic version — no renaming
-    assertEquals(sourcePath.toString(), "../savant-dependency-management/build/test/maven-cache/org/xerial/snappy/snappy-java/1.1.10.5/snappy-java-1.1.10.5-sources.jar");
+    assertEquals(sourcePath.toString(), "build/test/maven-cache/org/xerial/snappy/snappy-java/1.1.10.5/snappy-java-1.1.10.5-sources.jar");
   }
 
   @Test

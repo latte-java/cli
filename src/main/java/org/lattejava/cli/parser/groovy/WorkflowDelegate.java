@@ -24,12 +24,11 @@ import org.lattejava.dep.workflow.Workflow;
 import org.lattejava.dep.workflow.process.CacheProcess;
 import org.lattejava.dep.workflow.process.MavenProcess;
 import org.lattejava.dep.workflow.process.Process;
-import org.lattejava.dep.workflow.process.SVNProcess;
 import org.lattejava.dep.workflow.process.URLProcess;
 import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
 import org.lattejava.cli.parser.ParseException;
-import org.lattejava.util.SavantPaths;
+import org.lattejava.util.LattePaths;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -103,7 +102,7 @@ public class WorkflowDelegate {
    * <pre>
    *   fetch {
    *     cache()
-   *     url(url: "https://repository.savantbuild.org")
+   *     url(url: "https://repository.lattejava.org")
    *     maven(url: "https://repo1.maven.org/maven2")
    *   }
    *   publish {
@@ -112,11 +111,11 @@ public class WorkflowDelegate {
    * </pre>
    */
   public void standard() {
-    String savantCache = SavantPaths.get().cacheDir().toString();
-    workflow.fetchWorkflow.processes.add(new CacheProcess(output, savantCache, savantCache, defaultMavenDir));
-    workflow.fetchWorkflow.processes.add(new URLProcess(output, "https://repository.savantbuild.org", null, null));
+    String cache = LattePaths.get().cacheDir().toString();
+    workflow.fetchWorkflow.processes.add(new CacheProcess(output, cache, cache, defaultMavenDir));
+    workflow.fetchWorkflow.processes.add(new URLProcess(output, "https://repository.lattejava.org", null, null));
     workflow.fetchWorkflow.processes.add(new MavenProcess(output, "https://repo1.maven.org/maven2", null, null));
-    workflow.publishWorkflow.processes.add(new CacheProcess(output, savantCache, savantCache, defaultMavenDir));
+    workflow.publishWorkflow.processes.add(new CacheProcess(output, cache, cache, defaultMavenDir));
   }
 
   /**
@@ -136,8 +135,8 @@ public class WorkflowDelegate {
     }
 
     /**
-     * Adds a {@link CacheProcess} to the workflow that uses the given attributes. Creates a Savant-only cache
-     * (savantDir set, mavenDir null).
+     * Adds a {@link CacheProcess} to the workflow that uses the given attributes. Creates a Latte-only cache
+     * (latteDir set, mavenDir null).
      *
      * @param attributes The attributes.
      */
@@ -145,10 +144,10 @@ public class WorkflowDelegate {
       String dir = GroovyTools.toString(attributes, "dir");
       String intDir = GroovyTools.toString(attributes, "integrationDir");
       String mavenDir = GroovyTools.toString(attributes, "mavenDir");
-      String savantCache = SavantPaths.get().cacheDir().toString();
+      String cache = LattePaths.get().cacheDir().toString();
       processes.add(new CacheProcess(output,
-          dir != null ? dir : savantCache,
-          intDir != null ? intDir : savantCache,
+          dir != null ? dir : cache,
+          intDir != null ? intDir : cache,
           mavenDir != null ? mavenDir : defaultMavenDir));
     }
 
@@ -168,33 +167,18 @@ public class WorkflowDelegate {
 
     /**
      * Adds a {@link CacheProcess} to the workflow that handles Maven-sourced artifacts
-     * (mavenDir set, savantDir null).
+     * (mavenDir set, latteDir null).
      *
      * @param attributes Optionally a map that contains a dir attribute.
      */
     public void mavenCache(Map<String, Object> attributes) {
       String dir = GroovyTools.toString(attributes, "dir");
       String intDir = GroovyTools.toString(attributes, "integrationDir");
-      String savantCache = SavantPaths.get().cacheDir().toString();
+      String cache = LattePaths.get().cacheDir().toString();
       processes.add(new CacheProcess(output,
           null,
-          intDir != null ? intDir : savantCache,
+          intDir != null ? intDir : cache,
           dir != null ? dir : defaultMavenDir));
-    }
-
-    /**
-     * Adds a {@link SVNProcess} to the workflow that uses the given attributes.
-     *
-     * @param attributes The SVN attributes.
-     */
-    public void subversion(Map<String, Object> attributes) {
-      if (!GroovyTools.hasAttributes(attributes, "repository")) {
-        throw new ParseException("Invalid subversion workflow definition. It should look like:\n\n" +
-            "  subversion(repository: \"https://svn.example.com\")");
-      }
-
-      processes.add(new SVNProcess(output, GroovyTools.toString(attributes, "repository"), GroovyTools.toString(attributes, "username"),
-          GroovyTools.toString(attributes, "password")));
     }
 
     /**
@@ -205,7 +189,7 @@ public class WorkflowDelegate {
     public void url(Map<String, Object> attributes) {
       if (!GroovyTools.hasAttributes(attributes, "url")) {
         throw new ParseException("Invalid url workflow definition. It should look like:\n\n" +
-            "  url(url: \"https://repository.savantbuild.org\")");
+            "  url(url: \"https://repository.lattejava.org\")");
       }
 
       processes.add(new URLProcess(output, GroovyTools.toString(attributes, "url"), GroovyTools.toString(attributes, "username"),

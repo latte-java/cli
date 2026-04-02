@@ -15,7 +15,7 @@ project(group: "org.lattejava", name: "cli", version: "0.2.0", licenses: ["MIT"]
       dependency(id: "com.fasterxml.jackson.core:jackson-core:2.13.4:jar")
       dependency(id: "com.fasterxml.jackson.core:jackson-databind:2.13.4:jar")
       dependency(id: "org.apache.commons:commons-compress:1.7.0")
-      dependency(id: "org.apache.groovy:groovy:4.0.22:jar")
+      dependency(id: "org.apache.groovy:groovy:5.0.4:jar")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.easymock:easymock:3.2.0")
@@ -36,6 +36,7 @@ dependency = loadPlugin(id: "org.savantbuild.plugin:dependency:2.0.0")
 release = loadPlugin(id: "org.savantbuild.plugin:release-git:2.0.0")
 
 // Plugin settings
+idea.settings.imlFile = ".idea/cli.iml"
 java.settings.javaVersion = "25"
 javaTestNG.settings.javaVersion = "25"
 

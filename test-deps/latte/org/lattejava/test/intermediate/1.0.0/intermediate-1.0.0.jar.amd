@@ -1,0 +1,13 @@
+{
+  "licenses": [
+    {"type": "ApacheV2_0"}
+  ],
+  "dependencyGroups": {
+    "compile": [
+      {"id": "org.lattejava.test:multiple-versions:multiple-versions:1.1.0:jar"}
+    ],
+    "runtime": [
+      {"id": "org.lattejava.test:multiple-versions-different-dependencies:multiple-versions-different-dependencies:1.1.0:jar"}
+    ]
+  }
+}

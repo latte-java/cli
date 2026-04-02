@@ -16,7 +16,7 @@
 package org.lattejava.cli.runtime;
 
 /**
- * Thrown when Savant fails while running the build. This is specifically during the run phase of the build where the
+ * Thrown when Latte fails while running the build. This is specifically during the run phase of the build where the
  * targets are invoked.
  *
  * @author Brian Pontarelli

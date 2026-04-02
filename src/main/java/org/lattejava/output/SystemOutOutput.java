@@ -18,7 +18,7 @@ package org.lattejava.output;
 import java.io.PrintStream;
 
 /**
- * Basic Savant output system. This writes to Appendables.
+ * Basic Latte output system. This writes to Appendables.
  *
  * @author Brian Pontarelli
  */

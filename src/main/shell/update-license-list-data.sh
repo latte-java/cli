@@ -1,6 +1,6 @@
 
 script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-base=$(echo $script_dir | sed -r 's/(savant-dependency-management).*/\1/')
+base=$(echo $script_dir | sed -r 's/(cli).*/\1/')
 echo $base
 
 mkdir -p $base/build/license-list-data

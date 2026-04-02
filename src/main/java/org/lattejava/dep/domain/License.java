@@ -139,10 +139,10 @@ public final class License {
   }
 
   /**
-   * Parses a Savant SPDX identifier to determine the type of license. Savant supports additional license types and
+   * Parses a Latte SPDX identifier to determine the type of license. Latte supports additional license types and
    * flexible license text.
    *
-   * @param identifier The Savant SPDX id.
+   * @param identifier The Latte SPDX id.
    * @param text       (Optional) The license text.
    * @return The license and never null
    * @throws LicenseException If the identifier was invalid.

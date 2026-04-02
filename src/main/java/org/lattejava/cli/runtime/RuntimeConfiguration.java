@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Runtime configuration for a Savant build run.
+ * Runtime configuration for a Latte build run.
  *
  * @author Brian Pontarelli
  */

@@ -30,10 +30,10 @@ import org.lattejava.security.MD5;
 import org.lattejava.security.MD5Exception;
 
 /**
- * This class is a workflow process that attempts to download artifacts from the internet using the Savant scheme via
+ * This class is a workflow process that attempts to download artifacts from the internet using the Latte scheme via
  * HTTP.
  * <p>
- * Savant's URL scheme is
+ * Latte's URL scheme is
  * <p>
  * <b>domain</b>/<b>group</b>/<b>project</b>/<b>version</b>/<b>name</b>-<b>version</b>.<b>type</b>
  *
@@ -51,7 +51,7 @@ public class URLProcess implements Process {
   protected final ItemSource itemSource;
 
   public URLProcess(Output output, String url, String username, String password) {
-    this(output, url, username, password, ItemSource.SAVANT);
+    this(output, url, username, password, ItemSource.LATTE);
   }
 
   protected URLProcess(Output output, String url, String username, String password, ItemSource itemSource) {

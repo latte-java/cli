@@ -58,7 +58,7 @@ public class MainTest extends BaseUnitTest {
 
   @Test(enabled = false)
   public void lineNumber() {
-    Main.projectDir = projectDir.resolve("src/test/java/org/savantbuild/runtime");
+    Main.projectDir = projectDir.resolve("src/test/java/org/lattejava/runtime");
     Main.main("compile");
   }
 }

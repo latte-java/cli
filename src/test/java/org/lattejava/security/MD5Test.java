@@ -33,7 +33,7 @@ import static org.testng.Assert.assertNotNull;
 public class MD5Test extends BaseUnitTest {
   @Test
   public void md5() throws IOException {
-    Path f = projectDir.resolve("src/test/java/org/savantbuild/security/MD5Test.txt");
+    Path f = projectDir.resolve("src/test/java/org/lattejava/security/MD5Test.txt");
     MD5 md5 = MD5.forPath(f);
     assertNotNull(md5);
     assertEquals(md5.fileName, "MD5Test.txt");

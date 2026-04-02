@@ -113,17 +113,17 @@ public class ZipBuilderTest extends BaseUnitTest {
                        .directory(new Directory("test/directory", 0x755, "root", "root", null))
                        .build();
     assertTrue(Files.isReadable(file));
-    assertZipContains(file, "org/savantbuild/io/Copier.java", "org/savantbuild/io/CopierTest.java",
-        "org/savantbuild/io/FileSet.java", "org/savantbuild/io/FileTools.java");
-    assertZipFileEquals(file, "org/savantbuild/io/Copier.java", projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"));
+    assertZipContains(file, "org/lattejava/io/Copier.java", "org/lattejava/io/CopierTest.java",
+        "org/lattejava/io/FileSet.java", "org/lattejava/io/FileTools.java");
+    assertZipFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertZipContainsDirectory(file, "test/directory/", 0x755);
     assertZipContainsDirectory(file, "org/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/jar/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/tar/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/zip/", 0x755);
-    assertEquals(count, 34);
+    assertZipContainsDirectory(file, "org/lattejava/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/jar/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/tar/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/zip/", 0x755);
+    assertEquals(count, 193);
   }
 
   @Test
@@ -154,16 +154,16 @@ public class ZipBuilderTest extends BaseUnitTest {
                        .optionalFileSet("doesNotExist")
                        .build();
     assertTrue(Files.isReadable(file));
-    assertZipContains(file, "org/savantbuild/io/Copier.java", "org/savantbuild/io/CopierTest.java",
-        "org/savantbuild/io/FileSet.java", "org/savantbuild/io/FileTools.java");
-    assertZipFileEquals(file, "org/savantbuild/io/Copier.java", projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"));
+    assertZipContains(file, "org/lattejava/io/Copier.java", "org/lattejava/io/CopierTest.java",
+        "org/lattejava/io/FileSet.java", "org/lattejava/io/FileTools.java");
+    assertZipFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertZipContainsDirectory(file, "org/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/jar/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/tar/", 0x755);
-    assertZipContainsDirectory(file, "org/savantbuild/io/zip/", 0x755);
-    assertEquals(count, 33);
+    assertZipContainsDirectory(file, "org/lattejava/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/jar/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/tar/", 0x755);
+    assertZipContainsDirectory(file, "org/lattejava/io/zip/", 0x755);
+    assertEquals(count, 192);
   }
 
   @Test
@@ -177,11 +177,11 @@ public class ZipBuilderTest extends BaseUnitTest {
     builder.fileSet(new ArchiveFileSet(projectDir.resolve("src/main/java"), "foo", 0x755, null, null, null, null, null, asList(), asList()))
            .build();
     assertTrue(Files.isReadable(file));
-    assertZipContains(file, "foo/org/savantbuild/io/Copier.java", "foo/org/savantbuild/io/FileSet.java");
-    assertZipFileEquals(file, "foo/org/savantbuild/io/Copier.java", projectDir.resolve("src/main/java/org/savantbuild/io/Copier.java"));
+    assertZipContains(file, "foo/org/lattejava/io/Copier.java", "foo/org/lattejava/io/FileSet.java");
+    assertZipFileEquals(file, "foo/org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
 
     ZipTools.unzip(file, projectDir.resolve("build/test/zips/exploded"));
-    assertEquals(Files.getPosixFilePermissions(projectDir.resolve("build/test/zips/exploded/foo/org/savantbuild/io/Copier.java")),
+    assertEquals(Files.getPosixFilePermissions(projectDir.resolve("build/test/zips/exploded/foo/org/lattejava/io/Copier.java")),
         new HashSet<>(asList(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
             PosixFilePermission.GROUP_EXECUTE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_EXECUTE, PosixFilePermission.OTHERS_READ)));
   }

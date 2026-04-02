@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
 Main-Class: Test
-Savant-Plugin-Class: org.lattejava.cli.plugin.BadClassPlugin
+Latte-Plugin-Class: org.lattejava.cli.plugin.BadClassPlugin

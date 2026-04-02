@@ -114,9 +114,9 @@ public class Artifact {
    * Examples:
    * </p>
    * <pre>
-   *   org.lattejava.dep:savant-dependency-management:0.1
-   *   org.lattejava.dep:savant-dependency-management:0.1:jar
-   *   org.lattejava.dep:savant-dependency-management:some-other-artifact:0.1:jar
+   *   org.lattejava:cli:0.1
+   *   org.lattejava:cli:0.1:jar
+   *   org.lattejava:cli:some-other-artifact:0.1:jar
    * </pre>
    *
    * @param spec                   The spec.
@@ -196,21 +196,6 @@ public class Artifact {
    */
   public String getArtifactMetaDataFile() {
     return prefix() + "." + id.type + ".amd";
-  }
-
-  /**
-   * <p>
-   * Returns the artifact MetaData JSON file name. This does not include any path information at all and would look
-   * something like this:
-   * </p>
-   * <pre>
-   * common-collections-2.1.jar.amd.json
-   * </pre>
-   *
-   * @return The MetaData JSON file name.
-   */
-  public String getArtifactMetaDataJSONFile() {
-    return prefix() + "." + id.type + ".amd.json";
   }
 
   /**

@@ -139,7 +139,7 @@ public class NetTools {
   }
 
   private static Path writeToTempFile(InputStream response, MD5 md5) throws IOException {
-    File file = File.createTempFile("savant-net-tools", "download");
+    File file = File.createTempFile("latte-net-tools", "download");
     file.deleteOnExit();
 
     try (InputStream is = response; FileOutputStream os = new FileOutputStream(file)) {

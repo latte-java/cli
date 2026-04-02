@@ -15,7 +15,6 @@
  */
 package org.lattejava.dep.maven;
 
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -38,7 +37,7 @@ import org.testng.annotations.Test;
  */
 public class MavenToolsTest extends BaseUnitTest {
   private static POM parseGroovyJsonPOM() {
-    POM pom = MavenTools.parsePOM(Paths.get("../savant-dependency-management/src/test/resources/groovy-json-4.0.6.pom"), new SystemOutOutput(true));
+    POM pom = MavenTools.parsePOM(projectDir.resolve("src/test/resources/groovy-json-4.0.6.pom"), new SystemOutOutput(true));
     assertEquals(pom.group, "org.apache.groovy");
     assertEquals(pom.id, "groovy-json");
     assertEquals(pom.name, "Apache Groovy");
@@ -56,7 +55,7 @@ public class MavenToolsTest extends BaseUnitTest {
 
   @Test
   public void parse() {
-    POM pom = MavenTools.parsePOM(Paths.get("../savant-dependency-management/src/test/resources/groovy-4.0.5.pom"), new SystemOutOutput(true));
+    POM pom = MavenTools.parsePOM(projectDir.resolve("src/test/resources/groovy-4.0.5.pom"), new SystemOutOutput(true));
     assertEquals(pom.group, "org.apache.groovy");
     assertEquals(pom.id, "groovy");
     assertEquals(pom.name, "Apache Groovy");
@@ -76,7 +75,7 @@ public class MavenToolsTest extends BaseUnitTest {
     assertEquals(pom.licenses, Collections.singletonList(new MavenLicense("repo", "The Apache Software License, Version 2.0", "http://www.apache.org/licenses/LICENSE-2.0.txt")));
 
     // Everything is optional
-    Dependencies dependencies = MavenTools.toSavantDependencies(pom, Collections.emptyMap());
+    Dependencies dependencies = MavenTools.toLatteDependencies(pom, Collections.emptyMap());
     assertEquals(dependencies, new Dependencies());
   }
 
@@ -86,7 +85,7 @@ public class MavenToolsTest extends BaseUnitTest {
     POM pom = parseGroovyJsonPOM();
 
     // act
-    Dependencies dependencies = MavenTools.toSavantDependencies(pom, Collections.emptyMap());
+    Dependencies dependencies = MavenTools.toLatteDependencies(pom, Collections.emptyMap());
 
     // assert
     var expectedArtifact = new Artifact("org.apache.groovy:groovy:4.0.6");
@@ -102,7 +101,7 @@ public class MavenToolsTest extends BaseUnitTest {
     var mappings = Map.of("org.apache.groovy:groovy:4.0.heydude", new Version("4.0.6"));
 
     // act
-    Dependencies dependencies = MavenTools.toSavantDependencies(pom, mappings);
+    Dependencies dependencies = MavenTools.toLatteDependencies(pom, mappings);
 
     // assert
     var expectedArtifact = new Artifact("org.apache.groovy:groovy:4.0.6");
@@ -118,7 +117,7 @@ public class MavenToolsTest extends BaseUnitTest {
     var mappings = Map.of("org.apache.groovy:groovy:4.0", new Version("4.0.6"));
 
     // act
-    Dependencies dependencies = MavenTools.toSavantDependencies(pom, mappings);
+    Dependencies dependencies = MavenTools.toLatteDependencies(pom, mappings);
 
     // assert
     var expectedArtifact = new Artifact("org.apache.groovy:groovy:4.0.6");
@@ -143,13 +142,13 @@ public class MavenToolsTest extends BaseUnitTest {
     );
 
     // The final dependency has a sematic version of 1.80.0
-    Dependencies dependencies = MavenTools.toSavantDependencies(pom, Collections.emptyMap());
+    Dependencies dependencies = MavenTools.toLatteDependencies(pom, Collections.emptyMap());
     assertEquals(dependencies, new Dependencies(new DependencyGroup("compile", true, new Artifact("org.bouncycastle:bcprov-jdk18on:1.80.0"))));
   }
 
   @Test
   public void parse_versionRanges() {
-    POM pom = MavenTools.parsePOM(Paths.get("../savant-dependency-management/src/test/resources/bcutil-jdk18on-1.80.pom"), new SystemOutOutput(true));
+    POM pom = MavenTools.parsePOM(projectDir.resolve("src/test/resources/bcutil-jdk18on-1.80.pom"), new SystemOutOutput(true));
     pom.replaceKnownVariablesAndFillInDependencies();
     pom.replaceRangeValuesWithMappings(Map.of("org.bouncycastle:bcprov-jdk18on:[1.80,1.81)", "1.80"));
 
@@ -168,13 +167,13 @@ public class MavenToolsTest extends BaseUnitTest {
     );
 
     // The final dependency has a sematic version of 1.80.0
-    Dependencies dependencies = MavenTools.toSavantDependencies(pom, Collections.emptyMap());
+    Dependencies dependencies = MavenTools.toLatteDependencies(pom, Collections.emptyMap());
     assertEquals(dependencies, new Dependencies(new DependencyGroup("compile", true, new Artifact("org.bouncycastle:bcprov-jdk18on:1.80.0"))));
   }
 
   @Test
   public void parse_versionRanges_noMapping() {
-    POM pom = MavenTools.parsePOM(Paths.get("../savant-dependency-management/src/test/resources/bcutil-jdk18on-1.80.pom"), new SystemOutOutput(true));
+    POM pom = MavenTools.parsePOM(projectDir.resolve("src/test/resources/bcutil-jdk18on-1.80.pom"), new SystemOutOutput(true));
     pom.replaceKnownVariablesAndFillInDependencies();
 
     try {

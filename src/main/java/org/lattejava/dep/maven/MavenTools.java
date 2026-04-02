@@ -168,8 +168,8 @@ public class MavenTools {
     return new Artifact(id, version, pom.version, null);
   }
 
-  public static Dependencies toSavantDependencies(POM pom, Map<String, Version> mappings) {
-    Dependencies savantDependencies = new Dependencies();
+  public static Dependencies toLatteDependencies(POM pom, Map<String, Version> mappings) {
+    Dependencies dependencies = new Dependencies();
     pom.resolveAllDependencies().forEach(dep -> {
       String groupName = dep.scope;
 
@@ -181,10 +181,10 @@ public class MavenTools {
         return;
       }
 
-      DependencyGroup savantDependencyGroup = savantDependencies.groups.get(groupName);
-      if (savantDependencyGroup == null) {
-        savantDependencyGroup = new DependencyGroup(groupName, true);
-        savantDependencies.groups.put(groupName, savantDependencyGroup);
+      DependencyGroup dependencyGroup = dependencies.groups.get(groupName);
+      if (dependencyGroup == null) {
+        dependencyGroup = new DependencyGroup(groupName, true);
+        dependencies.groups.put(groupName, dependencyGroup);
       }
 
       List<ArtifactID> exclusions = new ArrayList<>();
@@ -197,29 +197,29 @@ public class MavenTools {
       ArtifactSpec spec = new ArtifactSpec(dep.toSpecification());
       Version mapping = ArtifactTools.determineSemanticVersion(spec, mappings);
       ArtifactID id = new ArtifactID(dep.group, dep.id, dep.getArtifactName(), (dep.type == null ? "jar" : dep.type));
-      dep.savantArtifact = new ReifiedArtifact(id, mapping, dep.version, exclusions, Collections.emptyList());
-      savantDependencyGroup.dependencies.add(dep.savantArtifact);
+      dep.latteArtifact = new ReifiedArtifact(id, mapping, dep.version, exclusions, Collections.emptyList());
+      dependencyGroup.dependencies.add(dep.latteArtifact);
     });
 
-    return savantDependencies;
+    return dependencies;
   }
 
-  public static List<License> toSavantLicenses(POM pom) {
+  public static List<License> toLatteLicenses(POM pom) {
     List<License> licenses = new ArrayList<>();
     for (MavenLicense license : pom.licenses) {
       // Lookup by SPDX id
-      License savantLicense;
+      License spdxLicense;
       try {
-        savantLicense = License.parse(license.name, null);
+        spdxLicense = License.parse(license.name, null);
       } catch (LicenseException e) {
         // Try the URL now
-        savantLicense = License.lookupByURL(license.url);
-        if (savantLicense == null) {
-          savantLicense = License.parse("Other", license.name);
+        spdxLicense = License.lookupByURL(license.url);
+        if (spdxLicense == null) {
+          spdxLicense = License.parse("Other", license.name);
         }
       }
 
-      licenses.add(savantLicense);
+      licenses.add(spdxLicense);
     }
 
     return licenses;

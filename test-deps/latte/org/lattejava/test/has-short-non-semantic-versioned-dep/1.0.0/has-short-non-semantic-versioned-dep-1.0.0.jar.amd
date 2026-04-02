@@ -1,0 +1,10 @@
+{
+  "licenses": [
+    {"type": "GPLV2_0"}
+  ],
+  "dependencyGroups": {
+    "compile": [
+      {"id": "org.lattejava.test:badver:badver:1.0:jar"}
+    ]
+  }
+}
