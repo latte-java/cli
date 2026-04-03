@@ -23,7 +23,7 @@ import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.domain.VersionException;
 import org.lattejava.cli.parser.ParseException;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
@@ -47,11 +47,11 @@ public interface ProjectRunner {
    * @throws CompatibilityException If the project has incompatible versions of a dependency.
    * @throws CyclicException If the project has cyclic dependencies.
    * @throws LicenseException If the project has a dependency with an invalid license.
-   * @throws MD5Exception If a dependency is corrupt.
+   * @throws ChecksumException If a dependency is corrupt.
    * @throws ProcessFailureException If the downloading of a dependency fails.
    * @throws VersionException If any of the versions are not semantic.
    */
   void run(Project project, Iterable<String> targets) throws ArtifactMetaDataMissingException, ArtifactMissingException,
-      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, MD5Exception,
+      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ParseException, ProcessFailureException, VersionException;
 }

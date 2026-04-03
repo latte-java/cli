@@ -26,7 +26,7 @@ import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.domain.VersionException;
 import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.plugin.PluginLoadException;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
@@ -50,7 +50,7 @@ public interface BuildRunner {
    * @throws CompatibilityException If the project has incompatible versions of a dependency.
    * @throws CyclicException If the project has cyclic dependencies.
    * @throws LicenseException If the project has a dependency with an invalid license.
-   * @throws MD5Exception If a dependency is corrupt.
+   * @throws ChecksumException If a dependency is corrupt.
    * @throws ParseException If the build file can not be parsed.
    * @throws PublishException If there was an error publishing an artifact.
    * @throws PluginLoadException If a plugin load failed for any reason (the plugin might not exist, might
@@ -60,6 +60,6 @@ public interface BuildRunner {
    * @throws VersionException If any of the versions are not semantic.
    */
   void run(Path buildFile, RuntimeConfiguration runtimeConfiguration) throws ArtifactMetaDataMissingException, ArtifactMissingException,
-      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, MD5Exception,
+      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ParseException, PluginLoadException, ProcessFailureException, PublishException, VersionException;
 }

@@ -168,7 +168,7 @@ public class WorkflowTest extends BaseUnitTest {
 
     // POMs are Maven-sourced and go to the Maven cache
     assertTrue(Files.isRegularFile(mvnCache.resolve("org/apache/groovy/groovy/4.0.5/groovy-4.0.5.pom")));
-    assertTrue(Files.isRegularFile(mvnCache.resolve("org/apache/groovy/groovy/4.0.5/groovy-4.0.5.pom.md5")));
+    assertTrue(Files.isRegularFile(mvnCache.resolve("org/apache/groovy/groovy/4.0.5/groovy-4.0.5.pom.sha1")));
 
     // AMDs are no longer written to disk — POM is translated in memory
     assertFalse(Files.exists(cache.resolve("org/apache/groovy/groovy/4.0.5/groovy-4.0.5.jar.amd")));
@@ -230,7 +230,7 @@ public class WorkflowTest extends BaseUnitTest {
 
     // POMs are Maven-sourced and go to the Maven cache
     assertTrue(Files.isRegularFile(mvnCache.resolve("io/vertx/vertx-core/3.9.8/vertx-core-3.9.8.pom")));
-    assertTrue(Files.isRegularFile(mvnCache.resolve("io/vertx/vertx-core/3.9.8/vertx-core-3.9.8.pom.md5")));
+    assertTrue(Files.isRegularFile(mvnCache.resolve("io/vertx/vertx-core/3.9.8/vertx-core-3.9.8.pom.sha1")));
 
     // AMDs are no longer written to disk — POM is translated in memory
     assertFalse(Files.exists(cache.resolve("io/vertx/vertx-core/3.9.8/vertx-core-3.9.8.jar.amd")));

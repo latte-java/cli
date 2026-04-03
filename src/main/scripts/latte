@@ -1,0 +1,26 @@
+#!/bin/bash
+# Check if java is installed
+if ! which java > /dev/null; then
+  echo "Java doesn't appear to be installed. You can install Java 25 easily using javaenv like this:"
+  echo ""
+  echo "  curl -fsSL https://lattejava.org/javaenv/install | bash"
+  echo "  javaenv install 25"
+  exit 1
+fi
+
+if ! java -version 2>&1 | grep -q "25.0"; then
+  echo "It looks like the version of Java you have in your path isn't Java 25. You can install Java 25 easily using javaenv like this:"
+  echo ""
+  echo "  curl -fsSL https://lattejava.org/javaenv/install | bash"
+  echo "  javaenv install 25"
+  exit 1
+fi
+
+SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+
+CLASSPATH=
+for f in "${SCRIPT_DIR}"/lib/*; do
+  CLASSPATH=${CLASSPATH}:${f}
+done
+
+exec java -cp "${CLASSPATH}" org.lattejava.cli.runtime.Main "$@"

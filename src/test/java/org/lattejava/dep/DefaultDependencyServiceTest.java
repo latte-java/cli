@@ -54,8 +54,9 @@ import org.lattejava.dep.workflow.process.CacheProcess;
 import org.lattejava.dep.workflow.process.MavenProcess;
 import org.lattejava.dep.workflow.process.URLProcess;
 import org.lattejava.domain.Version;
-import org.lattejava.security.MD5;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.Algorithm;
+import org.lattejava.security.Checksum;
+import org.lattejava.security.ChecksumException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -221,8 +222,8 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
       Dependencies dependencies = makeSimpleDependencies("org.lattejava.test:bad-amd-md5:1.0.0");
       service.buildGraph(project, dependencies, workflow);
       fail("Should have failed");
-    } catch (MD5Exception e) {
-      assertEquals(e.getMessage(), "MD5 mismatch when fetching item from [http://localhost:7042/test-deps/latte/org/lattejava/test/bad-amd-md5/1.0.0/bad-amd-md5-1.0.0.jar.amd]");
+    } catch (ChecksumException e) {
+      assertEquals(e.getMessage(), "SHA256 mismatch when fetching item from [http://localhost:7042/test-deps/latte/org/lattejava/test/bad-amd-md5/1.0.0/bad-amd-md5-1.0.0.jar.amd]");
     }
   }
 
@@ -548,17 +549,17 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     service.publish(publication, workflow);
 
     Path amdFile = projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd");
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.sha256")));
     assertTrue(Files.isRegularFile(amdFile));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar")));
 
-    // Ensure the MD5 files are correct (these methods throw exceptions if they aren't
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5"));
+    // Ensure the checksum files are correct (these methods throw exceptions if they aren't
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.sha256"), Algorithm.SHA256);
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.sha256"), Algorithm.SHA256);
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.sha256"), Algorithm.SHA256);
 
     Map<String, Version> mappings = new HashMap<>();
     mappings.put("org.badver:badver:1.0.0.Borked", new Version("1.0.0"));
@@ -579,17 +580,17 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     PublishWorkflow workflow = new PublishWorkflow(new CacheProcess(output, cache.toString(), null, null));
     service.publish(publication, workflow);
 
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar")));
 
-    // Ensure the MD5 files are correct (these methods throw exceptions if they aren't
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.md5"));
+    // Ensure the checksum files are correct (these methods throw exceptions if they aren't
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.amd.sha256"), Algorithm.SHA256);
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0.jar.sha256"), Algorithm.SHA256);
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-with-source/1.0.0/publication-with-source-1.0.0-src.jar.sha256"), Algorithm.SHA256);
   }
 
   @Test
@@ -603,16 +604,16 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     PublishWorkflow workflow = new PublishWorkflow(new CacheProcess(output, cache.toString(), null, null));
     service.publish(publication, workflow);
 
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd")));
-    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.md5")));
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.sha256")));
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar")));
-    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar.md5")));
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar.sha256")));
     assertFalse(Files.isRegularFile(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0-src.jar")));
 
-    // Ensure the MD5 files are correct (these methods throw exceptions if they aren't
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.md5"));
-    MD5.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.md5"));
+    // Ensure the checksum files are correct (these methods throw exceptions if they aren't
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.amd.sha256"), Algorithm.SHA256);
+    Checksum.load(projectDir.resolve("build/test/publish/org/lattejava/test/publication-without-source/1.0.0/publication-without-source-1.0.0.jar.sha256"), Algorithm.SHA256);
   }
 
   /**
@@ -1058,8 +1059,8 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     try {
       ArtifactGraph artifactGraph = service.reduce(graph);
       service.resolve(artifactGraph, workflow, new TraversalRules().with("compile", new GroupTraversalRule(true, true)));
-    } catch (MD5Exception e) {
-      assertEquals(e.getMessage(), "MD5 mismatch when fetching item from [http://localhost:7042/test-deps/latte/org/lattejava/test/bad-md5/1.0.0/bad-md5-1.0.0.jar]");
+    } catch (ChecksumException e) {
+      assertEquals(e.getMessage(), "SHA256 mismatch when fetching item from [http://localhost:7042/test-deps/latte/org/lattejava/test/bad-md5/1.0.0/bad-md5-1.0.0.jar]");
     }
   }
 

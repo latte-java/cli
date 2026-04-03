@@ -28,7 +28,7 @@ import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.domain.Target;
 import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
@@ -59,14 +59,14 @@ public class DefaultProjectRunner implements ProjectRunner {
    * @throws CompatibilityException If the project has incompatible versions of a dependency.
    * @throws CyclicException If the project has cyclic dependencies.
    * @throws LicenseException If the project has a dependency with an invalid license.
-   * @throws MD5Exception If a dependency is corrupt.
+   * @throws ChecksumException If a dependency is corrupt.
    * @throws PublishException If there was an error publishing an artifact.
    * @throws ProcessFailureException If the downloading of a dependency fails.
    * @throws VersionException If any of the versions are not semantic.
    */
   @Override
   public void run(Project project, Iterable<String> targets) throws ArtifactMetaDataMissingException, ArtifactMissingException,
-      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, MD5Exception,
+      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ProcessFailureException, PublishException, VersionException {
     Set<String> calledTargets = new HashSet<>();
     targets.forEach((targetName) -> {

@@ -39,7 +39,7 @@ public class FileSetTest extends BaseUnitTest {
   public void toFileInfos() throws Exception {
     FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"));
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 114);
+    assertEquals(infos.size(), 115);
     // Spot-check a few known files are present
     List<Path> actual = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
     assertTrue(actual.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
@@ -53,7 +53,7 @@ public class FileSetTest extends BaseUnitTest {
   public void toFileInfosWithExcludePatterns() throws Exception {
     FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), null, asList(Pattern.compile(".*/jar/.*")));
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 112);
+    assertEquals(infos.size(), 113);
     // Verify jar files are excluded
     List<Path> origins = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
     assertTrue(origins.stream().noneMatch(p -> p.toString().contains("/jar/")));

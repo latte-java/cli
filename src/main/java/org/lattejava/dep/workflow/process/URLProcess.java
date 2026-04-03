@@ -20,14 +20,16 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 import org.lattejava.dep.domain.ResolvableItem;
 import org.lattejava.dep.workflow.PublishWorkflow;
 import org.lattejava.net.NetTools;
 import org.lattejava.output.Output;
-import org.lattejava.security.MD5;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.Algorithm;
+import org.lattejava.security.Checksum;
+import org.lattejava.security.ChecksumException;
 
 /**
  * This class is a workflow process that attempts to download artifacts from the internet using the Latte scheme via
@@ -52,6 +54,10 @@ public class URLProcess implements Process {
 
   public URLProcess(Output output, String url, String username, String password) {
     this(output, url, username, password, ItemSource.LATTE);
+  }
+
+  protected List<Algorithm> getChecksumAlgorithms() {
+    return List.of(Algorithm.SHA256);
   }
 
   protected URLProcess(Output output, String url, String username, String password, ItemSource itemSource) {
@@ -99,49 +105,52 @@ public class URLProcess implements Process {
   private FetchResult tryFetchCandidate(ResolvableItem item, String candidateItem, PublishWorkflow publishWorkflow)
       throws ProcessFailureException {
     try {
-      URI md5URI = NetTools.build(url, item.group.replace('.', '/'), item.project, item.version, candidateItem + ".md5");
-      output.debugln("      - Download [" + md5URI + "]");
-      Path md5File = downloadToPath(md5URI, username, password, null);
-      if (md5File == null) {
-        output.debugln("      - Not found");
-        return null;
-      }
+      for (Algorithm algorithm : getChecksumAlgorithms()) {
+        URI checksumURI = NetTools.build(url, item.group.replace('.', '/'), item.project, item.version, candidateItem + algorithm.extension);
+        output.debugln("      - Download [" + checksumURI + "]");
+        Path checksumFile = downloadToPath(checksumURI, username, password, null);
+        if (checksumFile == null) {
+          output.debugln("      - Not found");
+          continue;
+        }
 
-      MD5 md5;
-      try {
-        md5 = MD5.load(md5File);
-      } catch (IOException e) {
-        Files.delete(md5File);
-        throw new ProcessFailureException(item, e);
-      }
-
-      URI itemURI = NetTools.build(url, item.group.replace('.', '/'), item.project, item.version, candidateItem);
-      output.debugln("      - Download [" + itemURI + "]");
-      Path itemFile;
-      try {
-        itemFile = downloadToPath(itemURI, username, password, md5);
-      } catch (MD5Exception e) {
-        throw new MD5Exception("MD5 mismatch when fetching item from [" + itemURI + "]");
-      }
-
-      if (itemFile != null) {
-        output.infoln("Downloaded [%s]", itemURI);
-        ResolvableItem matchedItem = candidateItem.equals(item.item) ? item : new ResolvableItem(item, candidateItem);
-        ResolvableItem md5Item = new ResolvableItem(item, candidateItem + ".md5");
-        publishWorkflow.publish(new FetchResult(md5File, itemSource, md5Item));
+        Checksum checksum;
         try {
-          Path publishedFile = publishWorkflow.publish(new FetchResult(itemFile, itemSource, matchedItem));
-          return new FetchResult(publishedFile != null ? publishedFile : itemFile, itemSource, matchedItem);
-        } catch (ProcessFailureException e) {
+          checksum = Checksum.load(checksumFile, algorithm);
+        } catch (IOException e) {
+          Files.delete(checksumFile);
           throw new ProcessFailureException(item, e);
         }
-      } else {
-        output.debugln("      - Not found");
+
+        URI itemURI = NetTools.build(url, item.group.replace('.', '/'), item.project, item.version, candidateItem);
+        output.debugln("      - Download [" + itemURI + "]");
+        Path itemFile;
+        try {
+          itemFile = downloadToPath(itemURI, username, password, checksum);
+        } catch (ChecksumException e) {
+          throw new ChecksumException(algorithm.name() + " mismatch when fetching item from [" + itemURI + "]");
+        }
+
+        if (itemFile != null) {
+          output.infoln("Downloaded [%s]", itemURI);
+          ResolvableItem matchedItem = candidateItem.equals(item.item) ? item : new ResolvableItem(item, candidateItem);
+          ResolvableItem checksumItem = new ResolvableItem(item, candidateItem + algorithm.extension);
+          publishWorkflow.publish(new FetchResult(checksumFile, itemSource, checksumItem));
+          try {
+            Path publishedFile = publishWorkflow.publish(new FetchResult(itemFile, itemSource, matchedItem));
+            return new FetchResult(publishedFile != null ? publishedFile : itemFile, itemSource, matchedItem);
+          } catch (ProcessFailureException e) {
+            throw new ProcessFailureException(item, e);
+          }
+        } else {
+          output.debugln("      - Not found");
+        }
+
+        return null;
       }
 
       return null;
     } catch (FileNotFoundException e) {
-      // Special case for file:// URLs
       return null;
     } catch (IOException e) {
       throw new ProcessFailureException(item, e);
@@ -161,9 +170,9 @@ public class URLProcess implements Process {
     return "URL(" + url + ")";
   }
 
-  private Path downloadToPath(URI uri, String username, String password, MD5 md5) throws IOException {
+  private Path downloadToPath(URI uri, String username, String password, Checksum checksum) throws IOException {
     try {
-      return NetTools.downloadToPath(uri, username, password, md5);
+      return NetTools.downloadToPath(uri, username, password, checksum);
     } catch (IOException e) {
       // Do not retry a FileNotFoundException
       if (e instanceof FileNotFoundException) {
@@ -184,7 +193,7 @@ public class URLProcess implements Process {
       } catch (InterruptedException ignore) {
       }
 
-      return NetTools.downloadToPath(uri, username, password, md5);
+      return NetTools.downloadToPath(uri, username, password, checksum);
     }
   }
 }

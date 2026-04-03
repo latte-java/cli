@@ -25,7 +25,7 @@ import org.lattejava.dep.workflow.process.FetchResult;
 import org.lattejava.dep.workflow.process.Process;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.output.Output;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 
 /**
  * This class is the workflow that is used when attempting to fetch artifacts.
@@ -52,10 +52,10 @@ public class FetchWorkflow {
    * @param publishWorkflow The PublishWorkflow that is used to store the item if it can be found.
    * @return A FetchResult that contains the item file and source, or null if the item was not found.
    * @throws ProcessFailureException If any of the processes failed while attempting to fetch the artifact.
-   * @throws MD5Exception If the item's MD5 file did not match the item.
+   * @throws ChecksumException If the item's checksum file did not match the item.
    */
   public FetchResult fetchItem(ResolvableItem item, PublishWorkflow publishWorkflow)
-      throws ProcessFailureException, MD5Exception {
+      throws ProcessFailureException, ChecksumException {
     output.debugln("\nFetching [" + item + "]");
     return processes.stream()
                     .map((process) -> {

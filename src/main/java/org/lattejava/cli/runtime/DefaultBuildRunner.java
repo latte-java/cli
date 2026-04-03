@@ -29,7 +29,7 @@ import org.lattejava.output.Output;
 import org.lattejava.cli.parser.BuildFileParser;
 import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.plugin.PluginLoadException;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
@@ -61,7 +61,7 @@ public class DefaultBuildRunner implements BuildRunner {
   @Override
   public void run(Path buildFile, RuntimeConfiguration runtimeConfiguration)
       throws ArtifactMetaDataMissingException, ArtifactMissingException,
-      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, MD5Exception,
+      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ParseException, PluginLoadException, ProcessFailureException, PublishException, VersionException {
     if (runtimeConfiguration.printVersion) {
       Main.printVersion(output);

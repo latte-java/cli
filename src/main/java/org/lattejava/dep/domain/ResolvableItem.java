@@ -55,7 +55,7 @@ public class ResolvableItem {
   }
 
   /**
-   * Copy constructor — drops alternatives (used for MD5, neg markers, etc.)
+   * Copy constructor — drops alternatives (used for checksum, neg markers, etc.)
    */
   public ResolvableItem(ResolvableItem other, String item) {
     this.group = other.group;

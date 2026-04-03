@@ -32,9 +32,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Base64;
 
-import org.lattejava.security.MD5;
-import org.lattejava.security.MD5Exception;
-import org.lattejava.security.MD5Tools;
+import org.lattejava.security.Checksum;
+import org.lattejava.security.ChecksumException;
+import org.lattejava.security.ChecksumTools;
 
 /**
  * This class provides toolkit methods for helping work with URLs and URIs and other network classes.
@@ -90,28 +90,28 @@ public class NetTools {
    * @param uri      The resource.
    * @param username (Optional) The username that might be used to connect to the resource.
    * @param password (Optional) The password that might be used to connect to the resource.
-   * @param md5      (Optional) The MD5 of the resource (to verify).
+   * @param checksum (Optional) The Checksum of the resource (to verify).
    * @return A temp file that stores the resource or null if the given URI doesn't exist.
    * @throws IOException If the resource could not be downloaded.
-   * @throws MD5Exception If the file was downloaded but doesn't match the MD5 sum.
+   * @throws ChecksumException If the file was downloaded but doesn't match the checksum.
    */
-  public static Path downloadToPath(URI uri, String username, String password, MD5 md5) throws IOException, MD5Exception {
+  public static Path downloadToPath(URI uri, String username, String password, Checksum checksum) throws IOException, ChecksumException {
     return uri.getScheme().startsWith("http")
-        ? fetchViaHttp(uri, username, password, md5)
-        : fetchFile(uri, md5);
+        ? fetchViaHttp(uri, username, password, checksum)
+        : fetchFile(uri, checksum);
   }
 
-  private static Path fetchFile(URI uri, MD5 md5) throws IOException {
+  private static Path fetchFile(URI uri, Checksum checksum) throws IOException {
     URLConnection uc = uri.toURL().openConnection();
     uc.setConnectTimeout(4_000);
     uc.setReadTimeout(10_000);
     uc.setDoInput(true);
     uc.setDoOutput(false);
     uc.connect();
-    return writeToTempFile(uc.getInputStream(), md5);
+    return writeToTempFile(uc.getInputStream(), checksum);
   }
 
-  private static Path fetchViaHttp(URI uri, String username, String password, MD5 md5) throws IOException {
+  private static Path fetchViaHttp(URI uri, String username, String password, Checksum checksum) throws IOException {
     var requestBuilder = HttpRequest.newBuilder()
                                     .uri(uri)
                                     .GET()
@@ -135,15 +135,15 @@ public class NetTools {
       return null;
     }
 
-    return writeToTempFile(response.body(), md5);
+    return writeToTempFile(response.body(), checksum);
   }
 
-  private static Path writeToTempFile(InputStream response, MD5 md5) throws IOException {
+  private static Path writeToTempFile(InputStream response, Checksum checksum) throws IOException {
     File file = File.createTempFile("latte-net-tools", "download");
     file.deleteOnExit();
 
     try (InputStream is = response; FileOutputStream os = new FileOutputStream(file)) {
-      MD5Tools.write(is, os, md5);
+      ChecksumTools.write(is, os, checksum);
       os.flush();
     }
 

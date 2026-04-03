@@ -35,7 +35,7 @@ import org.lattejava.dep.workflow.ArtifactMissingException;
 import org.lattejava.dep.workflow.PublishWorkflow;
 import org.lattejava.dep.workflow.Workflow;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
@@ -61,10 +61,10 @@ public interface DependencyService {
    * @return The dependency graph.
    * @throws ArtifactMetaDataMissingException If any artifacts AMD files could not be downloaded or found locally.
    * @throws ProcessFailureException If a workflow process failed while fetching the meta-data.
-   * @throws MD5Exception If any MD5 files didn't match the AMD file when downloading.
+   * @throws ChecksumException If any checksum files didn't match the AMD file when downloading.
    */
   DependencyGraph buildGraph(ReifiedArtifact project, Dependencies dependencies, Workflow workflow)
-      throws ArtifactMetaDataMissingException, ProcessFailureException, MD5Exception;
+      throws ArtifactMetaDataMissingException, ProcessFailureException, ChecksumException;
 
   /**
    * Publishes the given Publication (artifact, meta-data, source file, etc) with the given workflow.
@@ -98,11 +98,11 @@ public interface DependencyService {
    * @throws ProcessFailureException If a workflow process failed while fetching an artifact or its source.
    * @throws ArtifactMissingException If any of the required artifacts are missing.
    * @throws CyclicException If any of the artifact graph has any cycles in it.
-   * @throws MD5Exception If the item's MD5 file did not match the item.
+   * @throws ChecksumException If the item's checksum file did not match the item.
    * @throws LicenseException If an invalid license is encountered during the resolution process.
    */
   ResolvedArtifactGraph resolve(ArtifactGraph graph, Workflow workflow, TraversalRules rules, DependencyListener... listeners)
-      throws CyclicException, ArtifactMissingException, ProcessFailureException, MD5Exception, LicenseException;
+      throws CyclicException, ArtifactMissingException, ProcessFailureException, ChecksumException, LicenseException;
 
   /**
    * Controls how resolution functions for each dependency-group. This determines if sources are fetched or if

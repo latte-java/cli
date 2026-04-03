@@ -46,8 +46,8 @@ import org.lattejava.dep.workflow.process.ItemSource;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
-import org.lattejava.security.MD5;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.Checksum;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 import org.lattejava.util.Graph.Edge;
 
@@ -70,7 +70,7 @@ public class DefaultDependencyService implements DependencyService {
    */
   @Override
   public DependencyGraph buildGraph(ReifiedArtifact project, Dependencies dependencies, Workflow workflow)
-      throws ArtifactMetaDataMissingException, ProcessFailureException, MD5Exception {
+      throws ArtifactMetaDataMissingException, ProcessFailureException, ChecksumException {
     output.debugln("Building DependencyGraph with a root of [%s]", project);
     DependencyGraph graph = new DependencyGraph(project);
     populateGraph(graph, project, dependencies, workflow, new HashSet<>(), new LinkedList<>());
@@ -175,7 +175,7 @@ public class DefaultDependencyService implements DependencyService {
   @Override
   public ResolvedArtifactGraph resolve(ArtifactGraph graph, Workflow workflow, TraversalRules configuration,
                                        DependencyListener... listeners)
-      throws CyclicException, ArtifactMissingException, ProcessFailureException, MD5Exception, LicenseException {
+      throws CyclicException, ArtifactMissingException, ProcessFailureException, ChecksumException, LicenseException {
     output.debugln("Resolving ArtifactGraph with a root of [%s]", graph.root);
 
     ResolvedArtifact root = new ResolvedArtifact(graph.root.id, graph.root.version, graph.root.licenses, null, null);
@@ -298,7 +298,7 @@ public class DefaultDependencyService implements DependencyService {
    */
   private void populateGraph(DependencyGraph graph, Artifact origin, Dependencies dependencies, Workflow workflow,
                              Set<Artifact> artifactsRecursed, Deque<List<ArtifactID>> exclusions)
-      throws ArtifactMetaDataMissingException, ProcessFailureException, MD5Exception {
+      throws ArtifactMetaDataMissingException, ProcessFailureException, ChecksumException {
     dependencies.groups.forEach((type, group) -> {
       output.debugln("Loading dependency group [%s]", type);
 
@@ -350,14 +350,14 @@ public class DefaultDependencyService implements DependencyService {
    * @throws IOException If the publication fails.
    */
   private void publishItem(ResolvableItem item, Path file, PublishWorkflow workflow) throws IOException {
-    // Publish the MD5
-    MD5 md5 = MD5.forPath(file);
-    File tempFile = File.createTempFile("artifact-item", "md5");
+    // Publish the checksum
+    Checksum checksum = Checksum.sha256(file);
+    File tempFile = File.createTempFile("artifact-item", "sha256");
     tempFile.deleteOnExit();
-    Path md5File = tempFile.toPath();
-    MD5.writeMD5(md5, md5File);
-    ResolvableItem md5Item = new ResolvableItem(item, item.item + ".md5");
-    workflow.publish(new FetchResult(md5File, ItemSource.LATTE, md5Item));
+    Path checksumFile = tempFile.toPath();
+    Checksum.write(checksum, checksumFile);
+    ResolvableItem checksumItem = new ResolvableItem(item, item.item + ".sha256");
+    workflow.publish(new FetchResult(checksumFile, ItemSource.LATTE, checksumItem));
 
     // Now publish the item itself
     workflow.publish(new FetchResult(file, ItemSource.LATTE, item));

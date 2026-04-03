@@ -35,7 +35,7 @@ import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.domain.Version;
 import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 
 
 /**
@@ -72,9 +72,9 @@ public class Workflow {
    * @throws ArtifactMissingException If the artifact could not be found.
    * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the
    *     artifact.
-   * @throws MD5Exception If the item's MD5 file did not match the item.
+   * @throws ChecksumException If the item's checksum file did not match the item.
    */
-  public Path fetchArtifact(Artifact artifact) throws ArtifactMissingException, ProcessFailureException, MD5Exception {
+  public Path fetchArtifact(Artifact artifact) throws ArtifactMissingException, ProcessFailureException, ChecksumException {
     // Try the non-semantic version first since it is the real version on disk and in remote repositories
     FetchResult result = null;
     if (artifact.nonSemanticVersion != null) {
@@ -105,9 +105,9 @@ public class Workflow {
    * @throws ArtifactMetaDataMissingException If the AMD file could not be found.
    * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the AMD
    *     file.
-   * @throws MD5Exception If the item's MD5 file did not match the item.
+   * @throws ChecksumException If the item's checksum file did not match the item.
    */
-  public ArtifactMetaData fetchMetaData(Artifact artifact) throws ArtifactMetaDataMissingException, ProcessFailureException, MD5Exception {
+  public ArtifactMetaData fetchMetaData(Artifact artifact) throws ArtifactMetaDataMissingException, ProcessFailureException, ChecksumException {
     // Defined here in case an exception is thrown in the catch block below
     ResolvableItem item = new ResolvableItem(
         artifact.id.group, artifact.id.project, artifact.id.name,
@@ -169,9 +169,9 @@ public class Workflow {
    * @return The Path of the source or null if it doesn't exist.
    * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the
    *     source file.
-   * @throws MD5Exception If the item's MD5 file did not match the item.
+   * @throws ChecksumException If the item's checksum file did not match the item.
    */
-  public Path fetchSource(Artifact artifact) throws ProcessFailureException, MD5Exception {
+  public Path fetchSource(Artifact artifact) throws ProcessFailureException, ChecksumException {
     try {
       // Try non-semantic version first (-sources.jar with original version) since it is the real version on disk
       FetchResult result = null;

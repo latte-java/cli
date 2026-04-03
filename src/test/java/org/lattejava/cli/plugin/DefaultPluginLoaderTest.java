@@ -27,7 +27,7 @@ import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
 import org.lattejava.output.SystemOutOutput;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
-import org.lattejava.security.MD5;
+import org.lattejava.security.Checksum;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -43,36 +43,36 @@ import static org.testng.Assert.fail;
  */
 public class DefaultPluginLoaderTest extends BaseUnitTest {
   @BeforeClass
-  public void generateMD5Files() throws Exception {
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd.md5"));
+  public void generateChecksumFiles() throws Exception {
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.sha256"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-class/0.1.0/bad-class-0.1.0.jar.amd.sha256"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd.md5"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.sha256"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-constructor/0.1.0/bad-constructor-0.1.0.jar.amd.sha256"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd.md5"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.sha256"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/bad-manifest/0.1.0/bad-manifest-0.1.0.jar.amd.sha256"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.amd.md5"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.sha256"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/good/0.1.0/good-0.1.0.jar.amd.sha256"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd.md5"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.sha256"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-class/0.1.0/missing-class-0.1.0.jar.amd.sha256"));
 
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.md5"));
-    MD5.writeMD5(MD5.forPath(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd")),
-        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd.md5"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.sha256"));
+    Checksum.write(Checksum.sha256(projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd")),
+        projectDir.resolve("src/test/plugin-repository/org/lattejava/test/missing-manifest/0.1.0/missing-manifest-0.1.0.jar.amd.sha256"));
   }
 
   @Test

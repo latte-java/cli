@@ -21,8 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.lattejava.BaseUnitTest;
-import org.lattejava.security.MD5;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.Algorithm;
+import org.lattejava.security.Checksum;
+import org.lattejava.security.ChecksumException;
 import org.testng.annotations.Test;
 
 import com.sun.net.httpserver.HttpServer;
@@ -62,20 +63,20 @@ public class NetToolsTest extends BaseUnitTest {
   }
 
   @Test
-  public void downloadToFileWithMD5() throws Exception {
-    MD5 md5 = MD5.forBytes(Files.readAllBytes(projectDir.resolve("src/test/java/org/lattejava/net/TestFile.txt")), "TestFile.txt");
-    Path path = NetTools.downloadToPath(new URI("http://localhost:7042/src/test/java/org/lattejava/net/TestFile.txt"), null, null, md5);
+  public void downloadToFileWithChecksum() throws Exception {
+    Checksum checksum = Checksum.forBytes(Files.readAllBytes(projectDir.resolve("src/test/java/org/lattejava/net/TestFile.txt")), Algorithm.SHA256);
+    Path path = NetTools.downloadToPath(new URI("http://localhost:7042/src/test/java/org/lattejava/net/TestFile.txt"), null, null, checksum);
     String result = new String(Files.readAllBytes(path), "UTF-8");
     assertEquals(result.trim(), "This file is a test file for copying and writing and such.");
   }
 
   @Test
-  public void downloadToFileWithMD5Failure() throws Exception {
-    MD5 md5 = new MD5("0000000000000000000000000000000", new byte[]{0, 0, 0, 0, 0}, null);
+  public void downloadToFileWithChecksumFailure() throws Exception {
+    Checksum checksum = new Checksum("0".repeat(64), new byte[32], Algorithm.SHA256);
     try {
-      NetTools.downloadToPath(new URI("http://localhost:7042/src/test/java/org/lattejava/net/TestFile.txt"), null, null, md5);
+      NetTools.downloadToPath(new URI("http://localhost:7042/src/test/java/org/lattejava/net/TestFile.txt"), null, null, checksum);
       fail("Should have failed");
-    } catch (MD5Exception e) {
+    } catch (ChecksumException e) {
       // Expected
     }
   }

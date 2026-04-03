@@ -36,7 +36,7 @@ import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
 import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.parser.groovy.GroovyBuildFileParser;
 import org.lattejava.cli.plugin.PluginLoadException;
-import org.lattejava.security.MD5Exception;
+import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 import org.lattejava.util.LattePaths;
 
@@ -87,7 +87,7 @@ public class Main {
       output.debug(e);
       System.exit(1);
     } catch (ArtifactMetaDataMissingException | ArtifactMissingException | BuildRunException | BuildFailureException |
-             LicenseException | MD5Exception | ParseException | PluginLoadException | ProcessFailureException |
+             LicenseException | ChecksumException | ParseException | PluginLoadException | ProcessFailureException |
              PublishException | VersionException e) {
       int lineNumber = determineLineNumber(e);
       output.errorln(e.getMessage() + (lineNumber > 0 ? " Error occurred on line [" + lineNumber + "]" : ""));
@@ -115,7 +115,7 @@ public class Main {
   }
 
   public static void printHelp(Output output) {
-    output.infoln("Usage: sb [switches] [targets]");
+    output.infoln("Usage: latte [switches] [targets]");
     output.infoln("");
     output.infoln("Switches:");
     output.infoln("");
