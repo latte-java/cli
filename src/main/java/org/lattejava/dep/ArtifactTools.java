@@ -98,7 +98,7 @@ public class ArtifactTools {
   }
 
   /**
-   * Parses the MetaData from the given JSON .amd.json file.
+   * Parses the MetaData from the given JSON `.amd` file.
    *
    * @param file     The file to read the JSON MetaData information from.
    * @param mappings The semantic version mappings used when the JSON contains non-semantic versions.

@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Specification-Vendor: FooBarBaz
+Specification-Version: 2.0

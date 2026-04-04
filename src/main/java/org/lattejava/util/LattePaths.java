@@ -15,13 +15,9 @@
  */
 package org.lattejava.util;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
-
-import org.lattejava.output.Output;
 
 /**
  * Resolves Latte directory paths using XDG Base Directory conventions.
@@ -43,11 +39,6 @@ public class LattePaths {
   private final Function<String, String> envLookup;
 
   private final Path homeDir;
-
-  // This cannot be static because we need the ability to reset it in tests. However, it is effectively static outside
-  // of tests because all the constructors are private, which means that only the static get() method is usable, which
-  // returns a static instance.
-  private volatile boolean migrated;
 
   /**
    * Creates a LattePaths with an overridable home directory and environment map. Used for testing.

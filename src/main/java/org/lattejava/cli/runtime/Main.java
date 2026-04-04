@@ -20,6 +20,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
+import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
+import org.lattejava.cli.parser.ParseException;
+import org.lattejava.cli.parser.groovy.GroovyBuildFileParser;
+import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.dep.DependencyTreePrinter;
 import org.lattejava.dep.LicenseException;
 import org.lattejava.dep.PublishException;
@@ -32,15 +36,10 @@ import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
 import org.lattejava.output.SystemOutOutput;
-import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
-import org.lattejava.cli.parser.ParseException;
-import org.lattejava.cli.parser.groovy.GroovyBuildFileParser;
-import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
-import org.lattejava.util.LattePaths;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * Main entry point for Latte CLI runtime.
@@ -111,7 +110,7 @@ public class Main {
   public static void printCompatibilityError(CompatibilityException e, Output output) {
     DependencyGraph graph = e.graph;
     Dependency incompatible = e.dependency;
-    DependencyTreePrinter.print(output, graph, null, new HashSet<>(asList(incompatible)));
+    DependencyTreePrinter.print(output, graph, null, new HashSet<>(singletonList(incompatible)));
   }
 
   public static void printHelp(Output output) {

@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava", name: "cli", version: "0.2.0", licenses: ["MIT"]) {
+project(group: "org.lattejava", name: "cli", version: "1.0.0", licenses: ["MIT"]) {
   workflow {
     standard()
   }
