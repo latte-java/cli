@@ -16,7 +16,7 @@
 package org.lattejava.plugin.dep.maven
 
 /**
- * A settings object that defines options for how Savant project files are converted to POMs.
+ * A settings object that defines options for how Latte project files are converted to POMs.
  *
  * @author Brian Pontarelli
  */

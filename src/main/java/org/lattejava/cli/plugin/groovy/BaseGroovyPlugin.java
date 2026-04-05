@@ -25,7 +25,7 @@ import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.output.Output;
 import org.lattejava.cli.plugin.Plugin;
-import org.lattejava.cli.runtime.BuildFailureException;
+import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 
 import groovy.lang.GroovyObjectSupport;
@@ -50,13 +50,13 @@ public class BaseGroovyPlugin extends GroovyObjectSupport implements Plugin {
   }
 
   /**
-   * Fails the build with the given message by throwing a {@link BuildFailureException}.
+   * Fails the build with the given message by throwing a {@link RuntimeFailureException}.
    *
    * @param message The failure message.
    * @param values  Values used to format the message String.
    */
   protected void fail(String message, Object... values) {
-    throw new BuildFailureException(String.format(message, values));
+    throw new RuntimeFailureException(String.format(message, values));
   }
 
   /**
@@ -89,7 +89,7 @@ public class BaseGroovyPlugin extends GroovyObjectSupport implements Plugin {
       properties.load(fis);
       return properties;
     } catch (IOException e) {
-      throw new BuildFailureException("Failed to load the plugin configuration file [" + configFile + "]", e);
+      throw new RuntimeFailureException("Failed to load the plugin configuration file [" + configFile + "]", e);
     }
   }
 }

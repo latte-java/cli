@@ -244,7 +244,7 @@ public class POM {
       String concreteMavenVersion = rangeMappings.get(dep.toSpecification());
       if (concreteMavenVersion == null) {
         throw new VersionRangeException("""
-            Fortunately, version ranges are not supported. You must provide a rangeMapping in the build file.
+            Fortunately, version ranges are not supported. You must provide a rangeMapping in the project file.
             
             Example:
             

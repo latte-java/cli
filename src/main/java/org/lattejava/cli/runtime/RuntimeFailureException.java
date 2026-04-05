@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2013, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,23 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.savantbuild.test;
-
-// un-used import
-import org.slf4j.Logger;
-// un-used import
-import org.slf4j.LoggerFactory;
+package org.lattejava.cli.runtime;
 
 /**
- * Java class.
+ * Thrown from the project script when the runtime fails.
  *
- * @author Daniel DeGroff
+ * @author Brian Pontarelli
  */
-public class MyClass {
-  private String unUsed = "A sad un-used string.";
+public class RuntimeFailureException extends RuntimeException {
+  public RuntimeFailureException() {
+    super();
+  }
+
+  public RuntimeFailureException(String message) {
+    super(message);
+  }
+
+  public RuntimeFailureException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

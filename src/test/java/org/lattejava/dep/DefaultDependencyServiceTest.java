@@ -1268,7 +1268,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
   @Test
   public void transitiveAndDirectExclusions() {
     // Override to add exclusions but notice that the exclusions are brought back in because the intermediate pulls leaf1 transitively back in through multipleVersions.
-    // The only exclusion that survives is through intermediate's exclusion of leaf2_2 in the main project build file
+    // The only exclusion that survives is through intermediate's exclusion of leaf2_2 in the main project file
     goodGraph = new DependencyGraph(project);
     goodGraph.addEdge(new Dependency(project.id), new Dependency(multipleVersions.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile", License.Licenses.get("ApacheV1_0")));
     goodGraph.addEdge(new Dependency(project.id), new Dependency(intermediate.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "runtime", License.Licenses.get("ApacheV2_0")));
@@ -1303,7 +1303,7 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
   @Test
   public void wildcardExclusions() {
     // Override to add exclusions but notice that the exclusions are brought back in because the intermediate pulls leaf1 transitively back in through multipleVersions.
-    // The only exclusion that survives is through intermediate's exclusion of leaf2_2 in the main project build file
+    // The only exclusion that survives is through intermediate's exclusion of leaf2_2 in the main project file
     goodGraph = new DependencyGraph(project);
     goodGraph.addEdge(new Dependency(project.id), new Dependency(multipleVersions.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "compile", License.Licenses.get("ApacheV1_0")));
     goodGraph.addEdge(new Dependency(project.id), new Dependency(intermediate.id), new DependencyEdgeValue(new Version("1.0.0"), new Version("1.0.0"), "runtime", License.Licenses.get("ApacheV2_0")));

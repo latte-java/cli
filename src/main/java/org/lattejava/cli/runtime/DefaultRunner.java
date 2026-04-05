@@ -26,32 +26,32 @@ import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
-import org.lattejava.cli.parser.BuildFileParser;
+import org.lattejava.cli.parser.ProjectFileParser;
 import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
- * Default build runner. This is essentially the main entry point for the build system. It takes a build file and a list
- * of targets and runs the build.
+ * Default runner. This is essentially the main entry point for the CLI system. It takes a project file and a list
+ * of targets and runs the CLI.
  * <p>
- * This implementation uses the main {@link BuildFileParser} to parse the build file into domain objects.
+ * This implementation uses the main {@link ProjectFileParser} to parse the project file into domain objects.
  * <p>
- * Once the build file is parsed, this uses the default {@link ProjectRunner} to run build on the project.
+ * Once the project file is parsed, this uses the default {@link ProjectRunner} to run build on the project.
  *
  * @author Brian Pontarelli
  */
-public class DefaultBuildRunner implements BuildRunner {
-  private final BuildFileParser buildFileParser;
+public class DefaultRunner implements Runner {
+  private final ProjectFileParser projectFileParser;
 
   private final Output output;
 
   private final ProjectRunner projectRunner;
 
-  public DefaultBuildRunner(Output output, BuildFileParser buildFileParser, ProjectRunner projectRunner) {
+  public DefaultRunner(Output output, ProjectFileParser projectFileParser, ProjectRunner projectRunner) {
     this.output = output;
-    this.buildFileParser = buildFileParser;
+    this.projectFileParser = projectFileParser;
     this.projectRunner = projectRunner;
   }
 
@@ -59,16 +59,16 @@ public class DefaultBuildRunner implements BuildRunner {
    * {@inheritDoc}
    */
   @Override
-  public void run(Path buildFile, RuntimeConfiguration runtimeConfiguration)
+  public void run(Path projectFile, RuntimeConfiguration runtimeConfiguration)
       throws ArtifactMetaDataMissingException, ArtifactMissingException,
-      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
+      RunException, RuntimeFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ParseException, PluginLoadException, ProcessFailureException, PublishException, VersionException {
     if (runtimeConfiguration.printVersion) {
       Main.printVersion(output);
       return;
     }
 
-    Project project = buildFileParser.parse(buildFile, runtimeConfiguration);
+    Project project = projectFileParser.parse(projectFile, runtimeConfiguration);
 
     if (runtimeConfiguration.help) {
       printHelp(project);
@@ -87,7 +87,7 @@ public class DefaultBuildRunner implements BuildRunner {
   }
 
   private void printTargets(Project project) {
-    output.infoln("Targets in the project build file:");
+    output.infoln("Targets in the project file:");
     output.infoln("");
     project.targets.forEach((name, target) -> {
       output.infoln("  %s: %s", name, target.description != null ? target.description : "No description");

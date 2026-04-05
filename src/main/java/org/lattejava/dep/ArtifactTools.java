@@ -46,7 +46,7 @@ public class ArtifactTools {
    * Maven version error.
    */
   public static final String VersionError = """
-      Invalid Version in the dependency graph from a Maven dependency [%s]. You must specify a semantic version mapping for Latte to properly handle Maven dependencies. This goes at the top-level of the build file and looks like this:
+      Invalid Version in the dependency graph from a Maven dependency [%s]. You must specify a semantic version mapping for Latte to properly handle Maven dependencies. This goes at the top-level of the project file and looks like this:
 
       project(...) {
         workflow {

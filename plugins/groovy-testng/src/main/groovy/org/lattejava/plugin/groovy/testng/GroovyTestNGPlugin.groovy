@@ -39,18 +39,16 @@ import groovy.xml.MarkupBuilder
  * The Groovy TestNG plugin. The public methods on this class define the features of the plugin.
  */
 class GroovyTestNGPlugin extends BaseGroovyPlugin {
-  public static final String ERROR_MESSAGE = "You must create the file [~/.savant/plugins/org.lattejava.plugin.groovy.properties] " +
-      "that contains the system configuration for the Groovy plugin. This file should include the location of the GDK " +
-      "(groovy and groovyc) by version. These properties look like this:\n\n" +
-      "  2.1=/Library/Groovy/Versions/2.1.0/Home\n" +
-      "  2.2=/Library/Groovy/Versions/2.2.0/Home\n"
+  public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.groovy.properties] that contains the system configuration for the Groovy plugin. This file should include the location of the GDK (groovy and groovyc) by version. These properties look like this:
 
-  public static final String JAVA_ERROR_MESSAGE = "You must create the file [~/.savant/plugins/org.lattejava.plugin.java.properties] " +
-      "that contains the system configuration for the Java system. This file should include the location of the JDK " +
-      "(java and javac) by version. These properties look like this:\n\n" +
-      "  1.6=/Library/Java/JavaVirtualMachines/1.6.0_65-b14-462.jdk/Contents/Home\n" +
-      "  1.7=/Library/Java/JavaVirtualMachines/jdk1.7.0_10.jdk/Contents/Home\n" +
-      "  1.8=/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home\n"
+  4.0=/Users/me/.local/share/groovy/4.0.31
+  5.0=/Users/me/.local/share/groovy/5.0.5
+"""
+  public static final String JAVA_ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
+
+  21=/Users/me/.local/share/java/21.0.10+7
+  25=/Users/me/.local/share/java/25.0.2+10
+"""
 
   GroovyTestNGSettings settings = new GroovyTestNGSettings()
 
@@ -129,7 +127,7 @@ class GroovyTestNGPlugin extends BaseGroovyPlugin {
       }
     }
 
-    Path xmlFile = FileTools.createTempPath("savant", "testng.xml", true)
+    Path xmlFile = FileTools.createTempPath("latte", "testng.xml", true)
     BufferedWriter writer = Files.newBufferedWriter(xmlFile, Charset.forName("UTF-8"))
     MarkupBuilder xml = new MarkupBuilder(writer)
     xml.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")

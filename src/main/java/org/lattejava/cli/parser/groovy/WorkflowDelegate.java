@@ -34,7 +34,7 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 /**
- * Groovy delegate that captures the Workflow configuration from the project build file. The methods on this class
+ * Groovy delegate that captures the Workflow configuration from the project file. The methods of this class
  * capture the configuration from the DSL.
  *
  * @author Brian Pontarelli

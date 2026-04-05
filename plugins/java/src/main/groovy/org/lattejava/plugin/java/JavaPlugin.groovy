@@ -39,13 +39,11 @@ import com.tonicsystems.jarjar.Main
  * The Java plugin. The public methods on this class define the features of the plugin.
  */
 class JavaPlugin extends BaseGroovyPlugin {
-  public static
-  final String ERROR_MESSAGE = "You must create the file [~/.savant/plugins/org.lattejava.plugin.java.properties] " +
-      "that contains the system configuration for the Java system. This file should include the location of the JDK " +
-      "(java and javac) by version. These properties look like this:\n\n" +
-      "  1.6=/Library/Java/JavaVirtualMachines/1.6.0_65-b14-462.jdk/Contents/Home\n" +
-      "  1.7=/Library/Java/JavaVirtualMachines/jdk1.7.0_10.jdk/Contents/Home\n" +
-      "  1.8=/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home\n"
+  public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
+
+  21=/Users/me/.local/share/java/21.0.10+7
+  25=/Users/me/.local/share/java/25.0.2+10
+"""
 
   JavaLayout layout = new JavaLayout()
 
@@ -236,7 +234,7 @@ class JavaPlugin extends BaseGroovyPlugin {
     Main.main("process", rulesFile.toAbsolutePath().toString(), intermediateJar.toString(), processedJar.toString())
     output.infoln("JarJar completed successfully")
 
-    // Step 6 - explode the JarJar output JAR into the classes directory used by Savant. This will be added to the JAR file for the project
+    // Step 6 - explode the JarJar output JAR into the classes directory used by Latte. This will be added to the JAR file for the project
     filePlugin.mkdir(dir: outputDirectory)
     filePlugin.unjar(file: processedJar.toString(), to: outputDirectory)
 

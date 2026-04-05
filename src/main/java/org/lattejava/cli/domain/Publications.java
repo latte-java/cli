@@ -24,7 +24,7 @@ import java.util.Map;
 import org.lattejava.dep.domain.Publication;
 
 /**
- * Models the publication set in the project build file.
+ * Models the publication set in the project file.
  *
  * @author Brian Pontarelli
  */

@@ -182,7 +182,7 @@ public class MavenToolsTest extends BaseUnitTest {
     } catch (VersionRangeException e) {
 
       assertEquals(e.getMessage(), """
-          Fortunately, version ranges are not supported. You must provide a rangeMapping in the build file.
+          Fortunately, version ranges are not supported. You must provide a rangeMapping in the project file.
           
           Example:
           

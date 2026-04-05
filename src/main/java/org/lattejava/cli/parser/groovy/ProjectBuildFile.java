@@ -34,7 +34,7 @@ import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.plugin.DefaultPluginLoader;
 import org.lattejava.cli.plugin.Plugin;
 import org.lattejava.cli.plugin.PluginLoader;
-import org.lattejava.cli.runtime.BuildFailureException;
+import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.Switches;
 import org.lattejava.util.MapBuilder;
@@ -43,10 +43,11 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.MissingPropertyException;
 import groovy.lang.Script;
+
 import static java.util.Arrays.asList;
 
 /**
- * Base class from the project build file Groovy script.
+ * Base class from the project file Groovy script.
  *
  * @author Brian Pontarelli
  */
@@ -71,24 +72,27 @@ public abstract class ProjectBuildFile extends Script {
     try {
       return super.getProperty(property);
     } catch (MissingPropertyException e) {
-      throw new MissingPropertyException("You build file is attempting to access the property [" + property + "]. You might have forgotten to import a plugin or define this property or it could be a typo.", property, String.class);
+      throw new MissingPropertyException("You project file is attempting to access the property [" + property + "]. You " +
+          "might have forgotten to import a plugin or define this property or it could be a typo.", property, String.class);
     }
   }
 
   /**
-   * Fails the build with the given message by throwing a {@link BuildFailureException}.
+   * Fails the build with the given message by throwing a {@link RuntimeFailureException}.
    *
    * @param message The failure message.
    * @param values  Values used to format the message.
    */
   protected void fail(String message, Object... values) {
     output.errorln(message, values);
-    throw new BuildFailureException();
+    throw new RuntimeFailureException();
   }
 
   /**
-   * <p> Loads a plugin and returns a new instance of the Plugin class. This method is called with the information used
-   * to load the plugin like this: </p>
+   * <p>
+   * Loads a plugin and returns a new instance of the Plugin class. This method is called with the information used
+   * to load the plugin like this:
+   * </p>
    * <pre>
    *   java = loadPlugin(id: "org.lattejava.cli.plugin:java:0.1.0")
    * </pre>
@@ -98,8 +102,10 @@ public abstract class ProjectBuildFile extends Script {
    */
   protected Plugin loadPlugin(Map<String, Object> attributes) {
     if (!GroovyTools.hasAttributes(attributes, "id")) {
-      throw new ParseException("Invalid loadPlugin call. You must supply the id of the plugin to load like this:\n\n" +
-          "  groovy = loadPlugin(id: \"org.lattejava.cli.plugin:groovy:0.1.0\")");
+      throw new ParseException("""
+          Invalid loadPlugin call. You must supply the id of the plugin to load like this:
+          
+            groovy = loadPlugin(id: "org.lattejava.cli.plugin:groovy:0.1.0")""");
     }
 
     String id = GroovyTools.toString(attributes, "id");
@@ -111,14 +117,16 @@ public abstract class ProjectBuildFile extends Script {
   }
 
   /**
-   * <p> Sets up the project information in the build file. This method is called with a Map of values and a closure
-   * like this: </p>
+   * <p>
+   * Sets up the project information in the project file. This method is called with a Map of values and a closure
+   * like this:
+   * </p>
    * <pre>
    *   project(group: "org.example", name: "my-project", version: "1.1", licenses: ["Commercial"]) {
    *
    *   }
    * </pre>
-   * <p> The require attributes are: </p>
+   * <p> The required attributes are: </p>
    * <pre>
    *   group: The name of the group that the project belongs to
    *   name: The name of the project
@@ -133,13 +141,15 @@ public abstract class ProjectBuildFile extends Script {
   protected Project project(Map<String, Object> attributes, @DelegatesTo(ProjectDelegate.class) Closure<?> closure) {
     List<String> attrs = asList("group", "name", "version", "licenses");
     Map<String, Class<?>> attrTypes = new MapBuilder<String, Class<?>>().put("group", String.class)
-                                                                        .put("name", String.class)
-                                                                        .put("version", String.class)
-                                                                        .put("licenses", List.class)
-                                                                        .done();
+        .put("name", String.class)
+        .put("version", String.class)
+        .put("licenses", List.class)
+        .done();
     if (!GroovyTools.attributesValid(attributes, attrs, attrs, attrTypes)) {
-      throw new ParseException("Invalid project definition. One of the required attributes is missing (i.e. licenses). It should look like:\n\n" +
-          "  project(group: \"org.example\", name: \"my-project\", version: \"1.1\", licenses: [\"Commercial\"])");
+      throw new ParseException("""
+          Invalid project definition. One of the required attributes is missing (i.e. licenses). It should look like:
+          
+            project(group: "org.example", name: "my-project", version: "1.1", licenses: ["Commercial"])""");
     }
 
     project.group = GroovyTools.toString(attributes, "group");
@@ -147,8 +157,10 @@ public abstract class ProjectBuildFile extends Script {
 
     List<String> licenseNames = GroovyTools.toListOfStrings(attributes.get("licenses"));
     if (licenseNames == null || licenseNames.isEmpty()) {
-      throw new ParseException("Invalid project definition. The [licenses] attribute is missing. It should look like:\n\n" +
-          "  project(group: \"org.example\", name: \"my-project\", version: \"1.1\", licenses: [\"Commercial\"])");
+      throw new ParseException("""
+          Invalid project definition. The [licenses] attribute is missing. It should look like:
+          
+            project(group: "org.example", name: "my-project", version: "1.1", licenses: ["Commercial"])""");
     }
 
     for (String licenseName : licenseNames) {
@@ -200,9 +212,11 @@ public abstract class ProjectBuildFile extends Script {
    */
   protected Target target(Map<String, Object> attributes, Closure<?> closure) {
     if (!GroovyTools.hasAttributes(attributes, "name")) {
-      throw new ParseException("Invalid target definition. It should look like:\n\n" +
-          "  target(name: \"compile\") {\n" +
-          "  }");
+      throw new ParseException("""
+          Invalid target definition. It should look like:
+          
+            target(name: "compile") {
+            }""");
     }
 
     Target target = new Target();

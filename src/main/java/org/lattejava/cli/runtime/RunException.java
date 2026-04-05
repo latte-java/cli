@@ -21,8 +21,8 @@ package org.lattejava.cli.runtime;
  *
  * @author Brian Pontarelli
  */
-public class BuildRunException extends RuntimeException {
-  public BuildRunException(String message) {
+public class RunException extends RuntimeException {
+  public RunException(String message) {
     super(message);
   }
 }

@@ -15,34 +15,33 @@
  */
 package org.lattejava.cli.runtime;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import org.lattejava.BaseUnitTest;
-import org.lattejava.dep.PathTools;
 import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
-import org.lattejava.cli.parser.groovy.GroovyBuildFileParser;
+import org.lattejava.cli.parser.groovy.GroovyProjectFileParser;
+import org.lattejava.dep.PathTools;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
 /**
- * Tests the build runner.
+ * Tests the runner.
  *
  * @author Brian Pontarelli
  */
-public class DefaultBuildRunnerTest extends BaseUnitTest {
+public class DefaultRunnerTest extends BaseUnitTest {
   @Test
   public void javaProject() throws Exception {
     PathTools.prune(projectDir.resolve("test-project/build"));
     Files.createDirectories(projectDir.resolve("test-project/build"));
 
-    BuildRunner runner = new DefaultBuildRunner(output, new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-    runner.run(projectDir.resolve("test-project/build.latte"), new RuntimeConfiguration(false, "write"));
-    assertEquals(new String(Files.readAllBytes(projectDir.resolve("test-project/build/test-file.txt")), StandardCharsets.UTF_8), "File contents");
+    Runner runner = new DefaultRunner(output, new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
+    runner.run(projectDir.resolve("test-project/project.latte"), new RuntimeConfiguration(false, "write"));
+    assertEquals(Files.readString(projectDir.resolve("test-project/build/test-file.txt")), "File contents");
 
-    runner.run(projectDir.resolve("test-project/build.latte"), new RuntimeConfiguration(true, "delete"));
+    runner.run(projectDir.resolve("test-project/project.latte"), new RuntimeConfiguration(true, "delete"));
     assertFalse(Files.isDirectory(projectDir.resolve("test-project/build")));
   }
 
@@ -51,11 +50,11 @@ public class DefaultBuildRunnerTest extends BaseUnitTest {
     PathTools.prune(projectDir.resolve("test-project-licenses/build"));
     Files.createDirectories(projectDir.resolve("test-project-licenses/build"));
 
-    BuildRunner runner = new DefaultBuildRunner(output, new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-    runner.run(projectDir.resolve("test-project-licenses/build.latte"), new RuntimeConfiguration(false, "write"));
-    assertEquals(new String(Files.readAllBytes(projectDir.resolve("test-project-licenses/build/test-file.txt")), StandardCharsets.UTF_8), "File contents");
+    Runner runner = new DefaultRunner(output, new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
+    runner.run(projectDir.resolve("test-project-licenses/project.latte"), new RuntimeConfiguration(false, "write"));
+    assertEquals(Files.readString(projectDir.resolve("test-project-licenses/build/test-file.txt")), "File contents");
 
-    runner.run(projectDir.resolve("test-project-licenses/build.latte"), new RuntimeConfiguration(true, "delete"));
+    runner.run(projectDir.resolve("test-project-licenses/project.latte"), new RuntimeConfiguration(true, "delete"));
     assertFalse(Files.isDirectory(projectDir.resolve("test-project-licenses/build")));
   }
 }

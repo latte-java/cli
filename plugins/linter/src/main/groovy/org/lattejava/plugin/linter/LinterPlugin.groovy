@@ -171,7 +171,7 @@ class LinterPlugin extends BaseGroovyPlugin {
   private getLoaderWithCustomRules(List<String> customRuleDependencySpecs,
                                    ClassLoader ruleClassLoader) {
     def ourOwnRuleGroup = "rules"
-    // without the traversal rules, when we resolve below, Savant won't know which groups to resolve
+    // without the traversal rules, when we resolve below, Latte won't know which groups to resolve
     def traversalRules = new DependencyService.TraversalRules().with(ourOwnRuleGroup,
         new DependencyService.TraversalRules.GroupTraversalRule(false, false))
     // a "fake" or artificial root, just to resolve the custom rule JARs

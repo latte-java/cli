@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import org.lattejava.cli.runtime.BuildFailureException;
+import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.util.LattePaths;
 
 import groovy.lang.GroovyObjectSupport;
@@ -42,7 +42,7 @@ public class GlobalConfiguration extends GroovyObjectSupport {
       try (InputStream is = Files.newInputStream(configFile)) {
         properties.load(is);
       } catch (IOException e) {
-        throw new BuildFailureException("Unable to load global configuration file " + configFile, e);
+        throw new RuntimeFailureException("Unable to load global configuration file " + configFile, e);
       }
     }
   }
@@ -52,7 +52,7 @@ public class GlobalConfiguration extends GroovyObjectSupport {
     String value = properties.getProperty(property);
     if (value == null) {
       Path configFile = LattePaths.get().configDir().resolve("config.properties");
-      throw new BuildFailureException("Missing global configuration property [" + property + "]. You must define this " +
+      throw new RuntimeFailureException("Missing global configuration property [" + property + "]. You must define this " +
           "property in the global configuration file " + configFile);
     }
 
@@ -61,7 +61,7 @@ public class GlobalConfiguration extends GroovyObjectSupport {
 
   @Override
   public void setProperty(String property, Object newValue) {
-    throw new BuildFailureException("You attempted to set the property [" + property + "] to the value [" + newValue +
-        "]. You cannot set/change global configuration properties from a build file.");
+    throw new RuntimeFailureException("You attempted to set the property [" + property + "] to the value [" + newValue +
+        "]. You cannot set/change global configuration properties from a project file.");
   }
 }

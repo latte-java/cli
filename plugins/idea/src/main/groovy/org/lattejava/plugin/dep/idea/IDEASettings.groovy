@@ -79,9 +79,9 @@ class IDEASettings {
   ]
 
   /**
-   * Module map. This maps from Savant dependencies in the project build file to modules in the IDEA project. For
-   * example, let's say one of your modules depends on another module (foo depends on bar). In your Savant build file
-   * for the foo project will have this dependency:
+   * Module map. This maps from Latte dependencies in the project file to modules in the IDEA project. For example,
+   * let's say one of your modules depends on another module (foo depends on bar). In your Latte project file for the
+   * `foo` project will have this dependency:
    *
    * <pre>
    *   dependencies {

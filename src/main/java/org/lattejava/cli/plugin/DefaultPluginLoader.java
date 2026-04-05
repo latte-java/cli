@@ -35,7 +35,7 @@ import org.lattejava.dep.graph.ResolvedArtifactGraph;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.lang.Classpath;
 import org.lattejava.output.Output;
-import org.lattejava.cli.runtime.BuildFailureException;
+import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 
 /**
@@ -77,7 +77,7 @@ public class DefaultPluginLoader implements PluginLoader {
                 standard()
               }
             }""");
-      throw new BuildFailureException();
+      throw new RuntimeFailureException();
     }
 
     // This doesn't use the project as the root because the project might be in the graph and that would cause failures.

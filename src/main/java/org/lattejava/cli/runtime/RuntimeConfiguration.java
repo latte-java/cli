@@ -47,7 +47,7 @@ public class RuntimeConfiguration {
   public boolean help;
 
   /**
-   * Determines if the targets in the project build file should be printed to the output.
+   * Determines if the targets in the project file should be printed to the output.
    */
   public boolean listTargets;
 

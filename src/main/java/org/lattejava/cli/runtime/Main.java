@@ -22,7 +22,7 @@ import java.util.HashSet;
 
 import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
 import org.lattejava.cli.parser.ParseException;
-import org.lattejava.cli.parser.groovy.GroovyBuildFileParser;
+import org.lattejava.cli.parser.groovy.GroovyProjectFileParser;
 import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.dep.DependencyTreePrinter;
 import org.lattejava.dep.LicenseException;
@@ -62,8 +62,8 @@ public class Main {
       output.enableDebug();
     }
 
-    Path buildFile = projectDir.resolve("build.latte");
-    if (!Files.isRegularFile(buildFile) || !Files.isReadable(buildFile)) {
+    Path projectFile = projectDir.resolve("project.latte");
+    if (!Files.isRegularFile(projectFile) || !Files.isReadable(projectFile)) {
       if (runtimeConfiguration.printVersion) {
         printVersion(output);
         return;
@@ -71,21 +71,21 @@ public class Main {
         printHelp(output);
         return;
       } else {
-        output.errorln("Build file [build.latte] is missing or not readable.");
+        output.errorln("Project file [project.latte] is missing or not readable.");
         System.exit(1);
       }
     }
 
     try {
-      BuildRunner buildRunner = new DefaultBuildRunner(output, new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-      buildRunner.run(buildFile, runtimeConfiguration);
+      Runner runner = new DefaultRunner(output, new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
+      runner.run(projectFile, runtimeConfiguration);
     } catch (CompatibilityException e) {
       printCompatibilityError(e, output);
       int lineNumber = determineLineNumber(e);
       output.errorln(e.getMessage() + (lineNumber > 0 ? " Error occurred on line [" + lineNumber + "]" : ""));
       output.debug(e);
       System.exit(1);
-    } catch (ArtifactMetaDataMissingException | ArtifactMissingException | BuildRunException | BuildFailureException |
+    } catch (ArtifactMetaDataMissingException | ArtifactMissingException | RunException | RuntimeFailureException |
              LicenseException | ChecksumException | ParseException | PluginLoadException | ProcessFailureException |
              PublishException | VersionException e) {
       int lineNumber = determineLineNumber(e);
@@ -140,7 +140,7 @@ public class Main {
   private static int determineLineNumber(Exception e) {
     for (int i = 0; i < e.getStackTrace().length; i++) {
       StackTraceElement ste = e.getStackTrace()[i];
-      if (ste.getFileName() != null && ste.getFileName().endsWith(".savant")) {
+      if (ste.getFileName() != null && ste.getFileName().endsWith(".latte")) {
         return ste.getLineNumber();
       }
     }

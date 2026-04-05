@@ -158,7 +158,7 @@ class DebDelegate {
       throw new BuildFailureException("Invalid Debian package information. The [description] is missing or incomplete");
     }
 
-    Path tempDir = Files.createTempDirectory("savant-deb-plugin")
+    Path tempDir = Files.createTempDirectory("latte-deb-plugin")
     Path debianDir = tempDir.resolve("DEBIAN")
     Path md5File = debianDir.resolve("md5sums")
     if (files.size() > 0) {

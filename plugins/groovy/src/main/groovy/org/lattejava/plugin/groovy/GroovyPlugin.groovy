@@ -36,14 +36,12 @@ import java.util.stream.Collectors
  * The Groovy plugin. The public methods on this class define the features of the plugin.
  */
 class GroovyPlugin extends BaseGroovyPlugin {
-  public static final String ERROR_MESSAGE = """
-You must create the file [~/.config/latte/plugins/org.lattejava.plugin.groovy.properties] that contains the system configuration for the Groovy plugin. This file should include the location of the GDK (groovy and groovyc) by version. These properties look like this:
+  public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.groovy.properties] that contains the system configuration for the Groovy plugin. This file should include the location of the GDK (groovy and groovyc) by version. These properties look like this:
 
   4.0=/Users/me/.local/share/groovy/4.0.31
   5.0=/Users/me/.local/share/groovy/5.0.5
 """
-  public static final String JAVA_ERROR_MESSAGE = """
-You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
+  public static final String JAVA_ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
 
   21=/Users/me/.local/share/java/21.0.10+7
   25=/Users/me/.local/share/java/25.0.2+10

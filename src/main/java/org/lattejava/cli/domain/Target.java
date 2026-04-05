@@ -20,7 +20,7 @@ import java.util.List;
 import static java.util.Arrays.asList;
 
 /**
- * This class defines a target within the build file.
+ * This class defines a target within the project file.
  *
  * @author Brian Pontarelli
  */

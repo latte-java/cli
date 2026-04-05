@@ -87,7 +87,7 @@ public class DefaultProjectRunnerTest extends BaseUnitTest {
     try {
       runner.run(project, asList("clear")); // Simulates a user typo
       fail("Should have failed");
-    } catch (BuildRunException e) {
+    } catch (RunException e) {
       // Expected
       assertTrue(e.getMessage().contains("clear"));
     }

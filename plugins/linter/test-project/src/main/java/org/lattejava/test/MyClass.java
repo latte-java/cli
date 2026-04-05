@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,18 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.lattejava.cli.runtime;
+package org.lattejava.test;
+
+// un-used import
+import org.slf4j.Logger;
+// un-used import
+import org.slf4j.LoggerFactory;
 
 /**
- * Thrown from the build script when the build fails.
+ * Java class.
  *
- * @author Brian Pontarelli
+ * @author Daniel DeGroff
  */
-public class BuildFailureException extends RuntimeException {
-  public BuildFailureException() {
-    super();
-  }
-
-  public BuildFailureException(String message) {
-    super(message);
-  }
-
-  public BuildFailureException(String message, Throwable cause) {
-    super(message, cause);
-  }
+public class MyClass {
+  private String unUsed = "A sad un-used string.";
 }

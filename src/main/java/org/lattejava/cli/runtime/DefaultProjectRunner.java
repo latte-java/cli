@@ -53,9 +53,9 @@ public class DefaultProjectRunner implements ProjectRunner {
    * repository or local cache.
    * @throws ArtifactMissingException If any dependencies of the project are missing in the repository or local
    * cache.
-   * @throws BuildRunException If the build can not be run (internally not due to a failure of the build
+   * @throws RunException If the build can not be run (internally not due to a failure of the build
    * itself).
-   * @throws BuildFailureException If the build fails while running.
+   * @throws RuntimeFailureException If the build fails while running.
    * @throws CompatibilityException If the project has incompatible versions of a dependency.
    * @throws CyclicException If the project has cyclic dependencies.
    * @throws LicenseException If the project has a dependency with an invalid license.
@@ -66,13 +66,13 @@ public class DefaultProjectRunner implements ProjectRunner {
    */
   @Override
   public void run(Project project, Iterable<String> targets) throws ArtifactMetaDataMissingException, ArtifactMissingException,
-      BuildRunException, BuildFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
+      RunException, RuntimeFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ProcessFailureException, PublishException, VersionException {
     Set<String> calledTargets = new HashSet<>();
     targets.forEach((targetName) -> {
       Target target = project.targets.get(targetName);
       if (target == null) {
-        throw new BuildRunException("Invalid target [" + targetName + "]");
+        throw new RunException("Invalid target [" + targetName + "]");
       }
 
       // Traverse the target dependency graph if the target has dependencies (is in the graph)

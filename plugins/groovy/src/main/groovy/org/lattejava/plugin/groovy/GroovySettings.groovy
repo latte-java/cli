@@ -23,13 +23,13 @@ package org.lattejava.plugin.groovy
 class GroovySettings {
   /**
    * Configures the groovy version to use for compilation. This version must be defined in the
-   * ~/.savant/plugins/org.lattejava.plugin.groovy.properties file.
+   * ~/.config/latte/plugins/org.lattejava.plugin.groovy.properties file.
    */
   String groovyVersion
 
   /**
    * Configures the Java version to use for compilation. This version must be defined in the
-   * ~/.savant/plugins/org.lattejava.plugin.java.properties file.
+   * ~/.config/latte/plugins/org.lattejava.plugin.java.properties file.
    */
   String javaVersion
 

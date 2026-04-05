@@ -94,7 +94,7 @@ class LinterPluginTest {
     assertTrue(Files.exists(plugin.settings.reportDirectory.resolve("pmd-report.xml")))
 
     String textReport = new String(Files.readAllBytes(plugin.settings.reportDirectory.resolve("pmd-report.txt")))
-    assertEquals("test-project/src/main/java/org/savantbuild/test/MyClass.java:29:\tUnusedPrivateField:\tAvoid unused private fields such as 'unUsed'.\n",
+    assertEquals("test-project/src/main/java/org/lattejava/test/MyClass.java:29:\tUnusedPrivateField:\tAvoid unused private fields such as 'unUsed'.\n",
         textReport)
 
     // Perform the same request, but do not fail on violations.
@@ -113,7 +113,7 @@ class LinterPluginTest {
     assertTrue(Files.exists(plugin.settings.reportDirectory.resolve("pmd-report.xml")))
 
     textReport = new String(Files.readAllBytes(plugin.settings.reportDirectory.resolve("pmd-report.txt")))
-    assertEquals("test-project/src/main/java/org/savantbuild/test/MyClass.java:29:\tUnusedPrivateField:\tAvoid unused private fields such as 'unUsed'.\n",
+    assertEquals("test-project/src/main/java/org/lattejava/test/MyClass.java:29:\tUnusedPrivateField:\tAvoid unused private fields such as 'unUsed'.\n",
         textReport)
   }
 

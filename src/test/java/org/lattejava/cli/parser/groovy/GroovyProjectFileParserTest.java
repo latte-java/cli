@@ -55,14 +55,14 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Tests the groovy build file parser.
+ * Tests the groovy project file parser.
  *
  * @author Brian Pontarelli
  */
-public class GroovyBuildFileParserTest extends BaseUnitTest {
+public class GroovyProjectFileParserTest extends BaseUnitTest {
   @Test
   public void parse() {
-    GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
     Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/simple.latte");
     Project project = parser.parse(buildFile, new RuntimeConfiguration());
     assertEquals(project.group, "group");
@@ -181,7 +181,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
 
   @Test
   public void parseMissingPlugin() {
-    GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
     Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/missing-plugin.latte");
     Project project = parser.parse(buildFile, new RuntimeConfiguration());
 
@@ -195,7 +195,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
 
   @Test
   public void parseNonSemanticVersion() {
-    GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
     Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/non-semantic-version.latte");
     try {
       parser.parse(buildFile, new RuntimeConfiguration());
@@ -208,7 +208,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
 
   @Test
   public void parseShortNonSemanticVersion() {
-    GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
     Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/short-non-semantic-version.latte");
     Project project = parser.parse(buildFile, new RuntimeConfiguration());
 
@@ -230,7 +230,7 @@ public class GroovyBuildFileParserTest extends BaseUnitTest {
 
   @Test
   public void parseWithSwitches() {
-    GroovyBuildFileParser parser = new GroovyBuildFileParser(output, new DefaultTargetGraphBuilder());
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
     Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/simple.latte");
     RuntimeConfiguration runtimeConfiguration = new RuntimeConfiguration();
     runtimeConfiguration.switches.add("skip");

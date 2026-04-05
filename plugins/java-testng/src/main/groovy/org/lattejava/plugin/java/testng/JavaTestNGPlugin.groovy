@@ -54,13 +54,11 @@ import groovy.xml.MarkupBuilder
  * The Java TestNG plugin. The public methods on this class define the features of the plugin.
  */
 class JavaTestNGPlugin extends BaseGroovyPlugin {
-  public static
-  final String ERROR_MESSAGE = "You must create the file [~/.savant/plugins/org.lattejava.plugin.java.properties] " +
-      "that contains the system configuration for the Java system. This file should include the location of the JDK " +
-      "(java and javac) by version. These properties look like this:\n\n" +
-      "  1.6=/Library/Java/JavaVirtualMachines/1.6.0_65-b14-462.jdk/Contents/Home\n" +
-      "  1.7=/Library/Java/JavaVirtualMachines/jdk1.7.0_10.jdk/Contents/Home\n" +
-      "  1.8=/Library/Java/JavaVirtualMachines/jdk1.8.0.jdk/Contents/Home\n"
+  public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
+
+  21=/Users/me/.local/share/java/21.0.10+7
+  25=/Users/me/.local/share/java/25.0.2+10
+"""
 
   DependencyPlugin dependencyPlugin
 
@@ -225,7 +223,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       }
     }
 
-    Path xmlFile = FileTools.createTempPath("savant", "testng.xml", true)
+    Path xmlFile = FileTools.createTempPath("latte", "testng.xml", true)
     BufferedWriter writer = Files.newBufferedWriter(xmlFile, Charset.forName("UTF-8"))
     MarkupBuilder xml = new MarkupBuilder(writer)
     xml.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
@@ -396,7 +394,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     def coverageClassPath = dependencyPlugin.classpath {
       project.publications.group("main").each { publication -> path(location: publication.file.toAbsolutePath()) }
     }
-    // add each JAR from the Savant main publication group to be analyzed
+    // add each JAR from the Latte main publication group to be analyzed
     coverageClassPath.paths.each { p ->
       analyzer.analyzeAll(p.toFile())
     }

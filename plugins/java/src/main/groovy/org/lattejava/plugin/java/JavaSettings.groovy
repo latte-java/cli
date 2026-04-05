@@ -21,7 +21,7 @@ package org.lattejava.plugin.java
 class JavaSettings {
   /**
    * Configures the Java version to use for compilation. This version must be defined in the
-   * ~/.savant/plugins/org.lattejava.plugin.java.properties file.
+   * ~/.config/latte/plugins/org.lattejava.plugin.java.properties file.
    */
   String javaVersion
 

@@ -23,13 +23,13 @@ import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.domain.Publications;
 import org.lattejava.output.Output;
 import org.lattejava.cli.parser.groovy.WorkflowDelegate.ProcessDelegate;
-import org.lattejava.cli.runtime.BuildFailureException;
+import org.lattejava.cli.runtime.RuntimeFailureException;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 /**
- * Groovy delegate that captures the Project configuration from the project build file. The methods on this class
+ * Groovy delegate that captures the Project configuration from the project file. The methods of this class
  * capture the configuration from the DSL.
  *
  * @author Brian Pontarelli
@@ -66,12 +66,12 @@ public class ProjectDelegate {
    */
   public Dependencies dependencies(@DelegatesTo(DependenciesDelegate.class) Closure<?> closure) {
     if (!project.publications.allPublications().isEmpty()) {
-      throw new BuildFailureException("It looks like your project has defined its dependencies after its publications. " +
+      throw new RuntimeFailureException("It looks like your project has defined its dependencies after its publications. " +
           "Because Latte parses the [project() {}] definition linearly, you need to define your publications AFTER your dependencies.");
     }
 
     if (project.workflow == null) {
-      throw new BuildFailureException("It looks like your project has defined its dependencies before its workflows (or the workflow definition is missing). " +
+      throw new RuntimeFailureException("It looks like your project has defined its dependencies before its workflows (or the workflow definition is missing). " +
           "Because Latte parses the [project() {}] definition linearly, you need to define your dependencies AFTER your workflows.");
     }
 
@@ -153,7 +153,7 @@ public class ProjectDelegate {
    */
   public Workflow workflow(@DelegatesTo(WorkflowDelegate.class) Closure<?> closure) {
     if (project.dependencies != null && !project.dependencies.getAllArtifacts().isEmpty()) {
-      throw new BuildFailureException("It looks like your project has defined its workflows after its dependencies. " +
+      throw new RuntimeFailureException("It looks like your project has defined its workflows after its dependencies. " +
           "Because Latte parses the [project() {}] definition linearly, you need to define your workflows BEFORE your dependencies.");
     }
 

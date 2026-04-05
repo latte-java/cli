@@ -48,7 +48,7 @@ class ReleaseGitPlugin extends BaseGroovyPlugin {
     }
 
     if (!project.publishWorkflow) {
-      fail("You must specify a publishWorkflow in the project definition of your build.savant script.")
+      fail("You must specify a publishWorkflow in the project definition of your project.latte file.")
     }
 
     Git git = new Git(project.directory)
