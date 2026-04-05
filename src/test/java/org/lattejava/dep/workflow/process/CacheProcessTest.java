@@ -249,6 +249,7 @@ public class CacheProcessTest extends BaseUnitTest {
     Artifact artifact = new ReifiedArtifact("org.lattejava.test:multiple-versions:multiple-versions:1.1.0:jar", License.Licenses.get("ApacheV2_0"));
 
     Path negFile = projectDir.resolve("test-deps/latte/org/lattejava/test/multiple-versions/1.1.0/multiple-versions-1.1.0-src.jar.neg");
+    Files.deleteIfExists(negFile);
     Files.createDirectories(negFile.getParent());
     Files.createFile(negFile);
     try {

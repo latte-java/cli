@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava", name: "cli", version: "1.0.0", licenses: ["MIT"]) {
+project(group: "org.lattejava", name: "cli", version: "0.1.0", licenses: ["MIT"]) {
   workflow {
     standard()
   }
@@ -15,7 +15,7 @@ project(group: "org.lattejava", name: "cli", version: "1.0.0", licenses: ["MIT"]
       dependency(id: "com.fasterxml.jackson.core:jackson-core:2.13.4:jar")
       dependency(id: "com.fasterxml.jackson.core:jackson-databind:2.13.4:jar")
       dependency(id: "org.apache.commons:commons-compress:1.7.0")
-      dependency(id: "org.apache.groovy:groovy:5.0.4:jar")
+      dependency(id: "org.apache.groovy:groovy:5.0.5:jar")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.easymock:easymock:3.2.0")

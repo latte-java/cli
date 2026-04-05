@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2014-2022, Inversoft Inc., All Rights Reserved
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+project(group: "org.savantbuild.test", name: "test-project", version: "1.0.0", licenses: ["ApacheV2_0"]) {
+  workflow {
+    standard()
+  }
+
+  dependencies {
+    group(name: "test-compile") {
+      dependency(id: "org.testng:testng:6.8.7")
+    }
+  }
+}
+
+// Plugins
+groovy = loadPlugin(id: "org.savantbuild.plugin:groovy:0.1.0")
+
+// Plugin settings
+groovy.settings.groovyVersion = "2.2"
+groovy.settings.javaVersion = "1.8"
+
+target(name: "clean", description: "Cleans the project") {
+  groovy.clean()
+}
+
+target(name: "compile", description: "Compiles the project") {
+  groovy.compile()
+}
+
+target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
+  groovy.jar()
+}

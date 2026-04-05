@@ -1,0 +1,152 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.lattejava.test</groupId>
+  <artifactId>pom-test</artifactId>
+  <version>1.0.0</version>
+  <name>POM test</name>
+  <description>
+    Not used
+  </description>
+
+
+  <url>https://lattejava.org</url>
+  <organization>
+    <name>Not used</name>
+    <url>https://lattejava.org</url>
+  </organization>
+
+  <!-- Licenses comment -->
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>not-used</id>
+      <name>Not used</name>
+      <organization>Not used</organization>
+      <roles>
+        <role>Not used</role>
+      </roles>
+    </developer>
+  </developers>
+  <contributors>
+    <contributor>
+      <name>Not used</name>
+    </contributor>
+  </contributors>
+  <mailingLists>
+    <mailingList>
+      <name>Not used</name>
+      <archive>Not used</archive>
+    </mailingList>
+  </mailingLists>
+  <scm>
+    <connection>not-used</connection>
+    <developerConnection>not-used</developerConnection>
+    <url>not-used</url>
+  </scm>
+  <issueManagement>
+    <system>not-used</system>
+    <url>not-used</url>
+  </issueManagement>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>not-used</groupId>
+        <artifactId>not-used</artifactId>
+        <version>not-used</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <!-- Tight comment -->
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>notSemver</artifactId>
+      <version>1.0.Final</version>
+      <type>jar</type>
+      <scope>compile</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>multiple-versions</artifactId>
+      <version>1.0.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>multiple-versions-different-dependencies</artifactId>
+      <version>2.0.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>exclusions</artifactId>
+      <version>2.0.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+      <optional>false</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>org.lattejava.test</groupId>
+          <artifactId>excluded1</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.lattejava.test</groupId>
+          <artifactId>excluded2</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>intermediate</artifactId>
+      <version>3.0.0</version>
+      <type>jar</type>
+      <scope>runtime</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>optional</artifactId>
+      <version>4.0.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>provided</artifactId>
+      <version>5.0.0</version>
+      <type>jar</type>
+      <scope>provided</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>test-compile</artifactId>
+      <version>6.0.0</version>
+      <type>jar</type>
+      <scope>test</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.lattejava.test</groupId>
+      <artifactId>test-runtime</artifactId>
+      <version>7.0.0</version>
+      <type>jar</type>
+      <scope>test</scope>
+      <optional>false</optional>
+    </dependency>
+  </dependencies>
+</project>

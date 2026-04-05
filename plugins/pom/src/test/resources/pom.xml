@@ -1,0 +1,83 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>Should be updated</groupId>
+  <artifactId>Should be updated</artifactId>
+  <version>Should be updated</version>
+  <name>POM test</name>
+  <description>
+    Not used
+  </description>
+
+
+  <url>https://lattejava.org</url>
+  <organization>
+    <name>Not used</name>
+    <url>https://lattejava.org</url>
+  </organization>
+
+  <!-- Licenses comment -->
+  <licenses>
+    <license>
+      <name>Should be updated</name>
+      <url>Should be updated</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>not-used</id>
+      <name>Not used</name>
+      <organization>Not used</organization>
+      <roles>
+        <role>Not used</role>
+      </roles>
+    </developer>
+  </developers>
+  <contributors>
+    <contributor>
+      <name>Not used</name>
+    </contributor>
+  </contributors>
+  <mailingLists>
+    <mailingList>
+      <name>Not used</name>
+      <archive>Not used</archive>
+    </mailingList>
+  </mailingLists>
+  <scm>
+    <connection>not-used</connection>
+    <developerConnection>not-used</developerConnection>
+    <url>not-used</url>
+  </scm>
+  <issueManagement>
+    <system>not-used</system>
+    <url>not-used</url>
+  </issueManagement>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>not-used</groupId>
+        <artifactId>not-used</artifactId>
+        <version>not-used</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <!-- Tight comment -->
+  <dependencies>
+    <dependency>
+      <groupId>should-be-updated</groupId>
+      <artifactId>should-be-updated</artifactId>
+      <version>should-be-updated</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>should-be-updated</artifactId>
+          <groupId>should-be-updated</groupId>
+        </exclusion>
+      </exclusions>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+</project>

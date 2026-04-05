@@ -13,14 +13,14 @@
  * either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-project(group: "org.lattejava.plugin", name: "file", version: "1.0.0", licenses: ["ApacheV2_0"]) {
+project(group: "org.lattejava.plugin", name: "file", version: "0.1.0", licenses: ["ApacheV2_0"]) {
   workflow {
     standard()
   }
 
   dependencies {
     group(name: "provided") {
-      dependency(id: "org.lattejava:cli:1.0.0-{integration}")
+      dependency(id: "org.lattejava:cli:0.1.0-{integration}")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.testng:testng:6.8.7")

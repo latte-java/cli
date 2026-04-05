@@ -1,0 +1,20 @@
+Package: test
+Version: 3.0.0-M4-1
+Section: web
+Priority: required
+Architecture: x86
+Depends: test2
+Pre-Depends: test4
+Recommends: test6
+Suggests: test8
+Enhances: test3
+Conflicts: nothing
+Provides: test5
+Replaces: test7
+Installed-Size: 31
+Maintainer: Inversoft <sales@inversoft.com>
+Homepage: http://www.inversoft.com
+Description: Description synopsis
+ Description extended
+ line2
+ line3

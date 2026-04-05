@@ -3,8 +3,18 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/cli.iml" filepath="$PROJECT_DIR$/.idea/cli.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/database/database.iml" filepath="$PROJECT_DIR$/plugins/database/database.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/debian/debian.iml" filepath="$PROJECT_DIR$/plugins/debian/debian.iml" />
       <module fileurl="file://$PROJECT_DIR$/plugins/dependency/dependency.iml" filepath="$PROJECT_DIR$/plugins/dependency/dependency.iml" />
       <module fileurl="file://$PROJECT_DIR$/plugins/file/file.iml" filepath="$PROJECT_DIR$/plugins/file/file.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/groovy/groovy.iml" filepath="$PROJECT_DIR$/plugins/groovy/groovy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/groovy-testng/groovy-testng.iml" filepath="$PROJECT_DIR$/plugins/groovy-testng/groovy-testng.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/idea/idea.iml" filepath="$PROJECT_DIR$/plugins/idea/idea.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/java/java.iml" filepath="$PROJECT_DIR$/plugins/java/java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/java-testng/java-testng.iml" filepath="$PROJECT_DIR$/plugins/java-testng/java-testng.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/linter/linter.iml" filepath="$PROJECT_DIR$/plugins/linter/linter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/pom/pom.iml" filepath="$PROJECT_DIR$/plugins/pom/pom.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugins/release-git/release-git.iml" filepath="$PROJECT_DIR$/plugins/release-git/release-git.iml" />
     </modules>
   </component>
 </project>

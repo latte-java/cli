@@ -53,7 +53,7 @@ class FilePluginTest {
   @BeforeSuite
   static void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("LICENSE"))) {
+    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
       projectDir = Paths.get("../file")
     }
   }
@@ -65,7 +65,7 @@ class FilePluginTest {
 
     project = new Project(projectDir, output)
     project.group = "org.lattejava.test"
-    project.name = "file-plugin-test"
+    project.name = "file-test"
     project.version = new Version("1.0")
     project.licenses.add(License.parse("MIT", null))
 
