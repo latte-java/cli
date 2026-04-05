@@ -15,11 +15,11 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/savant/org/lattejava/cli/1.0.0-{integration}/cli-1.0.0-{integration}.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/savant/org/lattejava/cli/0.1.0-{integration}/cli-0.1.0-{integration}.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/savant/org/lattejava/cli/1.0.0-{integration}/cli-1.0.0-{integration}-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/savant/org/lattejava/cli/0.1.0-{integration}/cli-0.1.0-{integration}-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -81,11 +81,11 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/apache/groovy/groovy/5.0.4/groovy-5.0.4.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/apache/groovy/groovy/5.0.5/groovy-5.0.5.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$MAVEN_REPOSITORY$/org/apache/groovy/groovy/5.0.4/groovy-5.0.4-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/apache/groovy/groovy/5.0.5/groovy-5.0.5-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -113,3 +113,4 @@
     </orderEntry>
   </component>
 </module>
+

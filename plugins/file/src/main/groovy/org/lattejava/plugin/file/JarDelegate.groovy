@@ -19,7 +19,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.io.FileTools
 import org.lattejava.io.jar.JarBuilder
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Delegate for the jar method's closure. This passes through everything to the JarBuilder.
@@ -40,7 +40,7 @@ class JarDelegate extends BaseFileDelegate {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["file"], ["file"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE);
+      throw new RuntimeFailureException(ERROR_MESSAGE);
     }
 
     def file = FileTools.toPath(attributes["file"])
@@ -95,7 +95,7 @@ class JarDelegate extends BaseFileDelegate {
    */
   JarBuilder manifest(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["file", "map"], [], ["map": Map.class])) {
-      throw new BuildFailureException("Invalid manifest directive ${attributes.keySet()}. ${ERROR_MESSAGE}")
+      throw new RuntimeFailureException("Invalid manifest directive ${attributes.keySet()}. ${ERROR_MESSAGE}")
     }
 
     if (attributes.containsKey("file")) {

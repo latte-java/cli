@@ -21,7 +21,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.io.FileTools
 import org.lattejava.lang.Classpath
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 import java.nio.file.Path
 
@@ -58,7 +58,7 @@ class ClasspathDelegate extends BaseDependencyDelegate {
    */
   Path path(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["location"], ["location"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     def location = attributes["location"]

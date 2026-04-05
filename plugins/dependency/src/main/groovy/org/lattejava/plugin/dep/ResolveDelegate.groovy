@@ -18,7 +18,7 @@ package org.lattejava.plugin.dep
 import org.lattejava.dep.DependencyService
 import org.lattejava.dep.graph.ResolvedArtifactGraph
 import org.lattejava.cli.domain.Project
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Resolve delegate for closures.
@@ -40,7 +40,7 @@ class ResolveDelegate extends BaseDependencyDelegate {
    */
   ResolvedArtifactGraph resolve() {
     if (project.artifactGraph == null || project.workflow == null || traversalRules == null || traversalRules.rules.isEmpty()) {
-      throw new BuildFailureException("Unable to resolve the project dependencies because one of these items was not specified: " +
+      throw new RuntimeFailureException("Unable to resolve the project dependencies because one of these items was not specified: " +
           "[project.artifactGraph], [project.workflow], [resolveConfiguration], [resolveConfiguration.groupConfigurations]. " +
           "These are often supplied by by a closure like this:\n\n" +
           "  resolve() {\n" +

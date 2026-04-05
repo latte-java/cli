@@ -24,7 +24,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.io.FileSet
 import org.lattejava.io.Filter
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Delegate for the rename method.
@@ -70,7 +70,7 @@ class RenameDelegate extends BaseFileDelegate {
    */
   void filter(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["token", "value"], ["token", "value"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     filters.add(new Filter(attributes["token"].toString(), attributes["value"].toString()))
@@ -99,7 +99,7 @@ class RenameDelegate extends BaseFileDelegate {
    */
   int rename() {
     if (filters.isEmpty()) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     int count = 0

@@ -27,7 +27,7 @@ import org.lattejava.io.zip.ZipTools
 import org.lattejava.output.Output
 import org.lattejava.cli.parser.groovy.GroovyTools
 import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.cli.runtime.RuntimeConfiguration
 
 /**
@@ -201,7 +201,7 @@ class FilePlugin extends BaseGroovyPlugin {
    */
   void prune(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
-      throw new BuildFailureException("The file plugin prune method must be called like this:\n\n" +
+      throw new RuntimeFailureException("The file plugin prune method must be called like this:\n\n" +
           "  file.prune(dir: \"some dir\")")
     }
 

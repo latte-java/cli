@@ -393,7 +393,7 @@ class FilePluginTest {
     JarFile jf = new JarFile(jarFile.toFile())
     Manifest actual = jf.getManifest()
     expected.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VERSION, "1.0.0")
-    expected.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "org.lattejava.test.file-plugin-test")
+    expected.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "org.lattejava.test.file-test")
 
     assertEquals(actual.getMainAttributes(), expected.getMainAttributes(), "Actual " + actual.getMainAttributes() + " expected " + expected.getMainAttributes())
     jf.close()

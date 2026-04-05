@@ -17,7 +17,7 @@ package org.lattejava.plugin.dep
 
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 import static org.lattejava.dep.DependencyService.TraversalRules
 import static org.lattejava.dep.DependencyService.TraversalRules.GroupTraversalRule
@@ -59,7 +59,7 @@ class BaseDependencyDelegate {
    */
   TraversalRules dependencies(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["group", "transitive", "fetchSource", "transitiveGroups"], ["group"], DEPENDENCIES_ATTRIBUTE_TYPES)) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     GroovyTools.putDefaults(attributes, DEPENDENCIES_DEFAULT_ATTRIBUTES)

@@ -19,7 +19,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.io.Copier
 import org.lattejava.io.FileTools
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Delegate for the copy method's closure. This passes through everything to the Copier.
@@ -39,7 +39,7 @@ class CopyDelegate extends BaseFileDelegate {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["to"], ["to"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE);
+      throw new RuntimeFailureException(ERROR_MESSAGE);
     }
 
     def to = FileTools.toPath(attributes["to"])
@@ -73,7 +73,7 @@ class CopyDelegate extends BaseFileDelegate {
    */
   Copier filter(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["token", "value"], ["token", "value"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     copier.filter(attributes["token"].toString(), attributes["value"].toString())

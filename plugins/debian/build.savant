@@ -45,7 +45,7 @@ release = loadPlugin(id: "org.savantbuild.plugin:release-git:2.0.0")
 // Plugin settings
 groovy.settings.groovyVersion = "5.0"
 groovy.settings.javaVersion = "25"
-groovy.settings.jarManifest["Latte-Plugin-Class"] = "org.lattejava.plugin.deb.DebPlugin"
+groovy.settings.jarManifest["Latte-Plugin-Class"] = "org.lattejava.plugin.deb.DebianPlugin"
 groovyTestNG.settings.groovyVersion = "5.0"
 groovyTestNG.settings.javaVersion = "25"
 

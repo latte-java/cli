@@ -19,7 +19,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.io.FileTools
 import org.lattejava.io.zip.ZipBuilder
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Delegate for the zip method's closure. This passes through everything to the ZipBuilder.
@@ -39,7 +39,7 @@ class ZipDelegate extends BaseFileDelegate {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["file"], ["file"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE);
+      throw new RuntimeFailureException(ERROR_MESSAGE);
     }
 
     def file = FileTools.toPath(attributes["file"])

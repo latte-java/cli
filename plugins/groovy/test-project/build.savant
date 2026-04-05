@@ -18,7 +18,7 @@ import org.savantbuild.dep.DependencyService
 import org.savantbuild.dep.graph.ResolvedArtifactGraph
 import org.savantbuild.domain.Project
 import org.savantbuild.output.Output
-import org.savantbuild.runtime.BuildFailureException
+import org.savantbuild.runtime.RuntimeFailureException
 
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
@@ -180,7 +180,7 @@ class JavaPlugin {
   }
 
   static def fail(message) {
-    throw new BuildFailureException(message)
+    throw new RuntimeFailureException(message)
   }
 }
 

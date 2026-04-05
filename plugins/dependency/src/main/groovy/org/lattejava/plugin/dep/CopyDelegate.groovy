@@ -20,7 +20,7 @@ import org.lattejava.dep.graph.ResolvedArtifactGraph
 import org.lattejava.cli.domain.Project
 import org.lattejava.io.FileTools
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -48,7 +48,7 @@ class CopyDelegate extends BaseDependencyDelegate {
     this.dependencyService = dependencyService
 
     if (!GroovyTools.attributesValid(attributes, ["to", "removeVersion"], ["to"], [:])) {
-      throw new BuildFailureException(ERROR_MESSAGE);
+      throw new RuntimeFailureException(ERROR_MESSAGE);
     }
 
     def to = FileTools.toPath(attributes["to"])
@@ -63,7 +63,7 @@ class CopyDelegate extends BaseDependencyDelegate {
    */
   int copy() {
     if (project.artifactGraph == null || project.workflow == null || traversalRules == null || traversalRules.rules.isEmpty()) {
-      throw new BuildFailureException("Unable to resolve the project dependencies because one of these items was not specified: " +
+      throw new RuntimeFailureException("Unable to resolve the project dependencies because one of these items was not specified: " +
           "[project.artifactGraph], [project.workflow], [resolveConfiguration], [resolveConfiguration.groupConfigurations]. " +
           "These are often supplied by by a closure like this:\n\n" +
           "  copy(to: \"foo\") {\n" +
@@ -77,7 +77,7 @@ class CopyDelegate extends BaseDependencyDelegate {
 
     ResolvedArtifactGraph resolvedGraph = dependencyService.resolve(project.artifactGraph, project.workflow, traversalRules)
     if (resolvedGraph.size() == 0) {
-      throw new BuildFailureException("Unable to copy the dependencies [\n${traversalRules}]. It is likely that the dependency groups specified don't exist.")
+      throw new RuntimeFailureException("Unable to copy the dependencies [\n${traversalRules}]. It is likely that the dependency groups specified don't exist.")
     }
 
     int count = 0

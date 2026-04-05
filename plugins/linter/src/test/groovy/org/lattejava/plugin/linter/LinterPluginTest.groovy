@@ -25,7 +25,7 @@ import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
@@ -85,7 +85,7 @@ class LinterPluginTest {
           ruleSets: ["src/test/resources/pmd/ruleset.xml"]
       )
       fail("Expected PMD analysis to fail.")
-    } catch (BuildFailureException e) {
+    } catch (RuntimeFailureException e) {
       assertEquals("PMD analysis failed.", e.getMessage())
     }
 
@@ -104,7 +104,7 @@ class LinterPluginTest {
           minimumPriority: "MEDIUM",
           ruleSets: ["src/test/resources/pmd/ruleset.xml"]
       )
-    } catch (BuildFailureException e) {
+    } catch (RuntimeFailureException e) {
       fail("Did not expected PMD analysis to fail.\n" + e.getMessage())
     }
 
@@ -123,7 +123,7 @@ class LinterPluginTest {
     try {
       plugin.pmd()
       fail("Expected PMD analysis to fail.")
-    } catch (BuildFailureException e) {
+    } catch (RuntimeFailureException e) {
       assertEquals("""You must specify one or more values for the [ruleSets] argument. It will look something like this:
 
 pmd(ruleSets: ["src/test/resources/pmd/ruleset.xml"])""",

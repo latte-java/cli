@@ -35,7 +35,7 @@ import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
@@ -199,7 +199,7 @@ class ReleaseGitPluginTest {
     try {
       plugin.release()
       fail("Should have failed")
-    } catch (BuildFailureException e) {
+    } catch (RuntimeFailureException e) {
       assertTrue(e.message.contains("integration release"))
     }
   }

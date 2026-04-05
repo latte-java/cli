@@ -148,13 +148,13 @@ class DatabasePlugin extends BaseGroovyPlugin {
 
     if (settings.type.toLowerCase() == "mysql") {
       String createUsername = (settings.createUsername) ? settings.createUsername : "root"
-      execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "DROP DATABASE IF EXISTS ${settings.name}"])
-      execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "CREATE DATABASE ${settings.name} ${settings.createSuffix}"])
+      execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "DROP DATABASE IF EXISTS `${settings.name}`"])
+      execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "CREATE DATABASE `${settings.name}` ${settings.createSuffix}"])
 
       if (settings.grantUsername) {
         output.infoln("Granting privileges to [${settings.grantUsername}]")
         execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "CREATE USER '${settings.grantUsername}'@'%' IDENTIFIED BY '${settings.grantPassword}'"], true)
-        execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "GRANT ALL PRIVILEGES ON ${settings.name}.* TO '${settings.grantUsername}'@'%'"])
+        execAndWait(["mysql", "-u${createUsername}", "-h${settings.host}", "-v", settings.createArguments, "-e", "GRANT ALL PRIVILEGES ON `${settings.name}`.* TO '${settings.grantUsername}'@'%'"])
       }
     } else if (settings.type.toLowerCase() == "postgresql") {
       String createUsername = (settings.createUsername) ? settings.createUsername : "postgres"

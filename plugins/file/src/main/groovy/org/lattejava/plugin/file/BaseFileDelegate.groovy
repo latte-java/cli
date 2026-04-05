@@ -23,7 +23,7 @@ import org.lattejava.io.ArchiveFileSet
 import org.lattejava.io.Directory
 import org.lattejava.io.FileSet
 import org.lattejava.io.FileTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Base class for file delegate classes.
@@ -40,7 +40,7 @@ class BaseFileDelegate {
   protected ArchiveFileSet toArchiveFileSet(Map<String, Object> attributes) {
     String error = ArchiveFileSet.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     Path dir = project.directory.resolve(FileTools.toPath(attributes["dir"]))
@@ -59,7 +59,7 @@ class BaseFileDelegate {
   protected Directory toDirectory(Map<String, Object> attributes) {
     String error = Directory.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     return Directory.fromAttributes(attributes)
@@ -68,7 +68,7 @@ class BaseFileDelegate {
   protected FileSet toFileSet(Map<String, Object> attributes) {
     String error = FileSet.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     Path dir = project.directory.resolve(FileTools.toPath(attributes["dir"]))
@@ -87,7 +87,7 @@ class BaseFileDelegate {
   protected FileSet toOptionalFileSet(Map<String, Object> attributes) {
     String error = FileSet.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     Path dir = project.directory.resolve(FileTools.toPath(attributes["dir"]))

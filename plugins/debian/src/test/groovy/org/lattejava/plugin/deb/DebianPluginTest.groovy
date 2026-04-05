@@ -40,14 +40,14 @@ import static org.testng.Assert.assertEquals
  *
  * @author Brian Pontarelli
  */
-class DebPluginTest {
+class DebianPluginTest {
   public static Path projectDir
 
   Output output
 
   Project project
 
-  DebPlugin plugin
+  DebianPlugin plugin
 
   @BeforeSuite
   static void beforeSuite() {
@@ -68,7 +68,7 @@ class DebPluginTest {
     project.version = new Version("1.0")
     project.licenses.add(License.parse("ApacheV2_0", null))
 
-    plugin = new DebPlugin(project, new RuntimeConfiguration(), output)
+    plugin = new DebianPlugin(project, new RuntimeConfiguration(), output)
   }
 
   @Test
@@ -124,8 +124,8 @@ line3""")
         new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/ChangeLog.groovy"))))
     assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("main-groovy-files/org/lattejava/plugin/deb/DebDelegate.groovy"))),
         new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/DebDelegate.groovy"))))
-    assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("main-groovy-files/org/lattejava/plugin/deb/DebPlugin.groovy"))),
-        new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/DebPlugin.groovy"))))
+    assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("main-groovy-files/org/lattejava/plugin/deb/DebianPlugin.groovy"))),
+        new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/DebianPlugin.groovy"))))
     assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("main-groovy-files/org/lattejava/plugin/deb/Description.groovy"))),
         new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/Description.groovy"))))
     assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("main-groovy-files/org/lattejava/plugin/deb/Maintainer.groovy"))),
@@ -136,7 +136,7 @@ line3""")
         new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/Section.groovy"))))
     assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("main-groovy-files/org/lattejava/plugin/deb/Version.groovy"))),
         new String(Files.readAllBytes(projectDir.resolve("src/main/groovy/org/lattejava/plugin/deb/Version.groovy"))))
-    assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("test-groovy-files/org/lattejava/plugin/deb/DebPluginTest.groovy"))),
-        new String(Files.readAllBytes(projectDir.resolve("src/test/groovy/org/lattejava/plugin/deb/DebPluginTest.groovy"))))
+    assertEquals(new String(Files.readAllBytes(dataExplodeDir.resolve("test-groovy-files/org/lattejava/plugin/deb/DebianPluginTest.groovy"))),
+        new String(Files.readAllBytes(projectDir.resolve("src/test/groovy/org/lattejava/plugin/deb/DebianPluginTest.groovy"))))
   }
 }

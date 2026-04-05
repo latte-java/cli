@@ -19,7 +19,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.io.FileTools
 import org.lattejava.io.tar.TarBuilder
 import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
+import org.lattejava.cli.runtime.RuntimeFailureException
 
 /**
  * Delegate for the tar method's closure. This does all the work of building Tarfiles.
@@ -39,7 +39,7 @@ class TarDelegate extends BaseFileDelegate {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["file", "compress"], ["file"], ["compress": Boolean.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE);
+      throw new RuntimeFailureException(ERROR_MESSAGE);
     }
 
     this.builder = new TarBuilder(project.directory.resolve(FileTools.toPath(attributes["file"])))

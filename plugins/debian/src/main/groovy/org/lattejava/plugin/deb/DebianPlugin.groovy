@@ -25,9 +25,9 @@ import org.lattejava.cli.runtime.RuntimeConfiguration
  *
  * @author Brian Pontarelli
  */
-class DebPlugin extends BaseGroovyPlugin {
+class DebianPlugin extends BaseGroovyPlugin {
 
-  DebPlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
+  DebianPlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
     super(project, runtimeConfiguration, output)
   }
 

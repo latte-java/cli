@@ -15,22 +15,21 @@
  */
 package org.lattejava.plugin.deb
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardOpenOption
-
 import org.apache.commons.compress.archivers.ar.ArArchiveEntry
 import org.apache.commons.compress.archivers.ar.ArArchiveOutputStream
 import org.lattejava.cli.domain.Project
+import org.lattejava.cli.parser.groovy.GroovyTools
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.io.ArchiveFileSet
 import org.lattejava.io.Directory
 import org.lattejava.io.FileSet
 import org.lattejava.io.FileTools
 import org.lattejava.io.tar.TarBuilder
-import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.runtime.BuildFailureException
-import org.lattejava.security.Algorithm
 import org.lattejava.security.Checksum
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 
 /**
  * Delegate for the deb method's closure. This does all the work of building debian package files.
@@ -40,10 +39,11 @@ import org.lattejava.security.Checksum
 class DebDelegate {
   public static final String DEBIAN_BINARY_FILE = "2.0\n"
 
-  public static final String ERROR_MESSAGE = "The deb plugin build method must be called like this:\n\n" +
-      "  deb.build(to: \"package.deb\") {\n" +
-      "    tarFileSet(dir: \"some other dir\", prefix: \"some-prefix\")\n" +
-      "  }"
+  public static final String ERROR_MESSAGE = """The deb plugin build method must be called like this:
+
+  deb.build(to: "package.deb") {
+    tarFileSet(dir: "some other dir", prefix: "some-prefix")
+  }"""
 
   public final Project project
 
@@ -105,7 +105,7 @@ class DebDelegate {
         ["architecture": String.class, "conflicts": String.class, "depends": String.class, "enhances": String.class, "homepage": String.class,
          "package"     : String.class, "priority": String.class, "provides": String.class, "recommends": String.class, "replaces": String.class,
          "section"     : String.class, "suggests": String.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE);
+      throw new RuntimeFailureException(ERROR_MESSAGE);
     }
 
     this.to = FileTools.toPath(attributes["to"])
@@ -133,29 +133,29 @@ class DebDelegate {
     }
 
     if (section && !Section.isValid(section)) {
-      throw new BuildFailureException("Invalid section [${section}] for the debian package")
+      throw new RuntimeFailureException("Invalid section [${section}] for the debian package")
     }
 
     if (priority && !Priority.isValid(priority)) {
-      throw new BuildFailureException("Invalid section [${section}] for the debian package")
+      throw new RuntimeFailureException("Invalid section [${section}] for the debian package")
     }
   }
 
   void build() {
     if (!version || !version.debian || !version.upstream) {
-      throw new BuildFailureException("Invalid Debian package information. The [version] is missing or incomplete");
+      throw new RuntimeFailureException("Invalid Debian package information. The [version] is missing or incomplete")
     }
     if (!version.isDebianValid()) {
-      throw new BuildFailureException("Invalid Debian package information. The [version.debian] is not a valid version string");
+      throw new RuntimeFailureException("Invalid Debian package information. The [version.debian] is not a valid version string")
     }
     if (!version.isUpstreamValid()) {
-      throw new BuildFailureException("Invalid Debian package information. The [version.upstream] is not a valid version string");
+      throw new RuntimeFailureException("Invalid Debian package information. The [version.upstream] is not a valid version string")
     }
     if (!maintainer || (!maintainer.name && !maintainer.email)) {
-      throw new BuildFailureException("Invalid Debian package information. The [maintainer] is missing or incomplete");
+      throw new RuntimeFailureException("Invalid Debian package information. The [maintainer] is missing or incomplete")
     }
     if (!description || !description.extended || !description.synopsis) {
-      throw new BuildFailureException("Invalid Debian package information. The [description] is missing or incomplete");
+      throw new RuntimeFailureException("Invalid Debian package information. The [description] is missing or incomplete")
     }
 
     Path tempDir = Files.createTempDirectory("latte-deb-plugin")
@@ -177,7 +177,7 @@ class DebDelegate {
     long installedSize = createDataFile(dataTar)
 
     Path controlFile = debianDir.resolve("control")
-    createControlFile(controlFile, installedSize);
+    createControlFile(controlFile, installedSize)
 
     Path controlTar = tempDir.resolve("control.tar.gz")
     createControlTar(controlTar, debianDir)
@@ -221,7 +221,7 @@ class DebDelegate {
   void confFileSet(Map<String, Object> attributes) {
     String error = ArchiveFileSet.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     String userName = attributes["userName"] != null ? attributes["userName"] : "root"
@@ -244,7 +244,7 @@ class DebDelegate {
    */
   void description(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["synopsis", "extended"], [], ["synopsis": String.class, "extended": String.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     description = new Description(attributes["extended"], attributes["synopsis"])
@@ -262,7 +262,7 @@ class DebDelegate {
   void directory(Map<String, Object> attributes) {
     String error = Directory.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     Directory directory = Directory.fromAttributes(attributes)
@@ -286,7 +286,7 @@ class DebDelegate {
    */
   void maintainer(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["name", "email"], [], ["name": String.class, "email": String.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     maintainer = new Maintainer(attributes["name"], attributes["email"])
@@ -304,7 +304,7 @@ class DebDelegate {
   void tarFileSet(Map<String, Object> attributes) {
     String error = ArchiveFileSet.attributesValid(attributes)
     if (error != null) {
-      throw new BuildFailureException(error)
+      throw new RuntimeFailureException(error)
     }
 
     String userName = attributes["userName"] != null ? attributes["userName"] : "root"
@@ -327,13 +327,13 @@ class DebDelegate {
    */
   void version(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["upstream", "debian"], ["upstream"], ["upstream": String.class, "debian": String.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
+      throw new RuntimeFailureException(ERROR_MESSAGE)
     }
 
     version = new Version(attributes["upstream"], attributes["debian"])
   }
 
-  private void appendMD5s(Path md5File, List<FileSet> files) {
+  private static void appendMD5s(Path md5File, List<FileSet> files) {
     StringBuilder build = new StringBuilder()
     files.each { fileSet ->
       fileSet.toFileInfos().each { info ->
