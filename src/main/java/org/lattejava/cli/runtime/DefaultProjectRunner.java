@@ -78,10 +78,6 @@ public class DefaultProjectRunner implements ProjectRunner {
       // Traverse the target dependency graph if the target has dependencies (is in the graph)
       if (project.targetGraph.contains(target)) {
         project.targetGraph.traverseUp(target, (origin, destination, edge, depth) -> {
-          if (calledTargets.contains(destination.name)) {
-            return;
-          }
-
           runTarget(destination, calledTargets);
         });
       }
@@ -91,6 +87,14 @@ public class DefaultProjectRunner implements ProjectRunner {
   }
 
   private void runTarget(Target target, Set<String> calledTargets) {
+    if (calledTargets.contains(target.name)) {
+      return;
+    }
+
+    if (DefaultRunner.COMMANDS.containsKey(target.name)) {
+      output.infoln(214, "WARNING: Target [%s] overrides the built-in [%s] command.", target.name, target.name);
+    }
+
     output.infoln(117, ":[%s]:", target.name);
     target.invocation.run();
     calledTargets.add(target.name);

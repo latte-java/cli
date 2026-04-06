@@ -38,10 +38,10 @@ public class DefaultRunnerTest extends BaseUnitTest {
     Files.createDirectories(projectDir.resolve("test-project/build"));
 
     Runner runner = new DefaultRunner(output, new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-    runner.run(projectDir.resolve("test-project/project.latte"), new RuntimeConfiguration(false, "write"));
+    runner.run(projectDir.resolve("test-project"), new RuntimeConfiguration(false, "write"));
     assertEquals(Files.readString(projectDir.resolve("test-project/build/test-file.txt")), "File contents");
 
-    runner.run(projectDir.resolve("test-project/project.latte"), new RuntimeConfiguration(true, "delete"));
+    runner.run(projectDir.resolve("test-project"), new RuntimeConfiguration(true, "delete"));
     assertFalse(Files.isDirectory(projectDir.resolve("test-project/build")));
   }
 
@@ -51,10 +51,10 @@ public class DefaultRunnerTest extends BaseUnitTest {
     Files.createDirectories(projectDir.resolve("test-project-licenses/build"));
 
     Runner runner = new DefaultRunner(output, new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-    runner.run(projectDir.resolve("test-project-licenses/project.latte"), new RuntimeConfiguration(false, "write"));
+    runner.run(projectDir.resolve("test-project-licenses"), new RuntimeConfiguration(false, "write"));
     assertEquals(Files.readString(projectDir.resolve("test-project-licenses/build/test-file.txt")), "File contents");
 
-    runner.run(projectDir.resolve("test-project-licenses/project.latte"), new RuntimeConfiguration(true, "delete"));
+    runner.run(projectDir.resolve("test-project-licenses"), new RuntimeConfiguration(true, "delete"));
     assertFalse(Files.isDirectory(projectDir.resolve("test-project-licenses/build")));
   }
 }

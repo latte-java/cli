@@ -23,6 +23,7 @@ import static org.lattejava.cli.runtime.RuntimeConfiguration.DEBUG_SWITCH;
  * @author Brian Pontarelli
  */
 public class DefaultRuntimeConfigurationParser implements RuntimeConfigurationParser {
+
   /**
    * <p>
    * Parses the command-line arguments. There are currently 4 fixed arguments:
@@ -72,6 +73,8 @@ public class DefaultRuntimeConfigurationParser implements RuntimeConfigurationPa
         } else {
           configuration.switches.add(argument.substring(2, equals), argument.substring(equals + 1));
         }
+      } else if (configuration.command == null && configuration.targets.isEmpty() && DefaultRunner.COMMANDS.containsKey(argument)) {
+        configuration.command = argument;
       } else {
         configuration.targets.add(argument);
       }

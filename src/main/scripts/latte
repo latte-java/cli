@@ -23,4 +23,4 @@ for f in "${SCRIPT_DIR}"/lib/*; do
   CLASSPATH=${CLASSPATH}:${f}
 done
 
-exec java -cp "${CLASSPATH}" org.lattejava.cli.runtime.Main "$@"
+exec java -Dlatte.home="${SCRIPT_DIR}" -cp "${CLASSPATH}" org.lattejava.cli.runtime.Main "$@"

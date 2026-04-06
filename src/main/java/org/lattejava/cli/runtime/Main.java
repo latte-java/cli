@@ -15,7 +15,6 @@
  */
 package org.lattejava.cli.runtime;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -50,7 +49,7 @@ public class Main {
   public static Path projectDir = Paths.get("");
 
   /**
-   * THe main method.
+   * The main method.
    *
    * @param args CLI arguments.
    */
@@ -62,23 +61,9 @@ public class Main {
       output.enableDebug();
     }
 
-    Path projectFile = projectDir.resolve("project.latte");
-    if (!Files.isRegularFile(projectFile) || !Files.isReadable(projectFile)) {
-      if (runtimeConfiguration.printVersion) {
-        printVersion(output);
-        return;
-      } else if (runtimeConfiguration.help) {
-        printHelp(output);
-        return;
-      } else {
-        output.errorln("Project file [project.latte] is missing or not readable.");
-        System.exit(1);
-      }
-    }
-
     try {
       Runner runner = new DefaultRunner(output, new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder()), new DefaultProjectRunner(output));
-      runner.run(projectFile, runtimeConfiguration);
+      runner.run(projectDir, runtimeConfiguration);
     } catch (CompatibilityException e) {
       printCompatibilityError(e, output);
       int lineNumber = determineLineNumber(e);
@@ -114,15 +99,20 @@ public class Main {
   }
 
   public static void printHelp(Output output) {
-    output.infoln("Usage: latte [switches] [targets]");
+    output.infoln("Usage: latte [switches] <command | targets>");
+    output.infoln("");
+    output.infoln("Commands:");
+    output.infoln("");
+    output.infoln("   init            Initializes a new Latte project in the current directory");
+    output.infoln("                   Options: --template=<path>  Use a custom project template");
     output.infoln("");
     output.infoln("Switches:");
     output.infoln("");
-    output.infoln("   --noColor      Disables the colorized output of Latte");
-    output.infoln("   --debug        Enables debug output");
-    output.infoln("   --help         Displays the help message");
-    output.infoln("   --listTargets  Lists the build targets");
-    output.infoln("   --version      Prints the version of Latte");
+    output.infoln("   --noColor       Disables the colorized output of Latte");
+    output.infoln("   --debug         Enables debug output");
+    output.infoln("   --help          Displays the help message");
+    output.infoln("   --listTargets   Lists the build targets");
+    output.infoln("   --version       Prints the version of Latte");
     output.infoln("");
     output.infoln("NOTE: If any other argument starts with '--' then it is considered a switch. Switches can optionally have values using the equals sign like this:");
     output.infoln("");

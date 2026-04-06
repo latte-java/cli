@@ -15,37 +15,43 @@
  */
 package org.lattejava.cli.runtime;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
+import org.lattejava.cli.command.Command;
+import org.lattejava.cli.command.InitCommand;
+import org.lattejava.cli.domain.Project;
+import org.lattejava.cli.parser.ParseException;
+import org.lattejava.cli.parser.ProjectFileParser;
+import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.dep.LicenseException;
 import org.lattejava.dep.PublishException;
 import org.lattejava.dep.domain.CompatibilityException;
 import org.lattejava.dep.workflow.ArtifactMetaDataMissingException;
 import org.lattejava.dep.workflow.ArtifactMissingException;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.cli.domain.Project;
 import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
-import org.lattejava.cli.parser.ProjectFileParser;
-import org.lattejava.cli.parser.ParseException;
-import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
- * Default runner. This is essentially the main entry point for the CLI system. It takes a project file and a list
- * of targets and runs the CLI.
+ * Default runner. This handles global command dispatch, project file parsing, and target execution.
  * <p>
- * This implementation uses the main {@link ProjectFileParser} to parse the project file into domain objects.
- * <p>
- * Once the project file is parsed, this uses the default {@link ProjectRunner} to run build on the project.
+ * Global commands (like {@code init}) can run without a project file. If a project file exists and defines a target
+ * that matches a global command name, the target takes precedence and a warning is printed.
  *
  * @author Brian Pontarelli
  */
 public class DefaultRunner implements Runner {
-  private final ProjectFileParser projectFileParser;
+  public static final Map<String, Command> COMMANDS = Map.of(
+      "init", new InitCommand()
+  );
 
   private final Output output;
+
+  private final ProjectFileParser projectFileParser;
 
   private final ProjectRunner projectRunner;
 
@@ -55,11 +61,8 @@ public class DefaultRunner implements Runner {
     this.projectRunner = projectRunner;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void run(Path projectFile, RuntimeConfiguration runtimeConfiguration)
+  public void run(Path projectDir, RuntimeConfiguration runtimeConfiguration)
       throws ArtifactMetaDataMissingException, ArtifactMissingException,
       RunException, RuntimeFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ParseException, PluginLoadException, ProcessFailureException, PublishException, VersionException {
@@ -68,6 +71,23 @@ public class DefaultRunner implements Runner {
       return;
     }
 
+    Path projectFile = projectDir.resolve("project.latte");
+    boolean hasProjectFile = Files.isRegularFile(projectFile) && Files.isReadable(projectFile);
+
+    // No project file — handle commands, help, version, or error
+    if (!hasProjectFile) {
+      if (runtimeConfiguration.command != null) {
+        dispatchCommand(runtimeConfiguration);
+        return;
+      } else if (runtimeConfiguration.help) {
+        Main.printHelp(output);
+        return;
+      } else {
+        throw new RunException("Project file [project.latte] is missing or not readable.");
+      }
+    }
+
+    // Project file exists — parse it
     Project project = projectFileParser.parse(projectFile, runtimeConfiguration);
 
     if (runtimeConfiguration.help) {
@@ -78,7 +98,24 @@ public class DefaultRunner implements Runner {
       return;
     }
 
+    // If a global command was specified, check if the project overrides it with a target
+    if (runtimeConfiguration.command != null) {
+      if (project.targets.containsKey(runtimeConfiguration.command)) {
+        runtimeConfiguration.targets.addFirst(runtimeConfiguration.command);
+      } else {
+        dispatchCommand(runtimeConfiguration);
+        return;
+      }
+    }
+
     projectRunner.run(project, runtimeConfiguration.targets);
+  }
+
+  private void dispatchCommand(RuntimeConfiguration runtimeConfiguration) {
+    Command command = COMMANDS.get(runtimeConfiguration.command);
+    if (command != null) {
+      command.run(runtimeConfiguration, output);
+    }
   }
 
   private void printHelp(Project project) {

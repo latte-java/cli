@@ -25,6 +25,9 @@ import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
 import org.lattejava.cli.parser.TargetGraphBuilder;
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import static java.util.Arrays.asList;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expectLastCall;
@@ -123,6 +126,36 @@ public class DefaultProjectRunnerTest extends BaseUnitTest {
     verify(testRunner);
     verify(intRunner);
     verify(cleanRunner);
+  }
+
+  @Test
+  public void runTargetOverridesCommand() {
+    calledTargets.clear();
+
+    Runnable initRunner = makeRunnerMock("init");
+
+    Project project = new Project(null, output);
+    project.targets.put("init", new Target("init", "Custom init target", initRunner));
+    project.targetGraph = targetGraphBuilder.build(project);
+
+    // Capture stdout to check for the warning
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream originalOut = System.out;
+    System.setOut(new PrintStream(baos));
+
+    try {
+      ProjectRunner runner = new DefaultProjectRunner(new org.lattejava.output.SystemOutOutput(false));
+      runner.run(project, List.of("init"));
+    } finally {
+      System.setOut(originalOut);
+    }
+
+    assertEquals(calledTargets, List.of("init"));
+    String captured = baos.toString();
+    assertTrue(captured.contains("WARNING"), "Expected warning about overriding built-in command, got: " + captured);
+    assertTrue(captured.contains("overrides the built-in"), "Expected override message, got: " + captured);
+
+    verify(initRunner);
   }
 
   private Runnable makeRunnerMock(String targetName) {

@@ -17,6 +17,8 @@ package org.lattejava.cli.runtime;
 
 import java.nio.file.Path;
 
+import org.lattejava.cli.parser.ParseException;
+import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.dep.LicenseException;
 import org.lattejava.dep.PublishException;
 import org.lattejava.dep.domain.CompatibilityException;
@@ -24,42 +26,24 @@ import org.lattejava.dep.workflow.ArtifactMetaDataMissingException;
 import org.lattejava.dep.workflow.ArtifactMissingException;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.domain.VersionException;
-import org.lattejava.cli.parser.ParseException;
-import org.lattejava.cli.plugin.PluginLoadException;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 
 /**
- * Runs the CLI starting from a project file.
+ * Runs the CLI. This handles global commands, project file parsing, and target execution.
  *
  * @author Brian Pontarelli
  */
 public interface Runner {
   /**
-   * Loads the given project file and executes the given targets in it.
+   * Runs the CLI from the given project directory. This handles global command dispatch, project file parsing, and
+   * target execution. If a global command is specified and no project file exists, the command is executed directly.
+   * If a project file exists and defines a target matching a global command name, the target takes precedence.
    *
-   * @param projectFile          The project file.
+   * @param projectDir           The project directory (containing {@code project.latte} if it exists).
    * @param runtimeConfiguration The runtime configuration.
-   * @throws ArtifactMetaDataMissingException If any dependencies of the project are missing an AMD file in the
-   *                                          repository or local cache.
-   * @throws ArtifactMissingException         If any dependencies of the project are missing in the repository or local
-   *                                          cache.
-   * @throws RunException                     If the CLI cannot be run (internally, not due to a failure of the runtime
-   *                                          itself).
-   * @throws RuntimeFailureException          If the project fails while running.
-   * @throws CompatibilityException           If the project has incompatible versions of a dependency.
-   * @throws CyclicException                  If the project has cyclic dependencies.
-   * @throws LicenseException                 If the project has a dependency with an invalid license.
-   * @throws ChecksumException                If a dependency is corrupt.
-   * @throws ParseException                   If the project file cannot be parsed.
-   * @throws PublishException                 If there was an error publishing an artifact.
-   * @throws PluginLoadException              If a plugin load failed for any reason (the plugin might not exist, might
-   *                                          be invalid, or could have thrown an exception during construction because
-   *                                          it was missing configuration or something.)
-   * @throws ProcessFailureException          If the downloading of a dependency fails.
-   * @throws VersionException                 If any of the versions are not semantic.
    */
-  void run(Path projectFile, RuntimeConfiguration runtimeConfiguration) throws ArtifactMetaDataMissingException, ArtifactMissingException,
+  void run(Path projectDir, RuntimeConfiguration runtimeConfiguration) throws ArtifactMetaDataMissingException, ArtifactMissingException,
       RunException, RuntimeFailureException, CompatibilityException, CyclicException, LicenseException, ChecksumException,
       ParseException, PluginLoadException, ProcessFailureException, PublishException, VersionException;
 }

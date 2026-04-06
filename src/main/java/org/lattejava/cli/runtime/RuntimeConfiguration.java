@@ -37,6 +37,11 @@ public class RuntimeConfiguration {
   public boolean colorizeOutput = true;
 
   /**
+   * The global command to execute (e.g., "init"), or null if the CLI arguments specify targets instead.
+   */
+  public String command;
+
+  /**
    * Determines if debug output is enabled.
    */
   public boolean debug;
