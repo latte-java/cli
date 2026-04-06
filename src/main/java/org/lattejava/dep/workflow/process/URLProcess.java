@@ -41,7 +41,7 @@ import org.lattejava.security.ChecksumException;
  *
  * @author Brian Pontarelli
  */
-public class URLProcess implements Process {
+public class URLProcess extends BaseProcess {
   public final Output output;
 
   public final String password;
@@ -85,24 +85,10 @@ public class URLProcess implements Process {
    */
   @Override
   public FetchResult fetch(ResolvableItem item, PublishWorkflow publishWorkflow) throws ProcessFailureException {
-    // Try primary item first
-    FetchResult result = tryFetchCandidate(item, item.item, publishWorkflow);
-    if (result != null) {
-      return result;
-    }
-
-    // Try alternatives
-    for (String alt : item.alternativeItems) {
-      result = tryFetchCandidate(item, alt, publishWorkflow);
-      if (result != null) {
-        return result;
-      }
-    }
-
-    return null;
+    return fetchWithAlternatives(item, publishWorkflow);
   }
 
-  private FetchResult tryFetchCandidate(ResolvableItem item, String candidateItem, PublishWorkflow publishWorkflow)
+  protected FetchResult tryFetchCandidate(ResolvableItem item, String candidateItem, PublishWorkflow publishWorkflow)
       throws ProcessFailureException {
     try {
       for (Algorithm algorithm : getChecksumAlgorithms()) {

@@ -101,7 +101,7 @@ public class JarBuilderTest extends BaseUnitTest {
     assertJarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertJarContainsDirectories(file, "META-INF/", "test/directory/", "org/", "org/lattejava/", "org/lattejava/io/",
         "org/lattejava/io/jar/", "org/lattejava/io/tar/", "org/lattejava/io/zip/");
-    assertEquals(count, 195);
+    assertEquals(count, 200);
   }
 
   @Test
@@ -137,7 +137,7 @@ public class JarBuilderTest extends BaseUnitTest {
     assertJarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertJarContainsDirectories(file, "META-INF/", "org/", "org/lattejava/", "org/lattejava/io/",
         "org/lattejava/io/jar/", "org/lattejava/io/tar/", "org/lattejava/io/zip/");
-    assertEquals(count, 194);
+    assertEquals(count, 199);
   }
 
   @Test
@@ -161,6 +161,6 @@ public class JarBuilderTest extends BaseUnitTest {
     assertJarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertJarContainsDirectories(file, "META-INF/", "org/", "org/lattejava/", "org/lattejava/io/",
         "org/lattejava/io/jar/", "org/lattejava/io/tar/", "org/lattejava/io/zip/");
-    assertEquals(count, 195);
+    assertEquals(count, 200);
   }
 }

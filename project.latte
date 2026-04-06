@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, latte-java, All Rights Reserved
+ * Copyright (c) 2026, The Latte Project, All Rights Reserved
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,12 @@ project(group: "org.lattejava", name: "cli", version: "0.1.0", licenses: ["MIT"]
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.savantbuild.plugin:dependency:2.0.0")
-file = loadPlugin(id: "org.savantbuild.plugin:file:2.0.0")
-idea = loadPlugin(id: "org.savantbuild.plugin:idea:2.0.0")
-java = loadPlugin(id: "org.savantbuild.plugin:java:2.0.0")
-javaTestNG = loadPlugin(id: "org.savantbuild.plugin:java-testng:2.0.0")
-release = loadPlugin(id: "org.savantbuild.plugin:release-git:2.0.0")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0-{integration}")
+file = loadPlugin(id: "org.lattejava.plugin:file:0.1.0-{integration}")
+idea = loadPlugin(id: "org.lattejava.plugin:idea:0.1.0-{integration}")
+java = loadPlugin(id: "org.lattejava.plugin:java:0.1.0-{integration}")
+javaTestNG = loadPlugin(id: "org.lattejava.plugin:java-testng:0.1.0-{integration}")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0-{integration}")
 
 // Plugin settings
 idea.settings.imlFile = ".idea/cli.iml"

@@ -23,13 +23,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.lattejava.io.ArchiveFileSet;
 import org.lattejava.BaseUnitTest;
+import org.lattejava.io.ArchiveFileSet;
 import org.lattejava.io.Directory;
 import org.lattejava.io.FileSet;
 import org.lattejava.io.FileTools;
@@ -37,10 +38,7 @@ import org.testng.annotations.Test;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 /**
  * Tests the ZipBuilder.
@@ -123,7 +121,7 @@ public class ZipBuilderTest extends BaseUnitTest {
     assertZipContainsDirectory(file, "org/lattejava/io/jar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/tar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/zip/", 0x755);
-    assertEquals(count, 194);
+    assertEquals(count, 199);
   }
 
   @Test
@@ -163,7 +161,7 @@ public class ZipBuilderTest extends BaseUnitTest {
     assertZipContainsDirectory(file, "org/lattejava/io/jar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/tar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/zip/", 0x755);
-    assertEquals(count, 193);
+    assertEquals(count, 198);
   }
 
   @Test
@@ -174,7 +172,8 @@ public class ZipBuilderTest extends BaseUnitTest {
     assertTrue(Files.notExists(file));
 
     ZipBuilder builder = new ZipBuilder(file.toString());
-    builder.fileSet(new ArchiveFileSet(projectDir.resolve("src/main/java"), "foo", 0x755, null, null, null, null, null, asList(), asList()))
+    builder.fileSet(new ArchiveFileSet(projectDir.resolve("src/main/java"), "foo", 0x755, null,
+               null, null, null, null, List.of(), List.of()))
            .build();
     assertTrue(Files.isReadable(file));
     assertZipContains(file, "foo/org/lattejava/io/Copier.java", "foo/org/lattejava/io/FileSet.java");

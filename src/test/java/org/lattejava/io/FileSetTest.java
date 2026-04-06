@@ -39,23 +39,23 @@ public class FileSetTest extends BaseUnitTest {
   public void toFileInfos() throws Exception {
     FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"));
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 115);
+    assertEquals(infos.size(), 118);
     // Spot-check a few known files are present
-    List<Path> actual = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
+    List<Path> actual = infos.stream().map((info) -> info.origin).toList();
     assertTrue(actual.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
     assertTrue(actual.contains(projectDir.resolve("src/main/java/org/lattejava/io/Copier.java")));
-    List<Path> relatives = infos.stream().map((info) -> info.relative).collect(Collectors.toList());
+    List<Path> relatives = infos.stream().map((info) -> info.relative).toList();
     assertTrue(relatives.contains(Paths.get("org/lattejava/io/FileSet.java")));
     assertTrue(relatives.contains(Paths.get("org/lattejava/io/Copier.java")));
   }
 
   @Test
   public void toFileInfosWithExcludePatterns() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), null, asList(Pattern.compile(".*/jar/.*")));
+    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), null, List.of(Pattern.compile(".*/jar/.*")));
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 113);
+    assertEquals(infos.size(), 116);
     // Verify jar files are excluded
-    List<Path> origins = infos.stream().map((info) -> info.origin).collect(Collectors.toList());
+    List<Path> origins = infos.stream().map((info) -> info.origin).toList();
     assertTrue(origins.stream().noneMatch(p -> p.toString().contains("/jar/")));
     // Spot-check non-jar files are still present
     assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/Copier.java")));
@@ -64,7 +64,8 @@ public class FileSetTest extends BaseUnitTest {
 
   @Test
   public void toFileInfosWithIncludeAndExcludePatterns() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), asList(Pattern.compile(".*/io/.*")), asList(Pattern.compile(".*FileSet\\.java")));
+    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), List.of(Pattern.compile(".*/io/.*")),
+        List.of(Pattern.compile(".*FileSet\\.java")));
     List<FileInfo> infos = fileSet.toFileInfos();
     assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
         projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"),
@@ -98,7 +99,7 @@ public class FileSetTest extends BaseUnitTest {
 
   @Test
   public void toFileInfosWithIncludePatterns() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), asList(Pattern.compile(".*/jar/.*")), null);
+    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), List.of(Pattern.compile(".*/jar/.*")), null);
     List<FileInfo> infos = fileSet.toFileInfos();
     assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
         projectDir.resolve("src/main/java/org/lattejava/io/jar/JarBuilder.java"),

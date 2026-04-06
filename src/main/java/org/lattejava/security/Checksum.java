@@ -67,7 +67,7 @@ public final class Checksum {
       return null;
     }
 
-    String str = new String(Files.readAllBytes(path), StandardCharsets.UTF_8).trim();
+    String str = Files.readString(path).trim();
     if (str.length() < algorithm.hexLength) {
       throw new ChecksumException("Invalid " + algorithm.name() + " checksum [" + str + "] in file [" + path + "]. Expected at least " + algorithm.hexLength + " hex characters");
     }
