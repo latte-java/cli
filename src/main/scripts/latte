@@ -16,7 +16,8 @@ if ! java -version 2>&1 | grep -q "25.0"; then
   exit 1
 fi
 
-SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || realpath "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(dirname "$SCRIPT")"
 
 CLASSPATH=
 for f in "${SCRIPT_DIR}"/lib/*; do

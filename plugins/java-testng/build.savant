@@ -23,6 +23,7 @@ project(group: "org.lattejava.plugin", name: "java-testng", version: "0.1.0", li
       dependency(id: "org.lattejava:cli:0.1.0-{integration}")
     }
     group(name: "compile") {
+      dependency(id: "org.apache.groovy:groovy-xml:5.0.5")
       dependency(id: "org.lattejava.plugin:dependency:0.1.0-{integration}")
       dependency(id: "org.lattejava.plugin:file:0.1.0-{integration}")
       dependency(id: "org.jacoco:org.jacoco.agent:0.8.13")
