@@ -8,6 +8,9 @@ project(group: "org.lattejava", name: "cli", version: "0.1.0", licenses: ["MIT"]
   workflow {
     standard()
   }
+  publishWorkflow {
+    cache()
+  }
 
   dependencies {
     group(name: "compile") {
@@ -45,19 +48,16 @@ target(name: "clean", description: "Cleans the project") {
   java.clean()
 }
 
-target(name: "compile", description: "Compiles the project") {
+target(name: "build", description: "Compiles the project") {
   java.compile()
-}
-
-target(name: "jar", description: "JARs the project", dependsOn: ["compile"]) {
   java.jar()
 }
 
-target(name: "doc", description: "Generate the project's JavaDoc", dependsOn: ["compile"]) {
+target(name: "doc", description: "Generate the project's JavaDoc", dependsOn: ["build"]) {
   java.document()
 }
 
-target(name: "test", description: "Runs the project's tests", dependsOn: ["jar"]) {
+target(name: "test", description: "Runs the project's tests", dependsOn: ["build"]) {
   javaTestNG.test()
 }
 
@@ -69,14 +69,19 @@ target(name: "idea", description: "Updates the IntelliJ IDEA module file") {
   idea.iml()
 }
 
-target(name: "bundle", description: "Creates a self-contained runtime image using jlink", dependsOn: ["jar"]) {
+target(name: "bundle", description: "Creates a self-contained runtime bundle", dependsOn: ["build"]) {
   def bundleDir = "build/bundle"
   file.prune(dir: bundleDir)
   file.mkdir(dir: "${bundleDir}/lib")
+  file.mkdir(dir: "${bundleDir}/templates")
+
   file.copyFile(file: "src/main/scripts/latte", to: "${bundleDir}/latte")
   file.copyFile(file: "build/jars/${project.name}-${project.version}.jar", to: "${bundleDir}/lib/${project.name}-${project.version}.jar")
   dependency.copy(to: "${bundleDir}/lib") {
     dependencies(group: "compile", transitive: true, fetchSource: false)
+  }
+  file.copy(to: "${bundleDir}/templates") {
+    fileSet(dir: "src/main/templates", includePatterns: [/.*/])
   }
 }
 
