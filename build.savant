@@ -69,14 +69,19 @@ target(name: "idea", description: "Updates the IntelliJ IDEA module file") {
   idea.iml()
 }
 
-target(name: "bundle", description: "Creates a self-contained runtime image using jlink", dependsOn: ["jar"]) {
+target(name: "bundle", description: "Creates a self-contained runtime bundle", dependsOn: ["jar"]) {
   def bundleDir = "build/bundle"
   file.prune(dir: bundleDir)
   file.mkdir(dir: "${bundleDir}/lib")
+  file.mkdir(dir: "${bundleDir}/templates")
+
   file.copyFile(file: "src/main/scripts/latte", to: "${bundleDir}/latte")
   file.copyFile(file: "build/jars/${project.name}-${project.version}.jar", to: "${bundleDir}/lib/${project.name}-${project.version}.jar")
   dependency.copy(to: "${bundleDir}/lib") {
     dependencies(group: "compile", transitive: true, fetchSource: false)
+  }
+  file.copy(to: "${bundleDir}/templates") {
+    fileSet(dir: "src/main/templates", includePatterns: [/.*/])
   }
 }
 

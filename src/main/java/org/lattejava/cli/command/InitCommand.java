@@ -65,7 +65,7 @@ public class InitCommand implements Command {
     }
 
     String group = promptGroup(output);
-    String name = promptName(output);
+    String name = promptName(output, projectDir);
     String license = promptLicense(output);
 
     String template = loadTemplate(configuration);
@@ -80,7 +80,19 @@ public class InitCommand implements Command {
       throw new RuntimeFailureException("Failed to write project.latte: " + e.getMessage());
     }
 
+    createDirectoryLayout(projectDir);
     output.infoln("Created project.latte for [%s:%s]", group, name);
+  }
+
+  private void createDirectoryLayout(Path projectDir) {
+    try {
+      Files.createDirectories(projectDir.resolve("src/main/java"));
+      Files.createDirectories(projectDir.resolve("src/main/resources"));
+      Files.createDirectories(projectDir.resolve("src/test/java"));
+      Files.createDirectories(projectDir.resolve("src/test/resources"));
+    } catch (IOException e) {
+      throw new RuntimeFailureException("Failed to create project directory layout: " + e.getMessage());
+    }
   }
 
   private String promptGroup(Output output) {
@@ -99,10 +111,19 @@ public class InitCommand implements Command {
     }
   }
 
-  private String promptName(Output output) {
+  private String promptName(Output output, Path projectDir) {
+    String defaultName = guessProjectName(projectDir);
     while (true) {
-      output.info("Project name (e.g., my-library): ");
+      if (defaultName != null) {
+        output.info("Project name [%s]: ", defaultName);
+      } else {
+        output.info("Project name: ");
+      }
+
       String input = scanner.nextLine().trim();
+      if (input.isEmpty() && defaultName != null) {
+        return defaultName;
+      }
       if (input.isEmpty()) {
         output.errorln("Project name cannot be empty.");
         continue;
@@ -117,11 +138,10 @@ public class InitCommand implements Command {
 
   private String promptLicense(Output output) {
     while (true) {
-      output.info("License (SPDX identifier, e.g., Apache-2.0, MIT): ");
+      output.info("License (SPDX identifier e.g. Apache-2.0) [MIT]: ");
       String input = scanner.nextLine().trim();
       if (input.isEmpty()) {
-        output.errorln("License cannot be empty.");
-        continue;
+        return "MIT";
       }
       if (!License.Licenses.containsKey(input)) {
         output.errorln("Unknown license [%s]. Use an SPDX identifier (e.g., Apache-2.0, MIT, GPL-3.0-only).", input);
@@ -129,6 +149,21 @@ public class InitCommand implements Command {
       }
       return input;
     }
+  }
+
+  private String guessProjectName(Path projectDir) {
+    Path resolved = projectDir.toAbsolutePath().normalize();
+    Path fileName = resolved.getFileName();
+    if (fileName == null) {
+      return null;
+    }
+
+    String name = fileName.toString();
+    if (name.matches("[a-zA-Z][a-zA-Z0-9-]*")) {
+      return name;
+    }
+
+    return null;
   }
 
   private String loadTemplate(RuntimeConfiguration configuration) {

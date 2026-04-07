@@ -101,6 +101,12 @@ public class InitCommandTest extends BaseUnitTest {
     assertTrue(content.contains("target(name: \"clean\""));
     assertTrue(content.contains("dependsOn: [\"build\"]"));
     assertFalse(content.contains("${"));
+
+    // Verify directory layout was created
+    assertTrue(Files.isDirectory(testDir.resolve("src/main/java")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/main/resources")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/test/java")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/test/resources")));
   }
 
   @Test
@@ -113,6 +119,23 @@ public class InitCommandTest extends BaseUnitTest {
     assertTrue(content.contains("group: \"com.acme\""));
     assertTrue(content.contains("name: \"widget\""));
     assertTrue(content.contains("licenses: [\"MIT\"]"));
+  }
+
+  @Test
+  public void initWithExistingDirectories() throws IOException {
+    // Pre-create some of the directories
+    Files.createDirectories(testDir.resolve("src/main/java"));
+    Files.createDirectories(testDir.resolve("src/test/java"));
+
+    Scanner scanner = new Scanner("org.example\nmy-lib\nMIT\n");
+    InitCommand command = new InitCommand(scanner);
+    command.run(configWithTemplate(), output, testDir);
+
+    assertTrue(Files.isRegularFile(testDir.resolve("project.latte")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/main/java")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/main/resources")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/test/java")));
+    assertTrue(Files.isDirectory(testDir.resolve("src/test/resources")));
   }
 
   @Test
@@ -144,6 +167,39 @@ public class InitCommandTest extends BaseUnitTest {
     }
 
     assertEquals(Files.readString(projectFile), "existing content");
+  }
+
+  @Test
+  public void initWithDefaults() throws IOException {
+    // Create a directory with a valid project name
+    Path namedDir = testDir.resolve("my-cool-project");
+    Files.createDirectories(namedDir);
+
+    // Empty input for name and license — should use defaults
+    Scanner scanner = new Scanner("org.example\n\n\n");
+    InitCommand command = new InitCommand(scanner);
+    command.run(configWithTemplate(), output, namedDir);
+
+    String content = Files.readString(namedDir.resolve("project.latte"));
+    assertTrue(content.contains("group: \"org.example\""));
+    assertTrue(content.contains("name: \"my-cool-project\""));
+    assertTrue(content.contains("licenses: [\"MIT\"]"));
+  }
+
+  @Test
+  public void initOverrideDefaults() throws IOException {
+    // Create a directory with a valid project name
+    Path namedDir = testDir.resolve("my-cool-project");
+    Files.createDirectories(namedDir);
+
+    // Provide explicit values instead of accepting defaults
+    Scanner scanner = new Scanner("org.example\ncustom-name\nApache-2.0\n");
+    InitCommand command = new InitCommand(scanner);
+    command.run(configWithTemplate(), output, namedDir);
+
+    String content = Files.readString(namedDir.resolve("project.latte"));
+    assertTrue(content.contains("name: \"custom-name\""));
+    assertTrue(content.contains("licenses: [\"Apache-2.0\"]"));
   }
 
   @Test

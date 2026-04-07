@@ -11,11 +11,11 @@ project(group: "org.lattejava", name: "cli", version: "0.1.0", licenses: ["MIT"]
 
   dependencies {
     group(name: "compile") {
-      dependency(id: "com.fasterxml.jackson.core:jackson-annotations:2.13.4:jar")
-      dependency(id: "com.fasterxml.jackson.core:jackson-core:2.13.4:jar")
-      dependency(id: "com.fasterxml.jackson.core:jackson-databind:2.13.4:jar")
+      dependency(id: "com.fasterxml.jackson.core:jackson-annotations:2.13.4")
+      dependency(id: "com.fasterxml.jackson.core:jackson-core:2.13.4")
+      dependency(id: "com.fasterxml.jackson.core:jackson-databind:2.13.4")
       dependency(id: "org.apache.commons:commons-compress:1.7.0")
-      dependency(id: "org.apache.groovy:groovy:5.0.5:jar")
+      dependency(id: "org.apache.groovy:groovy:5.0.5")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.easymock:easymock:3.2.0")
