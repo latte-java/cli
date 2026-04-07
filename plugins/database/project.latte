@@ -1,0 +1,66 @@
+/*
+ * Copyright (c) 2026, The Latte Project, All Rights Reserved
+ *
+ * Licensed under the MIT License (the "License");
+ * you may not use this file except in compliance with the License.
+ */
+project(group: "org.lattejava.plugin", name: "database", version: "0.1.0", licenses: ["ApacheV2_0"]) {
+  workflow {
+    standard()
+  }
+  publishWorkflow {
+    cache()
+  }
+
+  dependencies {
+    group(name: "provided") {
+      dependency(id: "org.lattejava:cli:0.1.0-{integration}")
+    }
+    group(name: "compile") {
+      dependency(id: "com.mysql:mysql-connector-java:8.0.18")
+      dependency(id: "org.liquibase:liquibase-core:3.8.8")
+      dependency(id: "org.postgresql:postgresql:42.2.8")
+    }
+    group(name: "test-compile", export: false) {
+      dependency(id: "org.testng:testng:6.8.7")
+    }
+  }
+
+  publications {
+    standard()
+  }
+}
+
+// Plugins
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0-{integration}")
+groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.0-{integration}")
+groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.0-{integration}")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0-{integration}")
+
+// Plugin settings
+groovy.settings.groovyVersion = "5.0"
+groovy.settings.javaVersion = "25"
+groovy.settings.jarManifest["Latte-Plugin-Class"] = "org.lattejava.plugin.database.DatabasePlugin"
+groovyTestNG.settings.groovyVersion = "5.0"
+groovyTestNG.settings.javaVersion = "25"
+
+target(name: "clean", description: "Cleans the project") {
+  groovy.clean()
+}
+
+target(name: "build", description: "Compiles and JARs the project") {
+  groovy.compile()
+  groovy.jar()
+}
+
+target(name: "test", description: "Runs the project's tests", dependsOn: ["build"]) {
+  groovyTestNG.test()
+}
+
+target(name: "int", description: "Releases a local integration build of the project", dependsOn: ["test"]) {
+  dependency.integrate()
+}
+
+target(name: "release", description: "Releases a full version of the project", dependsOn: ["clean", "test"]) {
+  release.release()
+}
