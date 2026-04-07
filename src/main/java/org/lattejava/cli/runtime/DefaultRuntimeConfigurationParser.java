@@ -73,10 +73,10 @@ public class DefaultRuntimeConfigurationParser implements RuntimeConfigurationPa
         } else {
           configuration.switches.add(argument.substring(2, equals), argument.substring(equals + 1));
         }
-      } else if (configuration.command == null && configuration.targets.isEmpty() && DefaultRunner.COMMANDS.containsKey(argument)) {
+      } else if (configuration.command == null && configuration.args.isEmpty() && DefaultRunner.COMMANDS.containsKey(argument)) {
         configuration.command = argument;
       } else {
-        configuration.targets.add(argument);
+        configuration.args.add(argument);
       }
     }
 

@@ -105,6 +105,9 @@ public class Main {
     output.infoln("");
     output.infoln("   init            Initializes a new Latte project in the current directory");
     output.infoln("                   Options: --template=<path>  Use a custom project template");
+    output.infoln("   install         Adds a dependency and downloads it");
+    output.infoln("                   Usage: latte install <group:name:version> [group]");
+    output.infoln("                   Group defaults to compile if not specified");
     output.infoln("");
     output.infoln("Switches:");
     output.infoln("");

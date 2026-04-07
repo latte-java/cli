@@ -25,7 +25,6 @@ import java.util.List;
  * @author Brian Pontarelli
  */
 public class RuntimeConfiguration {
-
   /**
    * Define the debug switch.
    */
@@ -62,9 +61,9 @@ public class RuntimeConfiguration {
   public Switches switches = new Switches();
 
   /**
-   * The list of targets to execute (in order).
+   * The non-switch, non-command arguments. These are targets when running a build, or arguments to a global command.
    */
-  public List<String> targets = new ArrayList<>();
+  public List<String> args = new ArrayList<>();
 
   /**
    * Determines if the version should be displayed
@@ -76,6 +75,6 @@ public class RuntimeConfiguration {
 
   public RuntimeConfiguration(boolean colorizeOutput, String... targets) {
     this.colorizeOutput = colorizeOutput;
-    Collections.addAll(this.targets, targets);
+    Collections.addAll(this.args, targets);
   }
 }

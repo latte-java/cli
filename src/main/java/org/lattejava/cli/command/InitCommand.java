@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
+import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.dep.domain.License;
@@ -46,7 +47,7 @@ public class InitCommand implements Command {
   }
 
   @Override
-  public void run(RuntimeConfiguration configuration, Output output) {
+  public void run(RuntimeConfiguration configuration, Output output, Project project) {
     run(configuration, output, Path.of(""));
   }
 

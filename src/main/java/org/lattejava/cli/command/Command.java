@@ -15,6 +15,7 @@
  */
 package org.lattejava.cli.command;
 
+import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.output.Output;
 
@@ -29,6 +30,7 @@ public interface Command {
    *
    * @param configuration The runtime configuration parsed from the CLI arguments.
    * @param output        The output for user interaction and logging.
+   * @param project       The parsed project, or null if no project file exists.
    */
-  void run(RuntimeConfiguration configuration, Output output);
+  void run(RuntimeConfiguration configuration, Output output, Project project);
 }

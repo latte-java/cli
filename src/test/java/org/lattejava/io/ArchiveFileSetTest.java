@@ -38,7 +38,7 @@ public class ArchiveFileSetTest extends BaseUnitTest {
   public void toFileInfosNoPrefix() throws Exception {
     ArchiveFileSet fileSet = new ArchiveFileSet(projectDir.resolve("src/main/java"), null);
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 120);
+    assertEquals(infos.size(), 122);
     // Spot-check a few known files
     List<Path> origins = infos.stream().map((info) -> info.origin).toList();
     assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
@@ -52,7 +52,7 @@ public class ArchiveFileSetTest extends BaseUnitTest {
   public void toFileInfosWithPrefix() throws Exception {
     ArchiveFileSet fileSet = new ArchiveFileSet(projectDir.resolve("src/main/java"), "some-directory-1.0");
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 120);
+    assertEquals(infos.size(), 122);
     // Spot-check origins are unchanged (prefix doesn't affect origin)
     List<Path> origins = infos.stream().map((info) -> info.origin).toList();
     assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
@@ -66,7 +66,7 @@ public class ArchiveFileSetTest extends BaseUnitTest {
   public void toFileInfosWithDeepPrefix() throws Exception {
     ArchiveFileSet fileSet = new ArchiveFileSet(projectDir.resolve("src/main/java"), "usr/local/inversoft/main");
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 120);
+    assertEquals(infos.size(), 122);
     // Spot-check origins
     List<Path> origins = infos.stream().map((info) -> info.origin).toList();
     assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));

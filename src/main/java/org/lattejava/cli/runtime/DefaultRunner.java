@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.lattejava.cli.command.Command;
 import org.lattejava.cli.command.InitCommand;
+import org.lattejava.cli.command.InstallCommand;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.parser.ProjectFileParser;
@@ -46,7 +47,8 @@ import org.lattejava.util.CyclicException;
  */
 public class DefaultRunner implements Runner {
   public static final Map<String, Command> COMMANDS = Map.of(
-      "init", new InitCommand()
+      "init", new InitCommand(),
+      "install", new InstallCommand()
   );
 
   private final Output output;
@@ -77,7 +79,7 @@ public class DefaultRunner implements Runner {
     // No project file — handle commands, help, version, or error
     if (!hasProjectFile) {
       if (runtimeConfiguration.command != null) {
-        dispatchCommand(runtimeConfiguration);
+        dispatchCommand(runtimeConfiguration, null);
         return;
       } else if (runtimeConfiguration.help) {
         Main.printHelp(output);
@@ -101,20 +103,20 @@ public class DefaultRunner implements Runner {
     // If a global command was specified, check if the project overrides it with a target
     if (runtimeConfiguration.command != null) {
       if (project.targets.containsKey(runtimeConfiguration.command)) {
-        runtimeConfiguration.targets.addFirst(runtimeConfiguration.command);
+        runtimeConfiguration.args.addFirst(runtimeConfiguration.command);
       } else {
-        dispatchCommand(runtimeConfiguration);
+        dispatchCommand(runtimeConfiguration, project);
         return;
       }
     }
 
-    projectRunner.run(project, runtimeConfiguration.targets);
+    projectRunner.run(project, runtimeConfiguration.args);
   }
 
-  private void dispatchCommand(RuntimeConfiguration runtimeConfiguration) {
+  private void dispatchCommand(RuntimeConfiguration runtimeConfiguration, Project project) {
     Command command = COMMANDS.get(runtimeConfiguration.command);
     if (command != null) {
-      command.run(runtimeConfiguration, output);
+      command.run(runtimeConfiguration, output, project);
     }
   }
 
