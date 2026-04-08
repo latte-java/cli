@@ -105,6 +105,20 @@ target(name: "minio", description: "Starts a local MinIO container for S3 testin
   run("docker exec latte-minio mc mb local/latte-test")
 }
 
-target(name: "release", description: "Releases a full version of the project", dependsOn: ["clean", "test"]) {
+target(name: "release", description: "Releases a full version of the project", dependsOn: ["clean", "test", "bundle"]) {
   release.release()
+
+  // Create a tarball of the bundle and publish it as a GitHub release
+  def tarball = "build/latte-${project.version}.tar.gz"
+  file.tar(file: tarball, compress: true) {
+    fileSet(dir: "build/bundle", includePatterns: [/.*/])
+  }
+
+  def tag = project.version.toString()
+  def proc = "gh release create ${tag} ${tarball} --title ${tag} --generate-notes".execute()
+  proc.waitFor()
+  if (proc.exitValue() != 0) {
+    fail("GitHub release creation failed [exit=${proc.exitValue()}]: ${proc.err.text}")
+  }
+  output.infoln("GitHub release created for ${tag}")
 }
