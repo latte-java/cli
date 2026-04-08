@@ -1,0 +1,18 @@
+package org.lattejava.parser.groovy
+
+project(group: "org.example", name: "s3-test", version: "1.0.0", licenses: ["MIT"]) {
+  workflow {
+    fetch {
+      cache()
+      s3(endpoint: "https://abc123.r2.cloudflarestorage.com", bucket: "my-repo",
+         accessKeyId: "AKTEST", secretAccessKey: "secret123")
+    }
+    publish {
+      s3(endpoint: "https://abc123.r2.cloudflarestorage.com", bucket: "my-repo",
+         accessKeyId: "AKTEST", secretAccessKey: "secret123", region: "us-east-1")
+    }
+  }
+}
+
+target(name: "build", description: "Builds the project") {
+}

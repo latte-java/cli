@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava", name: "cli", version: "0.1.0", licenses: ["MIT"]) {
+project(group: "org.lattejava", name: "cli", version: "0.1.1", licenses: ["MIT"]) {
   workflow {
     standard()
   }
@@ -40,7 +40,6 @@ javaTestNG = loadPlugin(id: "org.lattejava.plugin:java-testng:0.1.0")
 release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0")
 
 // Plugin settings
-idea.settings.imlFile = ".idea/cli.iml"
 java.settings.javaVersion = "25"
 javaTestNG.settings.javaVersion = "25"
 

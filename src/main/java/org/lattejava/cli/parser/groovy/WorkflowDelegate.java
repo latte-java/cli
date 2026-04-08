@@ -24,6 +24,7 @@ import org.lattejava.dep.workflow.Workflow;
 import org.lattejava.dep.workflow.process.CacheProcess;
 import org.lattejava.dep.workflow.process.MavenProcess;
 import org.lattejava.dep.workflow.process.Process;
+import org.lattejava.dep.workflow.process.S3Process;
 import org.lattejava.dep.workflow.process.URLProcess;
 import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
@@ -179,6 +180,28 @@ public class WorkflowDelegate {
           null,
           intDir != null ? intDir : cache,
           dir != null ? dir : defaultMavenDir));
+    }
+
+    /**
+     * Adds an {@link S3Process} to the workflow that uses the given attributes.
+     *
+     * @param attributes The S3 attributes: endpoint (required), bucket (required), accessKeyId (required),
+     *                   secretAccessKey (required), region (optional, defaults to "auto").
+     */
+    public void s3(Map<String, Object> attributes) {
+      if (!GroovyTools.hasAttributes(attributes, "endpoint", "bucket", "accessKeyId", "secretAccessKey")) {
+        throw new ParseException("Invalid s3 workflow definition. It should look like:\n\n" +
+            "  s3(endpoint: \"https://account-id.r2.cloudflarestorage.com\", bucket: \"my-bucket\", " +
+            "accessKeyId: \"...\", secretAccessKey: \"...\")");
+      }
+
+      String region = GroovyTools.toString(attributes, "region");
+      processes.add(new S3Process(output,
+          GroovyTools.toString(attributes, "endpoint"),
+          GroovyTools.toString(attributes, "bucket"),
+          GroovyTools.toString(attributes, "accessKeyId"),
+          GroovyTools.toString(attributes, "secretAccessKey"),
+          region != null ? region : "auto"));
     }
 
     /**

@@ -34,6 +34,7 @@ import org.lattejava.dep.domain.Publication;
 import org.lattejava.dep.domain.ReifiedArtifact;
 import org.lattejava.dep.workflow.process.CacheProcess;
 import org.lattejava.dep.workflow.process.MavenProcess;
+import org.lattejava.dep.workflow.process.S3Process;
 import org.lattejava.dep.workflow.process.URLProcess;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.domain.Publications;
@@ -226,6 +227,30 @@ public class GroovyProjectFileParserTest extends BaseUnitTest {
         .dependencies
         .get(0);
     assertEquals(nonSemanticVersionedArtifact.nonSemanticVersion, "1.0");
+  }
+
+  @Test
+  public void parseS3Workflow() {
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/s3-workflow.latte");
+    Project project = parser.parse(buildFile, new RuntimeConfiguration());
+
+    // Verify fetch workflow has cache + s3
+    assertEquals(project.workflow.fetchWorkflow.processes.size(), 2);
+    assertTrue(project.workflow.fetchWorkflow.processes.get(0) instanceof CacheProcess);
+    assertTrue(project.workflow.fetchWorkflow.processes.get(1) instanceof S3Process);
+
+    S3Process fetchS3 = (S3Process) project.workflow.fetchWorkflow.processes.get(1);
+    assertEquals(fetchS3.endpoint, "https://abc123.r2.cloudflarestorage.com");
+    assertEquals(fetchS3.bucket, "my-repo");
+
+    // Verify publish workflow has s3 with explicit region
+    assertEquals(project.workflow.publishWorkflow.processes.size(), 1);
+    assertTrue(project.workflow.publishWorkflow.processes.get(0) instanceof S3Process);
+
+    S3Process publishS3 = (S3Process) project.workflow.publishWorkflow.processes.get(0);
+    assertEquals(publishS3.endpoint, "https://abc123.r2.cloudflarestorage.com");
+    assertEquals(publishS3.bucket, "my-repo");
   }
 
   @Test
