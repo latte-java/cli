@@ -8,28 +8,37 @@ Latte is a Java build system (like Maven/Gradle). This repo is the CLI component
 
 ## Build System
 
-This project is built with **Savant** (`sb` command). Java 21 is required (see `.javaversion`) to run Savant since it has not been upgraded to Java 25 yet. The project builds using Java 25 though. You can look at the setting `java.settings.javaVersion = "25"` in `build.savant` to understand the version of Java the project targets.
+This project is built with **Latte** (`latte` command). Java 25 is required (see `.javaversion` and `java.settings.javaVersion` in `project.latte`).
 
 ```bash
-# Always prefix with JAVA_HOME when running build commands
-JAVA_HOME=$(javaenv home) sb clean
-JAVA_HOME=$(javaenv home) sb compile
-JAVA_HOME=$(javaenv home) sb jar          # depends on compile
-JAVA_HOME=$(javaenv home) sb test         # depends on jar (runs TestNG)
-JAVA_HOME=$(javaenv home) sb int          # local integration build (depends on test)
-JAVA_HOME=$(javaenv home) sb bundle       # create jlink runtime image (depends on jar)
-JAVA_HOME=$(javaenv home) sb release      # full release (depends on clean, test)
+latte clean                # cleans the project
+latte build                # compiles and JARs the project
+latte test                 # runs tests (depends on build)
+latte int                  # local integration build (depends on test)
+latte bundle               # create self-contained runtime bundle (depends on build)
+latte release              # full release (depends on clean, test)
 ```
 
-The build file is `build.savant` (Groovy DSL, similar to Gradle). Dependencies, plugins, and targets are defined there.
+The build file is `project.latte` (Groovy DSL). Dependencies, plugins, and targets are defined there.
+
+### Plugins
+
+Plugins live under `plugins/` and are also built with Latte. Each plugin has its own `project.latte`. They must be built and integration-published in dependency order since some plugins depend on others:
+
+1. **No dependencies on other plugins:** file, dependency, database, debian, linter, pom
+2. **Depends on dependency plugin:** idea, release-git
+3. **Depends on dependency + file plugins:** groovy, java, groovy-testng, java-testng
+
+To build a plugin: `cd plugins/<name> && latte int`
 
 ## Testing
 
 - Framework: **TestNG** with **EasyMock** for mocking
-- Run all tests: `JAVA_HOME=$(javaenv home) sb test`
+- Run all tests: `latte test`
+- Run a specific test: `latte test --test=ClassName`
 - Test sources: `src/test/java/`
 - Test reports: `build/test-reports/`
-- Integration test data: `test-project/` contains a sample `build.latte` file used by `MainTest`
+- Integration test data: `test-project/` contains a sample `project.latte` file used by `DefaultRunnerTest`
 
 ## Architecture
 
@@ -60,8 +69,20 @@ The build file is `build.savant` (Groovy DSL, similar to Gradle). Dependencies, 
 3. Artifacts fetched via `Workflow` (tries Latte format first using `.amd`, then falls back to Maven `.pom`)
 4. Checksums verified (SHA256 for Latte repos, SHA1 for Maven repos)
 
+### License
+All new source files must use the MIT license header with copyright assigned to "The Latte Project":
+
+```
+/*
+ * Copyright (c) 2026, The Latte Project, All Rights Reserved
+ *
+ * Licensed under the MIT License (the "License");
+ * you may not use this file except in compliance with the License.
+ */
+```
+
 ### Key Conventions
 - Artifact metadata uses `.amd` (JSON)
 - The `~/.cache/latte` directory stores downloaded artifacts locally (conforms with XDG paths)
 - The `~/.config/latte` directory stores the system configuration for Latte, including plugin configuration 
-- Build file is `build.latte` (for projects built with Latte) or `build.savant` (for Savant, which Latte descends from)
+- Build file is `project.latte` (Groovy DSL)

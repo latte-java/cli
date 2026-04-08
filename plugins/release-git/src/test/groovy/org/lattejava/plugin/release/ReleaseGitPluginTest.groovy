@@ -281,6 +281,42 @@ class ReleaseGitPluginTest {
 }""")
   }
 
+  @Test
+  void releaseWithCustomTag() throws Exception {
+    project.dependencies = null
+    setupPublications(project, mainPub, mainPubSource, testPub, testPubSource)
+
+    // Run the release with a custom tag
+    ReleaseGitPlugin plugin = new ReleaseGitPlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.tag = "v-foo-bar"
+    plugin.release()
+
+    // Verify the custom tag exists (not the version-only tag)
+    String tags = "git tag -l".execute([], gitDir.toFile()).text
+    assertTrue(tags.contains("v-foo-bar"))
+    assertFalse(tags.contains("1.0.0"))
+
+    tags = "git tag -l".execute([], gitRemoteDir.toFile()).text
+    assertTrue(tags.contains("v-foo-bar"))
+    assertFalse(tags.contains("1.0.0"))
+
+    assertStatus(true)
+  }
+
+  @Test
+  void releaseDefaultTag() throws Exception {
+    project.dependencies = null
+    setupPublications(project, mainPub, mainPubSource, testPub, testPubSource)
+
+    // Run the release without changing the tag — should default to the version
+    ReleaseGitPlugin plugin = new ReleaseGitPlugin(project, new RuntimeConfiguration(), output)
+    assertEquals(plugin.settings.tag, "1.0.0")
+    plugin.release()
+
+    assertTagsExist()
+    assertStatus(true)
+  }
+
   private static void setupPublications(Project project, Path mainPub, Path mainPubSource, Path testPub, Path testPubSource) {
     Publication mainPublication = new Publication(
         new ReifiedArtifact("org.lattejava.test:release-git-test:release-git-main:1.0.0:jar", [License.parse("Commercial", "License")]),

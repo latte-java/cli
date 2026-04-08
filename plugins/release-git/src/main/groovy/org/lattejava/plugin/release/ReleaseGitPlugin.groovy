@@ -34,10 +34,13 @@ import static org.lattejava.lang.RuntimeTools.ProcessResult
 class ReleaseGitPlugin extends BaseGroovyPlugin {
   DependencyPlugin dependencyPlugin
 
+  ReleaseGitSettings settings = new ReleaseGitSettings()
+
   ReleaseGitPlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
     super(project, runtimeConfiguration, output)
 
     dependencyPlugin = new DependencyPlugin(project, runtimeConfiguration, output)
+    settings.tag = project.version.toString()
   }
 
   void release() {
@@ -69,10 +72,10 @@ class ReleaseGitPlugin extends BaseGroovyPlugin {
   }
 
   private void tag(Git git) {
-    output.infoln("Creating tag [${project.version}]")
+    output.infoln("Creating tag [${settings.tag}]")
 
     try {
-      git.tag(project.version, "Release version [${project.version}].")
+      git.tag(settings.tag, "Release version [${settings.tag}].")
     } catch (RuntimeException e) {
       fail("Unable to create Git tag for the release. Error is [%s]", e.getMessage())
     }
@@ -107,15 +110,15 @@ class ReleaseGitPlugin extends BaseGroovyPlugin {
   }
 
   private void checkIfTagIsAvailable(Git git) {
-    output.infoln("Checking if tag [${project.version}] already exists")
+    output.infoln("Checking if tag [${settings.tag}] already exists")
 
     ProcessResult result = git.fetchTags()
     if (result.exitCode != 0) {
       fail("Unable to fetch new tags from the remote git repository. Unable to perform a release.")
     }
 
-    if (git.doesTagExist(project.version)) {
-      fail("It appears that the version [${project.version}] has already been released.")
+    if (git.doesTagExist(settings.tag)) {
+      fail("It appears that the tag [${settings.tag}] already exists.")
     }
   }
 
