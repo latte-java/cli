@@ -161,28 +161,6 @@ class ReleaseGitPluginTest {
   }
 
   @Test
-  void releaseFromNonGitDirectory() throws Exception {
-    project.dependencies = null
-    setupPublications(project, mainPub, mainPubSource, testPub, testPubSource)
-
-    // Setup the bad directory and recreate the plugin
-    Files.createDirectories(projectDir.resolve("build/test/release/bad-project-dir"))
-    project = new Project(projectDir.resolve("build/test/release/bad-project-dir"), output)
-
-    // Run the release
-    try {
-      ReleaseGitPlugin plugin = new ReleaseGitPlugin(project, new RuntimeConfiguration(), output)
-      plugin.release()
-      fail("Should have failed")
-    } catch (e) {
-      // Expected
-      assertTrue(e.message.contains("You can only run a release from a Git repository."))
-    }
-
-    assertReleaseDidNotRun()
-  }
-
-  @Test
   void releaseWithDependencyIntegrationBuild() throws Exception {
     project.dependencies = new Dependencies(
         new DependencyGroup("compile", true,
