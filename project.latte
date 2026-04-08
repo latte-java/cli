@@ -9,7 +9,8 @@ project(group: "org.lattejava", name: "cli", version: "0.1.2", licenses: ["MIT"]
     standard()
   }
   publishWorkflow {
-    cache()
+    s3(endpoint: global.latteRepositoryS3URL, bucket: "latte-repository",
+       accessKeyId: global.latteRepositoryS3AccessKeyID, secretAccessKey: global.latteRepositoryS3SecretAccessKey)
   }
 
   dependencies {

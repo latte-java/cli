@@ -9,12 +9,13 @@ project(group: "org.lattejava.plugin", name: "debian", version: "0.1.1", license
     standard()
   }
   publishWorkflow {
-    cache()
+    s3(endpoint: global.latteRepositoryS3URL, bucket: "latte-repository",
+       accessKeyId: global.latteRepositoryS3AccessKeyID, secretAccessKey: global.latteRepositoryS3SecretAccessKey)
   }
 
   dependencies {
     group(name: "provided") {
-      dependency(id: "org.lattejava:cli:0.1.0-{integration}")
+      dependency(id: "org.lattejava:cli:0.1.0")
     }
     group(name: "compile") {
       dependency(id: "org.apache.commons:commons-compress:1.7.0")
@@ -30,10 +31,10 @@ project(group: "org.lattejava.plugin", name: "debian", version: "0.1.1", license
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0-{integration}")
-groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.0-{integration}")
-groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.0-{integration}")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0-{integration}")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
+groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.0")
+groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.0")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0")
 
 // Plugin settings
 groovy.settings.groovyVersion = "5.0"
