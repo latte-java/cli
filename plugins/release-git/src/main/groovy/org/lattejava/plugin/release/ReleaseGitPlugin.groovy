@@ -15,14 +15,11 @@
  */
 package org.lattejava.plugin.release
 
-import java.nio.file.Files
-import java.nio.file.Path
-
 import org.lattejava.cli.domain.Project
-import org.lattejava.output.Output
-import org.lattejava.plugin.dep.DependencyPlugin
 import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.output.Output
+import org.lattejava.plugin.dep.DependencyPlugin
 
 import static org.lattejava.lang.RuntimeTools.ProcessResult
 
