@@ -39,7 +39,7 @@ project(group: "org.lattejava.plugin", name: "java-testng", version: "0.1.1", li
 dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
 groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.0")
 groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.0")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.2")
 
 // Plugin settings
 groovy.settings.groovyVersion = "5.0"
@@ -47,6 +47,7 @@ groovy.settings.javaVersion = "25"
 groovy.settings.jarManifest["Latte-Plugin-Class"] = "org.lattejava.plugin.java.testng.JavaTestNGPlugin"
 groovyTestNG.settings.groovyVersion = "5.0"
 groovyTestNG.settings.javaVersion = "25"
+release.settings.tag = "${project.name}-${project.version}"
 
 target(name: "clean", description: "Cleans the project") {
   groovy.clean()
