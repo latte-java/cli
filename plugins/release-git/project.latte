@@ -4,13 +4,14 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava.plugin", name: "release-git", version: "0.1.1", licenses: ["ApacheV2_0"]) {
+project(group: "org.lattejava.plugin", name: "release-git", version: "0.1.2", licenses: ["ApacheV2_0"]) {
   workflow {
     standard()
   }
   publishWorkflow {
-    s3(endpoint: global.latteRepositoryS3URL, bucket: "latte-repository",
-       accessKeyId: global.latteRepositoryS3AccessKeyID, secretAccessKey: global.latteRepositoryS3SecretAccessKey)
+    cache()
+//    s3(endpoint: global.latteRepositoryS3URL, bucket: "latte-repository",
+//       accessKeyId: global.latteRepositoryS3AccessKeyID, secretAccessKey: global.latteRepositoryS3SecretAccessKey)
   }
 
   dependencies {

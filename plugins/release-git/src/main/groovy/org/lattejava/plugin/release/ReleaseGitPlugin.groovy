@@ -44,12 +44,6 @@ class ReleaseGitPlugin extends BaseGroovyPlugin {
   }
 
   void release() {
-    // Check if this is a working copy
-    Path gitDirectory = project.directory.resolve(".git")
-    if (!Files.isDirectory(gitDirectory)) {
-      fail("You can only run a release from a Git repository.")
-    }
-
     if (!project.publishWorkflow) {
       fail("You must specify a publishWorkflow in the project definition of your project.latte file.")
     }
