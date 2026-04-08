@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava", name: "cli", version: "0.1.1", licenses: ["MIT"]) {
+project(group: "org.lattejava", name: "cli", version: "0.1.2", licenses: ["MIT"]) {
   workflow {
     standard()
   }
@@ -71,10 +71,11 @@ target(name: "idea", description: "Updates the IntelliJ IDEA module file") {
 target(name: "bundle", description: "Creates a self-contained runtime bundle", dependsOn: ["build"]) {
   def bundleDir = "build/bundle"
   file.prune(dir: bundleDir)
+  file.mkdir(dir: "${bundleDir}/bin")
   file.mkdir(dir: "${bundleDir}/lib")
   file.mkdir(dir: "${bundleDir}/templates")
 
-  file.copyFile(file: "src/main/scripts/latte", to: "${bundleDir}/latte")
+  file.copyFile(file: "src/main/scripts/latte", to: "${bundleDir}/bin/latte")
   file.copyFile(file: "build/jars/${project.name}-${project.version}.jar", to: "${bundleDir}/lib/${project.name}-${project.version}.jar")
   dependency.copy(to: "${bundleDir}/lib") {
     dependencies(group: "compile", transitive: true, fetchSource: false)

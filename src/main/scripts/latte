@@ -17,11 +17,11 @@ if ! java -version 2>&1 | grep -q "25.0"; then
 fi
 
 SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || realpath "${BASH_SOURCE[0]}")"
-SCRIPT_DIR="$(dirname "$SCRIPT")"
+LATTE_HOME="$(dirname "$(dirname "$SCRIPT")")"
 
 CLASSPATH=
-for f in "${SCRIPT_DIR}"/lib/*; do
+for f in "${LATTE_HOME}"/lib/*; do
   CLASSPATH=${CLASSPATH}:${f}
 done
 
-exec java -Dlatte.home="${SCRIPT_DIR}" -cp "${CLASSPATH}" org.lattejava.cli.runtime.Main "$@"
+exec java -Dlatte.home="${LATTE_HOME}" -cp "${CLASSPATH}" org.lattejava.cli.runtime.Main "$@"
