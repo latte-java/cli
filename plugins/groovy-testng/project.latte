@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava.plugin", name: "groovy-testng", version: "0.1.2", licenses: ["ApacheV2_0"]) {
+project(group: "org.lattejava.plugin", name: "groovy-testng", version: "0.1.3", licenses: ["ApacheV2_0"]) {
   workflow {
     standard()
   }
@@ -19,8 +19,8 @@ project(group: "org.lattejava.plugin", name: "groovy-testng", version: "0.1.2", 
     }
     group(name: "compile") {
       dependency(id: "org.apache.groovy:groovy-xml:5.0.5")
-      dependency(id: "org.lattejava.plugin:dependency:0.1.2")
-      dependency(id: "org.lattejava.plugin:file:0.1.2")
+      dependency(id: "org.lattejava.plugin:dependency:0.1.3")
+      dependency(id: "org.lattejava.plugin:file:0.1.3")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.testng:testng:7.12.0")
@@ -33,10 +33,10 @@ project(group: "org.lattejava.plugin", name: "groovy-testng", version: "0.1.2", 
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.2")
-groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.2")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.3")
+groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.3")
 groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.2")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.2")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.3")
 
 // Plugin settings
 groovy.settings.groovyVersion = "5.0"
