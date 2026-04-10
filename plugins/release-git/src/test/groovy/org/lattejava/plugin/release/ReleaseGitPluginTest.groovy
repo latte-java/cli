@@ -32,6 +32,7 @@ import org.lattejava.dep.workflow.Workflow
 import org.lattejava.dep.workflow.process.CacheProcess
 import org.lattejava.cli.domain.Project
 import org.lattejava.domain.Version
+import org.json.simple.parser.JSONParser
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
@@ -204,30 +205,11 @@ class ReleaseGitPluginTest {
 
     // Verify the SubVersion publish and the AMD files
     assertStatus(true)
-    assertEquals(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-main-1.0.0.jar.amd"))),
-        """{
-  "licenses" : [ {
-    "type" : "Commercial",
-    "text" : "License"
-  } ],
-  "dependencyGroups" : {
-    "compile" : [ {
-      "id" : "org.lattejava.test:leaf2:leaf2:1.0.0:jar"
-    } ]
-  }
-}""")
-    assertEquals(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-test-1.0.0.jar.amd"))),
-        """{
-  "licenses" : [ {
-    "type" : "Commercial",
-    "text" : "License"
-  } ],
-  "dependencyGroups" : {
-    "compile" : [ {
-      "id" : "org.lattejava.test:leaf2:leaf2:1.0.0:jar"
-    } ]
-  }
-}""")
+    def parser = new JSONParser()
+    assertEquals(parser.parse(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-main-1.0.0.jar.amd")))),
+        parser.parse('{"licenses":[{"type":"Commercial","text":"License"}],"dependencyGroups":{"compile":[{"id":"org.lattejava.test:leaf2:leaf2:1.0.0:jar"}]}}'))
+    assertEquals(parser.parse(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-test-1.0.0.jar.amd")))),
+        parser.parse('{"licenses":[{"type":"Commercial","text":"License"}],"dependencyGroups":{"compile":[{"id":"org.lattejava.test:leaf2:leaf2:1.0.0:jar"}]}}'))
   }
 
   @Test
@@ -243,20 +225,11 @@ class ReleaseGitPluginTest {
 
     // Verify the SubVersion publish and the AMD files
     assertStatus(true)
-    assertEquals(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-main-1.0.0.jar.amd"))),
-        """{
-  "licenses" : [ {
-    "type" : "Commercial",
-    "text" : "License"
-  } ]
-}""")
-    assertEquals(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-test-1.0.0.jar.amd"))),
-        """{
-  "licenses" : [ {
-    "type" : "Commercial",
-    "text" : "License"
-  } ]
-}""")
+    def parser = new JSONParser()
+    assertEquals(parser.parse(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-main-1.0.0.jar.amd")))),
+        parser.parse('{"licenses":[{"type":"Commercial","text":"License"}]}'))
+    assertEquals(parser.parse(new String(Files.readAllBytes(publishDir.resolve("org/lattejava/test/release-git-test/1.0.0/release-git-test-1.0.0.jar.amd")))),
+        parser.parse('{"licenses":[{"type":"Commercial","text":"License"}]}'))
   }
 
   @Test
