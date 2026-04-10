@@ -15,14 +15,14 @@ project(group: "org.lattejava.plugin", name: "groovy", version: "0.1.1", license
 
   dependencies {
     group(name: "provided") {
-      dependency(id: "org.lattejava:cli:0.1.0")
+      dependency(id: "org.lattejava:cli:0.1.3")
     }
     group(name: "compile") {
-      dependency(id: "org.lattejava.plugin:dependency:0.1.0")
-      dependency(id: "org.lattejava.plugin:file:0.1.0")
+      dependency(id: "org.lattejava.plugin:dependency:0.1.2")
+      dependency(id: "org.lattejava.plugin:file:0.1.2")
     }
     group(name: "test-compile", export: false) {
-      dependency(id: "org.testng:testng:6.8.7")
+      dependency(id: "org.testng:testng:7.12.0")
     }
   }
 
@@ -32,9 +32,9 @@ project(group: "org.lattejava.plugin", name: "groovy", version: "0.1.1", license
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
-groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.0")
-groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.0")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.2")
+groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.1")
+groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.1")
 release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.2")
 
 // Plugin settings

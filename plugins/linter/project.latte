@@ -15,7 +15,7 @@ project(group: "org.lattejava.plugin", name: "linter", version: "0.1.1", license
 
   dependencies {
     group(name: "provided") {
-      dependency(id: "org.lattejava:cli:0.1.0")
+      dependency(id: "org.lattejava:cli:0.1.3")
     }
     group(name: "compile") {
       dependency(id: "net.sourceforge.pmd:pmd-core:7.5.0")
@@ -23,7 +23,7 @@ project(group: "org.lattejava.plugin", name: "linter", version: "0.1.1", license
       dependency(id: "org.slf4j:slf4j-simple:1.7.25")
     }
     group(name: "test-compile", export: false) {
-      dependency(id: "org.testng:testng:6.8.7")
+      dependency(id: "org.testng:testng:7.12.0")
     }
   }
 
