@@ -16,12 +16,18 @@
 package org.lattejava.dep;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.ArtifactMetaData;
@@ -29,12 +35,8 @@ import org.lattejava.dep.domain.ArtifactSpec;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.domain.License;
-import org.lattejava.dep.domain.json.AMDJson;
-import org.lattejava.dep.domain.json.AMDJsonDependency;
-import org.lattejava.dep.domain.json.AMDJsonLicense;
 import org.lattejava.domain.Version;
 import org.lattejava.domain.VersionException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This class is a toolkit for handling artifact operations.
@@ -103,41 +105,55 @@ public class ArtifactTools {
    * @param file     The file to read the JSON MetaData information from.
    * @param mappings The semantic version mappings used when the JSON contains non-semantic versions.
    * @return The MetaData parsed.
-   * @throws IOException If the parse operation failed because of an IO error.
+   * @throws IOException      If the parse operation failed because of an IO error.
    * @throws VersionException If any of the version strings could not be parsed.
    */
   public static ArtifactMetaData parseArtifactMetaData(Path file, Map<String, Version> mappings)
       throws IOException, VersionException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    AMDJson amdJson = objectMapper.readValue(file.toFile(), AMDJson.class);
+    JSONParser parser = new JSONParser();
+    JSONObject root;
+    try (FileReader reader = new FileReader(file.toFile())) {
+      root = (JSONObject) parser.parse(reader);
+    } catch (ParseException e) {
+      throw new IOException("Failed to parse AMD JSON file: " + file, e);
+    }
 
     // Convert licenses
     List<License> licenses = new ArrayList<>();
-    if (amdJson.licenses != null) {
-      for (AMDJsonLicense jsonLicense : amdJson.licenses) {
-        String text = jsonLicense.text;
+    JSONArray licensesArray = (JSONArray) root.get("licenses");
+    if (licensesArray != null) {
+      for (Object obj : licensesArray) {
+        JSONObject jsonLicense = (JSONObject) obj;
+        String type = (String) jsonLicense.get("type");
+        String text = (String) jsonLicense.get("text");
         if (text != null) {
           text = text.trim();
           if (text.isEmpty()) {
             text = null;
           }
         }
-        licenses.add(License.parse(jsonLicense.type, text));
+        licenses.add(License.parse(type, text));
       }
     }
 
     // Convert dependency groups
     Dependencies dependencies = null;
-    if (amdJson.dependencyGroups != null) {
+    JSONObject depGroupsObj = (JSONObject) root.get("dependencyGroups");
+    if (depGroupsObj != null) {
       dependencies = new Dependencies();
-      for (Map.Entry<String, List<AMDJsonDependency>> entry : amdJson.dependencyGroups.entrySet()) {
-        DependencyGroup group = new DependencyGroup(entry.getKey(), true);
-        for (AMDJsonDependency jsonDep : entry.getValue()) {
-          ArtifactSpec spec = new ArtifactSpec(jsonDep.id);
+      for (Object key : depGroupsObj.keySet()) {
+        String groupName = (String) key;
+        JSONArray depsArray = (JSONArray) depGroupsObj.get(groupName);
+        DependencyGroup group = new DependencyGroup(groupName, true);
+        for (Object depObj : depsArray) {
+          JSONObject jsonDep = (JSONObject) depObj;
+          String id = (String) jsonDep.get("id");
+          ArtifactSpec spec = new ArtifactSpec(id);
           List<ArtifactID> exclusions = new ArrayList<>();
-          if (jsonDep.exclusions != null) {
-            for (String exclusionSpec : jsonDep.exclusions) {
-              exclusions.add(new ArtifactID(exclusionSpec));
+          JSONArray exclusionsArray = (JSONArray) jsonDep.get("exclusions");
+          if (exclusionsArray != null) {
+            for (Object exObj : exclusionsArray) {
+              exclusions.add(new ArtifactID((String) exObj));
             }
           }
 
@@ -157,7 +173,7 @@ public class ArtifactTools {
 
           group.dependencies.add(new Artifact(spec.id, version, nonSemanticVersion, exclusions));
         }
-        dependencies.groups.put(entry.getKey(), group);
+        dependencies.groups.put(groupName, group);
       }
     }
 
@@ -175,41 +191,50 @@ public class ArtifactTools {
     File tmp = File.createTempFile("latte", "amd.json");
     tmp.deleteOnExit();
 
-    List<AMDJsonLicense> licenses = new ArrayList<>();
+    JSONObject root = new JSONObject();
+    JSONArray licensesArray = new JSONArray();
     for (License license : artifactMetaData.licenses) {
-      licenses.add(new AMDJsonLicense(license.identifier, license.customText ? license.text : null));
+      JSONObject licObj = new JSONObject();
+      licObj.put("type", license.identifier);
+      if (license.customText && license.text != null) {
+        licObj.put("text", license.text);
+      }
+      licensesArray.add(licObj);
     }
+    root.put("licenses", licensesArray);
 
-    Map<String, List<AMDJsonDependency>> dependencyGroups = null;
     Dependencies dependencies = artifactMetaData.dependencies;
     if (dependencies != null) {
-      dependencyGroups = new java.util.LinkedHashMap<>();
+      JSONObject depGroupsObj = new JSONObject();
       for (Map.Entry<String, DependencyGroup> entry : dependencies.groups.entrySet()) {
         DependencyGroup group = entry.getValue();
         if (!group.export) {
           continue;
         }
 
-        List<AMDJsonDependency> jsonDeps = new ArrayList<>();
+        JSONArray depsArray = new JSONArray();
         for (Artifact artifact : group.dependencies) {
+          JSONObject depObj = new JSONObject();
           String version = artifact.nonSemanticVersion != null ? artifact.nonSemanticVersion : artifact.version.toString();
           String id = artifact.id.group + ":" + artifact.id.project + ":" + artifact.id.name + ":" + version + ":" + artifact.id.type;
-          List<String> exclusions = null;
+          depObj.put("id", id);
           if (!artifact.exclusions.isEmpty()) {
-            exclusions = new ArrayList<>();
+            JSONArray exArray = new JSONArray();
             for (ArtifactID exclusion : artifact.exclusions) {
-              exclusions.add(exclusion.group + ":" + exclusion.project + ":" + exclusion.name + ":" + exclusion.type);
+              exArray.add(exclusion.group + ":" + exclusion.project + ":" + exclusion.name + ":" + exclusion.type);
             }
+            depObj.put("exclusions", exArray);
           }
-          jsonDeps.add(new AMDJsonDependency(id, exclusions));
+          depsArray.add(depObj);
         }
-        dependencyGroups.put(entry.getKey(), jsonDeps);
+        depGroupsObj.put(entry.getKey(), depsArray);
       }
+      root.put("dependencyGroups", depGroupsObj);
     }
 
-    AMDJson amdJson = new AMDJson(licenses, dependencyGroups);
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.writerWithDefaultPrettyPrinter().writeValue(tmp, amdJson);
+    try (FileWriter writer = new FileWriter(tmp)) {
+      root.writeJSONString(writer);
+    }
 
     return tmp.toPath();
   }
@@ -234,5 +259,4 @@ public class ArtifactTools {
     }
     return dots >= 2;
   }
-
 }

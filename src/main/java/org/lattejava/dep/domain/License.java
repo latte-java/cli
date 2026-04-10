@@ -17,6 +17,8 @@
 package org.lattejava.dep.domain;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,18 +27,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.lattejava.dep.LicenseException;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Domain for licenses.
  *
  * @author Brian Pontarelli
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public final class License {
   public static final Set<String> CustomLicenses = new HashSet<>();
 
@@ -46,20 +46,16 @@ public final class License {
 
   public boolean customText;
 
-  @JsonProperty("detailsUrl")
   public String detailsURL;
 
   public LicenseTextException exception;
 
-  @JsonProperty("isFsfLibre")
   public boolean fsfLibre;
 
-  @JsonProperty("licenseId")
   public String identifier;
 
   public String name;
 
-  @JsonProperty("isOsiApproved")
   public boolean osiApproved;
 
   public String reference;
@@ -206,36 +202,44 @@ public final class License {
     return identifier;
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static class LicenseExceptionTextJSON {
-    public String licenseExceptionText;
+  private static Boolean toBoolean(Object value) {
+    if (value instanceof Boolean b) {
+      return b;
+    }
+    return false;
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static class LicenseExceptionsJSON {
-    public List<LicenseTextException> exceptions = new ArrayList<>();
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static class LicenseTextJSON {
-    public String licenseText;
-  }
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  private static class LicensesJSON {
-    public List<License> licenses = new ArrayList<>();
+  private static List<String> toStringList(JSONArray array) {
+    if (array == null) {
+      return new ArrayList<>();
+    }
+    List<String> list = new ArrayList<>();
+    for (Object obj : array) {
+      list.add((String) obj);
+    }
+    return list;
   }
 
   static {
     try (InputStream is = License.class.getResourceAsStream("/licenses.json")) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      LicensesJSON licenses = objectMapper.readerFor(LicensesJSON.class).readValue(is);
-      for (License license : licenses.licenses) {
+      JSONParser parser = new JSONParser();
+      JSONObject root = (JSONObject) parser.parse(new InputStreamReader(is, StandardCharsets.UTF_8));
+      JSONArray licensesArray = (JSONArray) root.get("licenses");
+      for (Object obj : licensesArray) {
+        JSONObject licObj = (JSONObject) obj;
+        License license = new License();
+        license.reference = (String) licObj.get("reference");
+        license.detailsURL = (String) licObj.get("detailsUrl");
+        license.name = (String) licObj.get("name");
+        license.identifier = (String) licObj.get("licenseId");
+        license.osiApproved = toBoolean(licObj.get("isOsiApproved"));
+        license.fsfLibre = toBoolean(licObj.get("isFsfLibre"));
+        license.seeAlso = toStringList((JSONArray) licObj.get("seeAlso"));
         Licenses.put(license.identifier, license);
 
         try (InputStream ltis = License.class.getResourceAsStream("/license-details/" + license.identifier + ".json")) {
-          LicenseTextJSON text = objectMapper.readerFor(LicenseTextJSON.class).readValue(ltis);
-          license.text = text.licenseText;
+          JSONObject textObj = (JSONObject) parser.parse(new InputStreamReader(ltis, StandardCharsets.UTF_8));
+          license.text = (String) textObj.get("licenseText");
         } catch (Exception e) {
           throw new IllegalStateException(e);
         }
@@ -245,14 +249,21 @@ public final class License {
     }
 
     try (InputStream is = License.class.getResourceAsStream("/exceptions.json")) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      LicenseExceptionsJSON exceptions = objectMapper.readerFor(LicenseExceptionsJSON.class).readValue(is);
-      for (LicenseTextException le : exceptions.exceptions) {
+      JSONParser parser = new JSONParser();
+      JSONObject root = (JSONObject) parser.parse(new InputStreamReader(is, StandardCharsets.UTF_8));
+      JSONArray exceptionsArray = (JSONArray) root.get("exceptions");
+      for (Object obj : exceptionsArray) {
+        JSONObject exObj = (JSONObject) obj;
+        LicenseTextException le = new LicenseTextException();
+        le.detailsURL = (String) exObj.get("detailsUrl");
+        le.identifier = (String) exObj.get("licenseExceptionId");
+        le.name = (String) exObj.get("name");
+        le.reference = (String) exObj.get("reference");
         Exceptions.put(le.identifier, le);
 
         try (InputStream ltis = License.class.getResourceAsStream("/license-exceptions/" + le.identifier + ".json")) {
-          LicenseExceptionTextJSON text = objectMapper.readerFor(LicenseExceptionTextJSON.class).readValue(ltis);
-          le.text = text.licenseExceptionText;
+          JSONObject textObj = (JSONObject) parser.parse(new InputStreamReader(ltis, StandardCharsets.UTF_8));
+          le.text = (String) textObj.get("licenseExceptionText");
         } catch (Exception e) {
           throw new IllegalStateException(e);
         }

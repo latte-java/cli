@@ -95,15 +95,13 @@ public class ReifiedArtifact extends Artifact {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
     if (!super.equals(o)) {
       return false;
     }
-
-    final ReifiedArtifact that = (ReifiedArtifact) o;
-    return licenses.equals(that.licenses);
+    if (o instanceof ReifiedArtifact that) {
+      return licenses.equals(that.licenses);
+    }
+    return true;
   }
 
   @Override

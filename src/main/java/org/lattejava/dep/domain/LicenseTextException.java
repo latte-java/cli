@@ -17,20 +17,14 @@ package org.lattejava.dep.domain;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * Domain for license exceptions (like the classpath exception).
  *
  * @author Brian Pontarelli
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class LicenseTextException {
-  @JsonProperty("detailsUrl")
   public String detailsURL;
 
-  @JsonProperty("licenseExceptionId")
   public String identifier;
 
   public String name;
