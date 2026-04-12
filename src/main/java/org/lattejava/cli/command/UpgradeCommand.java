@@ -210,7 +210,81 @@ public class UpgradeCommand implements Command {
     if (project == null) {
       throw new RuntimeFailureException("The 'plugins' upgrade requires a project.latte file.");
     }
-    throw new RuntimeFailureException("Plugin upgrade not yet implemented.");
+
+    Path projectFile = project.directory.resolve("project.latte");
+    String content;
+    try {
+      content = Files.readString(projectFile, java.nio.charset.StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeFailureException("Failed to read project.latte: " + e.getMessage());
+    }
+
+    // Pattern: loadPlugin(id: "group:name:version")
+    java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+        "(loadPlugin\\(id:\\s*\"([^:]+:[^:]+):)([^\"]+)(\"\\))");
+    java.util.regex.Matcher matcher = pattern.matcher(content);
+    StringBuilder result = new StringBuilder();
+    boolean updated = false;
+
+    while (matcher.find()) {
+      String artifactId = matcher.group(2);
+      String currentVersion = matcher.group(3);
+      String latestVersion = queryLatestVersion(artifactId);
+
+      if (latestVersion != null && !latestVersion.equals(currentVersion)) {
+        output.infoln("Upgrading plugin [%s] from %s to %s", artifactId, currentVersion, latestVersion);
+        matcher.appendReplacement(result, java.util.regex.Matcher.quoteReplacement(
+            matcher.group(1) + latestVersion + matcher.group(4)));
+        updated = true;
+      } else {
+        matcher.appendReplacement(result, java.util.regex.Matcher.quoteReplacement(matcher.group(0)));
+        if (latestVersion == null) {
+          output.infoln("Plugin [%s:%s] not found in repository, skipping", artifactId, currentVersion);
+        } else {
+          output.infoln("Plugin [%s] already at latest version %s", artifactId, currentVersion);
+        }
+      }
+    }
+    matcher.appendTail(result);
+
+    if (updated) {
+      try {
+        Files.writeString(projectFile, result.toString(), java.nio.charset.StandardCharsets.UTF_8);
+      } catch (IOException e) {
+        throw new RuntimeFailureException("Failed to write project.latte: " + e.getMessage());
+      }
+    }
+  }
+
+  /**
+   * Queries the Latte repository search API for the latest version of an artifact.
+   *
+   * @return The latest version string, or null if not found.
+   */
+  private String queryLatestVersion(String artifactId) {
+    try {
+      String encodedId = java.net.URLEncoder.encode(artifactId, java.nio.charset.StandardCharsets.UTF_8);
+      HttpRequest request = HttpRequest.newBuilder()
+          .uri(URI.create("https://api.lattejava.org/repository/search?id=" + encodedId + "&latest=true"))
+          .GET()
+          .timeout(Duration.ofMillis(10_000))
+          .build();
+      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() == 404) {
+        return null;
+      }
+      if (response.statusCode() != 200) {
+        return null;
+      }
+      JSONObject json = (JSONObject) new JSONParser().parse(response.body());
+      JSONArray versions = (JSONArray) json.get("versions");
+      if (versions == null || versions.isEmpty()) {
+        return null;
+      }
+      return (String) versions.getFirst();
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   private void upgradeDependency(RuntimeConfiguration configuration, Output output, Project project) {
