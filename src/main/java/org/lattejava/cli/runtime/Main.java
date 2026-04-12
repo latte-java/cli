@@ -106,8 +106,8 @@ public class Main {
     output.infoln("   init            Initializes a new Latte project in the current directory");
     output.infoln("                   Options: --template=<path>  Use a custom project template");
     output.infoln("   install         Adds a dependency and downloads it");
-    output.infoln("                   Usage: latte install <group:name:version> [group]");
-    output.infoln("                   Group defaults to compile if not specified");
+    output.infoln("                   Usage: latte install <artifact-id> [version] [group]");
+    output.infoln("                   Resolves latest version if omitted. Group defaults to compile");
     output.infoln("   upgrade         Upgrades runtime, plugins, or dependencies");
     output.infoln("                   Usage: latte upgrade <parameter>");
     output.infoln("                   Run 'latte upgrade help' for details");

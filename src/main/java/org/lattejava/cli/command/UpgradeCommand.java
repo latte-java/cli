@@ -24,6 +24,7 @@ import org.json.simple.parser.JSONParser;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.runtime.Main;
 import org.lattejava.dep.domain.Artifact;
+import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
@@ -76,7 +77,7 @@ public class UpgradeCommand implements Command {
     output.infoln("   runtime          Upgrades only the Latte runtime");
     output.infoln("   plugins          Upgrades all plugins in the project file");
     output.infoln("   dependency       Upgrades a single dependency");
-    output.infoln("                    Usage: latte upgrade dependency <group:name:version>");
+    output.infoln("                    Usage: latte upgrade dependency <artifact-id> [version]");
     output.infoln("   dependencies     Upgrades all project dependencies");
     output.infoln("   help             Displays this help message");
     output.infoln("");
@@ -294,15 +295,36 @@ public class UpgradeCommand implements Command {
       throw new RuntimeFailureException("The 'dependency' upgrade requires a project.latte file.");
     }
     if (configuration.args.size() < 2) {
-      throw new RuntimeFailureException("Usage: latte upgrade dependency <group:name:version>");
+      throw new RuntimeFailureException("Usage: latte upgrade dependency <artifact-id> [version]");
     }
 
-    String dependencySpec = configuration.args.get(1);
+    // Parse the artifact ID
+    ArtifactID id;
+    try {
+      id = new ArtifactID(configuration.args.get(1));
+    } catch (Exception e) {
+      throw new RuntimeFailureException("Invalid dependency [" + configuration.args.get(1) + "]. Expected format: group:name");
+    }
+
+    // Version is the third arg (after "dependency"), or resolve from the repository
+    String version;
+    if (configuration.args.size() > 2) {
+      version = configuration.args.get(2);
+    } else {
+      output.infoln("Resolving latest version for [%s:%s]...", id.group, id.project);
+      version = queryLatestVersion(id.group + ":" + id.project);
+      if (version == null) {
+        throw new RuntimeFailureException("Could not find artifact [" + id.group + ":" + id.project + "] in the repository.");
+      }
+      output.infoln("Resolved to version [%s]", version);
+    }
+
+    String dependencySpec = id.group + ":" + id.project + ":" + version;
     Artifact artifact;
     try {
       artifact = new Artifact(dependencySpec);
     } catch (Exception e) {
-      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. Expected format: group:name:version");
+      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. " + e.getMessage());
     }
 
     if (project.dependencies == null) {

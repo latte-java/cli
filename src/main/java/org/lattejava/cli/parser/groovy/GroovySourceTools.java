@@ -15,9 +15,13 @@
  */
 package org.lattejava.cli.parser.groovy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import groovyjarjarantlr4.v4.runtime.CharStreams;
+import org.lattejava.dep.domain.Artifact;
+import org.lattejava.dep.domain.Dependencies;
+import org.lattejava.dep.domain.DependencyGroup;
 import groovyjarjarantlr4.v4.runtime.Token;
 import org.apache.groovy.parser.antlr4.GroovyLexer;
 
@@ -97,6 +101,125 @@ public class GroovySourceTools {
     }
 
     return null;
+  }
+
+  /**
+   * A string literal found inside a method call. The range {@code [start, end)} covers the string literal including
+   * its quotes. {@code value} is the unquoted content.
+   *
+   * @param start The character index of the opening quote.
+   * @param end   The character index one past the closing quote.
+   * @param value The string content without quotes.
+   */
+  public record StringLiteral(int start, int end, String value) {}
+
+  /**
+   * Finds all string literal arguments inside calls to the named method. For example, given source containing
+   * {@code loadPlugin(id: "org.lattejava.plugin:dep:0.1.0")}, calling
+   * {@code findMethodCallStringArguments(source, "loadPlugin")} returns a list with one {@link StringLiteral}
+   * whose value is {@code "org.lattejava.plugin:dep:0.1.0"}.
+   *
+   * @param source The Groovy source text.
+   * @param name   The method name to search for (e.g., "loadPlugin").
+   * @return A list of string literals found inside matching method calls, in source order.
+   */
+  public static List<StringLiteral> findMethodCallStringArguments(String source, String name) {
+    List<? extends Token> tokens = tokenize(source);
+    List<StringLiteral> results = new ArrayList<>();
+
+    for (int i = 0; i < tokens.size(); i++) {
+      Token token = tokens.get(i);
+      if (!isIdentifier(token, name)) {
+        continue;
+      }
+
+      // Must be followed by LPAREN
+      int j = skipWhitespace(tokens, i + 1);
+      if (j >= tokens.size() || tokens.get(j).getType() != GroovyLexer.LPAREN) {
+        continue;
+      }
+
+      // Find the matching RPAREN
+      int closeIndex = skipParens(tokens, j);
+      if (closeIndex == -1) {
+        continue;
+      }
+
+      // Scan inside the parens for StringLiteral tokens
+      for (int k = j + 1; k < closeIndex - 1; k++) {
+        Token t = tokens.get(k);
+        if (t.getType() == GroovyLexer.StringLiteral) {
+          String text = t.getText();
+          // Strip quotes
+          String value = text.substring(1, text.length() - 1);
+          results.add(new StringLiteral(t.getStartIndex(), t.getStopIndex() + 1, value));
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Replaces the {@code dependencies} block in a Groovy project source string with a freshly generated one. If no
+   * {@code dependencies} block exists, one is inserted inside the {@code project} block.
+   *
+   * @param source       The Groovy source text.
+   * @param dependencies The dependencies to render.
+   * @return The modified source text.
+   * @throws IllegalArgumentException If no {@code project} block can be found when inserting a new dependencies block.
+   */
+  public static String replaceDependenciesBlock(String source, Dependencies dependencies) {
+    Block depsBlock = findBlock(source, "dependencies", 1);
+
+    if (depsBlock != null) {
+      int lineStart = source.lastIndexOf('\n', depsBlock.start()) + 1;
+      String indent = source.substring(lineStart, depsBlock.start());
+      String newBlock = generateDependenciesBlock(dependencies, indent);
+      return source.substring(0, depsBlock.start()) + newBlock + source.substring(depsBlock.end());
+    }
+
+    // No dependencies block — insert one inside the project block
+    Block projectBlock = findBlock(source, "project", 0);
+    if (projectBlock == null) {
+      throw new IllegalArgumentException("Could not find a project block in the source.");
+    }
+
+    int lineStart = source.lastIndexOf('\n', projectBlock.start()) + 1;
+    String outerIndent = source.substring(lineStart, projectBlock.start());
+    String indent = outerIndent + "  ";
+    int insertPos = projectBlock.end() - 1;
+    String newBlock = "\n" + indent + generateDependenciesBlock(dependencies, indent) + "\n";
+    return source.substring(0, insertPos) + newBlock + source.substring(insertPos);
+  }
+
+  /**
+   * Generates a Groovy {@code dependencies} block string from a {@link Dependencies} object.
+   *
+   * @param dependencies The dependencies to render.
+   * @param indent       The indentation prefix for the block.
+   * @return The generated block text.
+   */
+  public static String generateDependenciesBlock(Dependencies dependencies, String indent) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("dependencies {\n");
+
+    for (DependencyGroup group : dependencies.groups.values()) {
+      sb.append(indent).append("  group(name: \"").append(group.name).append("\"");
+      if (!group.export) {
+        sb.append(", export: false");
+      }
+      sb.append(") {\n");
+
+      for (Artifact dep : group.dependencies) {
+        sb.append(indent).append("    dependency(id: \"").append(dep.toShortestString()).append("\")\n");
+      }
+
+      sb.append(indent).append("  }\n");
+    }
+
+    sb.append(indent).append("}");
+    return sb.toString();
   }
 
   /**

@@ -26,9 +26,11 @@ import org.lattejava.cli.parser.groovy.GroovySourceTools;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.dep.domain.Artifact;
+import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.workflow.Workflow;
+import org.lattejava.net.RepositoryTools;
 import org.lattejava.output.Output;
 
 /**
@@ -39,8 +41,9 @@ import org.lattejava.output.Output;
  * <p>
  * Usage:
  * <pre>
- *   latte install org.foo:example:1.0          # adds to "compile" group
- *   latte install org.foo:example:1.0 test     # adds to "test" group (shorthand for test-compile)
+ *   latte install org.foo:example              # resolves latest version, adds to "compile" group
+ *   latte install org.foo:example 1.0          # adds to "compile" group
+ *   latte install org.foo:example 1.0 test     # adds to "test" group
  * </pre>
  *
  * @author Brian Pontarelli
@@ -54,18 +57,39 @@ public class InstallCommand implements Command {
 
     List<String> args = configuration.args;
     if (args.isEmpty()) {
-      throw new RuntimeFailureException("Usage: latte install <group:name:version> [dependency-group]\n\nExample: latte install org.foo:example:1.0 test");
+      throw new RuntimeFailureException("Usage: latte install <artifact-id> [version] [dependency-group]\n\nExample: latte install org.foo:example 1.0 test");
     }
 
-    String dependencySpec = args.getFirst();
-    String groupName = args.size() > 1 ? args.get(1) : "compile";
+    // Parse the artifact ID (no version)
+    ArtifactID id;
+    try {
+      id = new ArtifactID(args.getFirst());
+    } catch (Exception e) {
+      throw new RuntimeFailureException("Invalid dependency [" + args.getFirst() + "]. Expected format: group:name");
+    }
 
-    // Validate the dependency spec parses correctly
+    // Version is the second arg, or resolve from the repository
+    String version;
+    String groupName;
+    if (args.size() > 1) {
+      version = args.get(1);
+      groupName = args.size() > 2 ? args.get(2) : "compile";
+    } else {
+      output.infoln("Resolving latest version for [%s:%s]...", id.group, id.project);
+      version = RepositoryTools.queryLatestVersion(id.group + ":" + id.project);
+      if (version == null) {
+        throw new RuntimeFailureException("Could not find artifact [" + id.group + ":" + id.project + "] in the repository.");
+      }
+      output.infoln("Resolved to version [%s]", version);
+      groupName = "compile";
+    }
+
+    String dependencySpec = id.group + ":" + id.project + ":" + version;
     Artifact artifact;
     try {
       artifact = new Artifact(dependencySpec);
     } catch (Exception e) {
-      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. Expected format: group:name:version");
+      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. " + e.getMessage());
     }
 
     // Initialize dependencies if the project doesn't have any yet

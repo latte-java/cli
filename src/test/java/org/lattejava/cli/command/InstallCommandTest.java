@@ -89,7 +89,7 @@ public class InstallCommandTest extends BaseUnitTest {
     Project project = createProject(BASE_PROJECT);
 
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("org.slf4j:slf4j-api:2.0.16");
+    config.args = List.of("org.slf4j:slf4j-api", "2.0.16");
 
     new InstallCommand().run(config, output, project);
 
@@ -122,7 +122,7 @@ public class InstallCommandTest extends BaseUnitTest {
     Project project = createProject(BASE_PROJECT);
 
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("org.easymock:easymock:3.2.0", "test-compile");
+    config.args = List.of("org.easymock:easymock", "3.2.0", "test-compile");
 
     new InstallCommand().run(config, output, project);
 
@@ -155,7 +155,7 @@ public class InstallCommandTest extends BaseUnitTest {
     Project project = createProject(BASE_PROJECT);
 
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("org.example:runtime-lib:1.0.0", "runtime");
+    config.args = List.of("org.example:runtime-lib", "1.0.0", "runtime");
 
     new InstallCommand().run(config, output, project);
 
@@ -190,7 +190,7 @@ public class InstallCommandTest extends BaseUnitTest {
     Project project = createProject(BASE_PROJECT);
 
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("com.fasterxml.jackson.core:jackson-core:2.13.4");
+    config.args = List.of("com.fasterxml.jackson.core:jackson-core", "2.13.4");
 
     new InstallCommand().run(config, output, project);
 
@@ -213,7 +213,7 @@ public class InstallCommandTest extends BaseUnitTest {
     Project project = new Project(testDir, output);
 
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("org.slf4j:slf4j-api:2.0.16");
+    config.args = List.of("org.slf4j:slf4j-api", "2.0.16");
 
     new InstallCommand().run(config, output, project);
 
@@ -236,7 +236,7 @@ public class InstallCommandTest extends BaseUnitTest {
   @Test
   public void installNoProject() {
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("org.foo:bar:1.0");
+    config.args = List.of("org.foo:bar", "1.0");
 
     try {
       new InstallCommand().run(config, output, null);
@@ -280,7 +280,7 @@ public class InstallCommandTest extends BaseUnitTest {
     project.workflow = workflow;
 
     RuntimeConfiguration config = new RuntimeConfiguration();
-    config.args = List.of("org.nonexistent:fake-lib:99.99.99");
+    config.args = List.of("org.nonexistent:fake-lib", "99.99.99");
 
     try {
       new InstallCommand().run(config, output, project);
