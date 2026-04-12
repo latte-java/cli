@@ -1,0 +1,15 @@
+{
+  "name": "repository-search",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.1",
+    "wrangler": "^4.14.0"
+  }
+}

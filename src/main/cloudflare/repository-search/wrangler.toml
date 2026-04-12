@@ -1,0 +1,7 @@
+name = "repository-search"
+main = "src/index.js"
+compatibility_date = "2025-04-01"
+
+[[r2_buckets]]
+binding = "REPOSITORY"
+bucket_name = "latte-repository"
