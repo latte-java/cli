@@ -23,6 +23,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.runtime.Main;
+import org.lattejava.dep.domain.Artifact;
+import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.io.FileTools;
@@ -291,13 +293,74 @@ public class UpgradeCommand implements Command {
     if (project == null) {
       throw new RuntimeFailureException("The 'dependency' upgrade requires a project.latte file.");
     }
-    throw new RuntimeFailureException("Dependency upgrade not yet implemented.");
+    if (configuration.args.size() < 2) {
+      throw new RuntimeFailureException("Usage: latte upgrade dependency <group:name:version>");
+    }
+
+    String dependencySpec = configuration.args.get(1);
+    Artifact artifact;
+    try {
+      artifact = new Artifact(dependencySpec);
+    } catch (Exception e) {
+      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. Expected format: group:name:version");
+    }
+
+    if (project.dependencies == null) {
+      throw new RuntimeFailureException("No dependencies found in project.latte.");
+    }
+
+    boolean found = false;
+    for (DependencyGroup group : project.dependencies.groups.values()) {
+      for (int i = 0; i < group.dependencies.size(); i++) {
+        Artifact existing = group.dependencies.get(i);
+        if (existing.id.equals(artifact.id)) {
+          group.dependencies.set(i, artifact);
+          found = true;
+          output.infoln("Upgrading [%s] from %s to %s in [%s] group", artifact.id, existing.version, artifact.version, group.name);
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      throw new RuntimeFailureException("Dependency [" + artifact.id + "] not found in any dependency group.");
+    }
+
+    Path projectFile = project.directory.resolve("project.latte");
+    InstallCommand.replaceDependenciesBlock(projectFile, project.dependencies);
   }
 
   private void upgradeDependencies(Output output, Project project) {
     if (project == null) {
       throw new RuntimeFailureException("The 'dependencies' upgrade requires a project.latte file.");
     }
-    throw new RuntimeFailureException("Dependencies upgrade not yet implemented.");
+    if (project.dependencies == null) {
+      output.infoln("No dependencies found in project.latte.");
+      return;
+    }
+
+    boolean updated = false;
+    for (DependencyGroup group : project.dependencies.groups.values()) {
+      for (int i = 0; i < group.dependencies.size(); i++) {
+        Artifact existing = group.dependencies.get(i);
+        String artifactId = existing.id.group + ":" + existing.id.project;
+        String latestVersion = queryLatestVersion(artifactId);
+
+        if (latestVersion != null && !latestVersion.equals(existing.version.toString())) {
+          output.infoln("Upgrading [%s] from %s to %s in [%s] group", artifactId, existing.version, latestVersion, group.name);
+          group.dependencies.set(i, new Artifact(artifactId + ":" + latestVersion));
+          updated = true;
+        } else if (latestVersion == null) {
+          output.infoln("Dependency [%s:%s] not found in repository, skipping", artifactId, existing.version);
+        } else {
+          output.infoln("Dependency [%s] already at latest version %s", artifactId, existing.version);
+        }
+      }
+    }
+
+    if (updated) {
+      Path projectFile = project.directory.resolve("project.latte");
+      InstallCommand.replaceDependenciesBlock(projectFile, project.dependencies);
+    }
   }
 }

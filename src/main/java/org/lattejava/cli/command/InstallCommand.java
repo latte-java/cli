@@ -96,7 +96,7 @@ public class InstallCommand implements Command {
     output.infoln("Added [%s] to [%s] group in project.latte", dependencySpec, groupName);
   }
 
-  private void replaceDependenciesBlock(Path projectFile, Dependencies dependencies) {
+  static void replaceDependenciesBlock(Path projectFile, Dependencies dependencies) {
     String content;
     try {
       content = Files.readString(projectFile, StandardCharsets.UTF_8);
@@ -139,7 +139,7 @@ public class InstallCommand implements Command {
     }
   }
 
-  private String generateDependenciesBlock(Dependencies dependencies, String indent) {
+  static String generateDependenciesBlock(Dependencies dependencies, String indent) {
     StringBuilder sb = new StringBuilder();
     sb.append("dependencies {\n");
 
