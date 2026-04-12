@@ -108,6 +108,9 @@ public class Main {
     output.infoln("   install         Adds a dependency and downloads it");
     output.infoln("                   Usage: latte install <group:name:version> [group]");
     output.infoln("                   Group defaults to compile if not specified");
+    output.infoln("   upgrade         Upgrades runtime, plugins, or dependencies");
+    output.infoln("                   Usage: latte upgrade <parameter>");
+    output.infoln("                   Run 'latte upgrade help' for details");
     output.infoln("");
     output.infoln("Switches:");
     output.infoln("");

@@ -22,6 +22,7 @@ import java.util.Map;
 import org.lattejava.cli.command.Command;
 import org.lattejava.cli.command.InitCommand;
 import org.lattejava.cli.command.InstallCommand;
+import org.lattejava.cli.command.UpgradeCommand;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.parser.ParseException;
 import org.lattejava.cli.parser.ProjectFileParser;
@@ -48,7 +49,8 @@ import org.lattejava.util.CyclicException;
 public class DefaultRunner implements Runner {
   public static final Map<String, Command> COMMANDS = Map.of(
       "init", new InitCommand(),
-      "install", new InstallCommand()
+      "install", new InstallCommand(),
+      "upgrade", new UpgradeCommand()
   );
 
   private final Output output;
