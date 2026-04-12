@@ -15,14 +15,11 @@
  */
 package org.lattejava.cli.command;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 import org.lattejava.cli.domain.Project;
-import org.lattejava.cli.parser.groovy.GroovySourceTools;
+import org.lattejava.cli.parser.groovy.ProjectFileTools;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.dep.domain.Artifact;
@@ -30,6 +27,7 @@ import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.workflow.Workflow;
+import org.lattejava.domain.Version;
 import org.lattejava.net.RepositoryTools;
 import org.lattejava.output.Output;
 
@@ -84,13 +82,8 @@ public class InstallCommand implements Command {
       groupName = "compile";
     }
 
-    String dependencySpec = id.group + ":" + id.project + ":" + version;
-    Artifact artifact;
-    try {
-      artifact = new Artifact(dependencySpec);
-    } catch (Exception e) {
-      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. " + e.getMessage());
-    }
+    Version artifactVersion = new Version(version);
+    Artifact artifact = new Artifact(id, artifactVersion);
 
     // Initialize dependencies if the project doesn't have any yet
     if (project.dependencies == null) {
@@ -100,7 +93,7 @@ public class InstallCommand implements Command {
     // Check if the dependency already exists
     DependencyGroup group = project.dependencies.groups.get(groupName);
     if (group != null && group.dependencies.stream().anyMatch(dep -> dep.id.equals(artifact.id))) {
-      output.infoln("Dependency [%s] already exists in the [%s] group.", dependencySpec, groupName);
+      output.infoln("Dependency [%s] already exists in the [%s] group.", artifact, groupName);
       return;
     }
 
@@ -116,73 +109,8 @@ public class InstallCommand implements Command {
 
     // Regenerate the dependencies block in the project file
     Path projectFile = project.directory.resolve("project.latte");
-    replaceDependenciesBlock(projectFile, project.dependencies);
-    output.infoln("Added [%s] to [%s] group in project.latte", dependencySpec, groupName);
-  }
-
-  static void replaceDependenciesBlock(Path projectFile, Dependencies dependencies) {
-    String content;
-    try {
-      content = Files.readString(projectFile, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeFailureException("Failed to read project.latte: " + e.getMessage());
-    }
-
-    GroovySourceTools.Block depsBlock = GroovySourceTools.findBlock(content, "dependencies", 1);
-
-    if (depsBlock != null) {
-      // Determine the indentation of the dependencies keyword
-      int lineStart = content.lastIndexOf('\n', depsBlock.start()) + 1;
-      String indent = content.substring(lineStart, depsBlock.start());
-
-      // Replace the old block with a freshly generated one
-      String newBlock = generateDependenciesBlock(dependencies, indent);
-      content = content.substring(0, depsBlock.start()) + newBlock + content.substring(depsBlock.end());
-    } else {
-      // No dependencies block — insert one inside the project block
-      GroovySourceTools.Block projectBlock = GroovySourceTools.findBlock(content, "project", 0);
-      if (projectBlock == null) {
-        throw new RuntimeFailureException("Could not find a project block in project.latte.");
-      }
-
-      // Determine the indentation inside the project block
-      int lineStart = content.lastIndexOf('\n', projectBlock.start()) + 1;
-      String outerIndent = content.substring(lineStart, projectBlock.start());
-      String indent = outerIndent + "  ";
-
-      // Insert before the closing brace of the project block
-      int insertPos = projectBlock.end() - 1;
-      String newBlock = "\n" + indent + generateDependenciesBlock(dependencies, indent) + "\n";
-      content = content.substring(0, insertPos) + newBlock + content.substring(insertPos);
-    }
-
-    try {
-      Files.writeString(projectFile, content, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeFailureException("Failed to write project.latte: " + e.getMessage());
-    }
-  }
-
-  static String generateDependenciesBlock(Dependencies dependencies, String indent) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("dependencies {\n");
-
-    for (DependencyGroup group : dependencies.groups.values()) {
-      sb.append(indent).append("  group(name: \"").append(group.name).append("\"");
-      if (!group.export) {
-        sb.append(", export: false");
-      }
-      sb.append(") {\n");
-
-      for (Artifact dep : group.dependencies) {
-        sb.append(indent).append("    dependency(id: \"").append(dep.toShortestString()).append("\")\n");
-      }
-
-      sb.append(indent).append("  }\n");
-    }
-
-    sb.append(indent).append("}");
-    return sb.toString();
+    ProjectFileTools.writeDependencies(projectFile, project.dependencies);
+    output.infoln("Added [%s] to [%s] group in project.latte", artifact, groupName);
   }
 
   private void downloadArtifact(Artifact artifact, Workflow workflow, Output output) {

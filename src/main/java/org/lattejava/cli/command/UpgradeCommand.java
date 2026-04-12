@@ -6,7 +6,6 @@
  */
 package org.lattejava.cli.command;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,11 +16,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.lattejava.cli.domain.Project;
+import org.lattejava.cli.parser.groovy.GroovySourceTools;
+import org.lattejava.cli.parser.groovy.ProjectFileTools;
 import org.lattejava.cli.runtime.Main;
 import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.ArtifactID;
@@ -30,6 +32,7 @@ import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.io.FileTools;
 import org.lattejava.io.tar.TarTools;
+import org.lattejava.net.RepositoryTools;
 import org.lattejava.output.Output;
 
 /**
@@ -64,7 +67,8 @@ public class UpgradeCommand implements Command {
           upgradeDependencies(output, project);
         }
       }
-      default -> throw new RuntimeFailureException("Unknown upgrade parameter [" + subcommand + "]. Run 'latte upgrade help' for usage.");
+      default ->
+          throw new RuntimeFailureException("Unknown upgrade parameter [" + subcommand + "]. Run 'latte upgrade help' for usage.");
     }
   }
 
@@ -215,78 +219,38 @@ public class UpgradeCommand implements Command {
     }
 
     Path projectFile = project.directory.resolve("project.latte");
-    String content;
-    try {
-      content = Files.readString(projectFile, java.nio.charset.StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeFailureException("Failed to read project.latte: " + e.getMessage());
-    }
+    String content = ProjectFileTools.readProjectFile(projectFile);
 
-    // Pattern: loadPlugin(id: "group:name:version")
-    java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
-        "(loadPlugin\\(id:\\s*\"([^:]+:[^:]+):)([^\"]+)(\"\\))");
-    java.util.regex.Matcher matcher = pattern.matcher(content);
-    StringBuilder result = new StringBuilder();
+    List<GroovySourceTools.StringLiteral> literals = GroovySourceTools.findMethodCallStringArguments(content, "loadPlugin");
     boolean updated = false;
 
-    while (matcher.find()) {
-      String artifactId = matcher.group(2);
-      String currentVersion = matcher.group(3);
-      String latestVersion = queryLatestVersion(artifactId);
+    // Process in reverse order so character offsets remain valid after each replacement
+    for (int i = literals.size() - 1; i >= 0; i--) {
+      GroovySourceTools.StringLiteral literal = literals.get(i);
+      String value = literal.value(); // e.g. "org.lattejava.plugin:dependency:0.1.0"
+      int lastColon = value.lastIndexOf(':');
+      if (lastColon == -1) {
+        continue;
+      }
+
+      String artifactId = value.substring(0, lastColon);
+      String currentVersion = value.substring(lastColon + 1);
+      String latestVersion = RepositoryTools.queryLatestVersion(artifactId);
 
       if (latestVersion != null && !latestVersion.equals(currentVersion)) {
         output.infoln("Upgrading plugin [%s] from %s to %s", artifactId, currentVersion, latestVersion);
-        matcher.appendReplacement(result, java.util.regex.Matcher.quoteReplacement(
-            matcher.group(1) + latestVersion + matcher.group(4)));
+        String newValue = "\"" + artifactId + ":" + latestVersion + "\"";
+        content = content.substring(0, literal.start()) + newValue + content.substring(literal.end());
         updated = true;
+      } else if (latestVersion == null) {
+        output.infoln("Plugin [%s:%s] not found in repository, skipping", artifactId, currentVersion);
       } else {
-        matcher.appendReplacement(result, java.util.regex.Matcher.quoteReplacement(matcher.group(0)));
-        if (latestVersion == null) {
-          output.infoln("Plugin [%s:%s] not found in repository, skipping", artifactId, currentVersion);
-        } else {
-          output.infoln("Plugin [%s] already at latest version %s", artifactId, currentVersion);
-        }
+        output.infoln("Plugin [%s] already at latest version %s", artifactId, currentVersion);
       }
     }
-    matcher.appendTail(result);
 
     if (updated) {
-      try {
-        Files.writeString(projectFile, result.toString(), java.nio.charset.StandardCharsets.UTF_8);
-      } catch (IOException e) {
-        throw new RuntimeFailureException("Failed to write project.latte: " + e.getMessage());
-      }
-    }
-  }
-
-  /**
-   * Queries the Latte repository search API for the latest version of an artifact.
-   *
-   * @return The latest version string, or null if not found.
-   */
-  private String queryLatestVersion(String artifactId) {
-    try {
-      String encodedId = java.net.URLEncoder.encode(artifactId, java.nio.charset.StandardCharsets.UTF_8);
-      HttpRequest request = HttpRequest.newBuilder()
-          .uri(URI.create("https://api.lattejava.org/repository/search?id=" + encodedId + "&latest=true"))
-          .GET()
-          .timeout(Duration.ofMillis(10_000))
-          .build();
-      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() == 404) {
-        return null;
-      }
-      if (response.statusCode() != 200) {
-        return null;
-      }
-      JSONObject json = (JSONObject) new JSONParser().parse(response.body());
-      JSONArray versions = (JSONArray) json.get("versions");
-      if (versions == null || versions.isEmpty()) {
-        return null;
-      }
-      return (String) versions.getFirst();
-    } catch (Exception e) {
-      return null;
+      ProjectFileTools.writeProjectFile(projectFile, content);
     }
   }
 
@@ -312,7 +276,7 @@ public class UpgradeCommand implements Command {
       version = configuration.args.get(2);
     } else {
       output.infoln("Resolving latest version for [%s:%s]...", id.group, id.project);
-      version = queryLatestVersion(id.group + ":" + id.project);
+      version = RepositoryTools.queryLatestVersion(id.group + ":" + id.project);
       if (version == null) {
         throw new RuntimeFailureException("Could not find artifact [" + id.group + ":" + id.project + "] in the repository.");
       }
@@ -349,7 +313,7 @@ public class UpgradeCommand implements Command {
     }
 
     Path projectFile = project.directory.resolve("project.latte");
-    InstallCommand.replaceDependenciesBlock(projectFile, project.dependencies);
+    ProjectFileTools.writeDependencies(projectFile, project.dependencies);
   }
 
   private void upgradeDependencies(Output output, Project project) {
@@ -366,7 +330,7 @@ public class UpgradeCommand implements Command {
       for (int i = 0; i < group.dependencies.size(); i++) {
         Artifact existing = group.dependencies.get(i);
         String artifactId = existing.id.group + ":" + existing.id.project;
-        String latestVersion = queryLatestVersion(artifactId);
+        String latestVersion = RepositoryTools.queryLatestVersion(artifactId);
 
         if (latestVersion != null && !latestVersion.equals(existing.version.toString())) {
           output.infoln("Upgrading [%s] from %s to %s in [%s] group", artifactId, existing.version, latestVersion, group.name);
@@ -382,7 +346,7 @@ public class UpgradeCommand implements Command {
 
     if (updated) {
       Path projectFile = project.directory.resolve("project.latte");
-      InstallCommand.replaceDependenciesBlock(projectFile, project.dependencies);
+      ProjectFileTools.writeDependencies(projectFile, project.dependencies);
     }
   }
 }
