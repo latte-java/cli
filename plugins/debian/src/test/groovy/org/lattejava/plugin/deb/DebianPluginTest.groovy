@@ -15,23 +15,22 @@
  */
 package org.lattejava.plugin.deb
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
 import org.apache.commons.compress.archivers.ar.ArArchiveEntry
 import org.apache.commons.compress.archivers.ar.ArArchiveInputStream
-import org.lattejava.dep.domain.License
 import org.lattejava.cli.domain.Project
-import org.lattejava.domain.Version
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.domain.License
 import org.lattejava.io.FileTools
 import org.lattejava.io.tar.TarTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
 import org.testng.annotations.Test
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 import static org.testng.Assert.assertEquals
 
@@ -52,7 +51,7 @@ class DebianPluginTest {
   @BeforeSuite
   static void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
+    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
       projectDir = Paths.get("../deb")
     }
   }

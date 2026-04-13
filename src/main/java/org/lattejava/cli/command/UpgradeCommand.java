@@ -25,11 +25,11 @@ import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.parser.groovy.GroovySourceTools;
 import org.lattejava.cli.parser.groovy.ProjectFileTools;
 import org.lattejava.cli.runtime.Main;
+import org.lattejava.cli.runtime.RuntimeConfiguration;
+import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.DependencyGroup;
-import org.lattejava.cli.runtime.RuntimeConfiguration;
-import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.io.FileTools;
 import org.lattejava.io.tar.TarTools;
 import org.lattejava.net.RepositoryTools;
@@ -337,7 +337,7 @@ public class UpgradeCommand implements Command {
           group.dependencies.set(i, new Artifact(artifactId + ":" + latestVersion));
           updated = true;
         } else if (latestVersion == null) {
-          output.infoln("Dependency [%s:%s] not found in repository, skipping", artifactId, existing.version);
+          output.infoln("Dependency [%s:%s] not found in Latte repository, skipping. (Maven artifacts currently need to be manually upgraded)", artifactId, existing.version);
         } else {
           output.infoln("Dependency [%s] already at latest version %s", artifactId, existing.version);
         }

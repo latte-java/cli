@@ -86,3 +86,4 @@ All new source files must use the MIT license header with copyright assigned to 
 - The `~/.cache/latte` directory stores downloaded artifacts locally (conforms with XDG paths)
 - The `~/.config/latte` directory stores the system configuration for Latte, including plugin configuration 
 - Build file is `project.latte` (Groovy DSL)
+- Always create skills, rules, and commands in the project (`.claude/` directory) unless explicitly instructed to place them elsewhere

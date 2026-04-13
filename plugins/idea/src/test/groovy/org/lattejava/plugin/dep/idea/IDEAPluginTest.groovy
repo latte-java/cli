@@ -15,10 +15,8 @@
  */
 package org.lattejava.plugin.dep.idea
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
+import org.lattejava.cli.domain.Project
+import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.lattejava.dep.domain.Artifact
 import org.lattejava.dep.domain.Dependencies
 import org.lattejava.dep.domain.DependencyGroup
@@ -28,15 +26,17 @@ import org.lattejava.dep.workflow.PublishWorkflow
 import org.lattejava.dep.workflow.Workflow
 import org.lattejava.dep.workflow.process.CacheProcess
 import org.lattejava.dep.workflow.process.MavenProcess
-import org.lattejava.cli.domain.Project
 import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
 import org.testng.annotations.Test
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 import static org.testng.Assert.assertEquals
 
@@ -76,7 +76,7 @@ class IDEAPluginTest {
   @BeforeSuite
   static void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
+    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
       projectDir = Paths.get("../idea")
     }
   }

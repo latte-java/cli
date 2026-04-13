@@ -15,13 +15,13 @@
  */
 package org.lattejava.plugin.file
 
-import org.lattejava.dep.domain.License
 import org.lattejava.cli.domain.Project
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.domain.License
 import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
 import org.testng.annotations.Test
@@ -53,7 +53,7 @@ class FilePluginTest {
   @BeforeSuite
   static void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
+    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
       projectDir = Paths.get("../file")
     }
   }

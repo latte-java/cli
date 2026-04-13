@@ -15,15 +15,8 @@
  */
 package org.lattejava.plugin.java
 
-import org.lattejava.dep.workflow.process.MavenProcess
-
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.jar.JarEntry
-import java.util.jar.JarFile
-import java.util.jar.JarInputStream
-
+import org.lattejava.cli.domain.Project
+import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.lattejava.dep.domain.Artifact
 import org.lattejava.dep.domain.Dependencies
 import org.lattejava.dep.domain.DependencyGroup
@@ -32,21 +25,22 @@ import org.lattejava.dep.workflow.FetchWorkflow
 import org.lattejava.dep.workflow.PublishWorkflow
 import org.lattejava.dep.workflow.Workflow
 import org.lattejava.dep.workflow.process.CacheProcess
-import org.lattejava.dep.workflow.process.URLProcess
-import org.lattejava.cli.domain.Project
+import org.lattejava.dep.workflow.process.MavenProcess
 import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeSuite
 import org.testng.annotations.Test
 
-import static org.testng.Assert.assertEquals
-import static org.testng.Assert.assertFalse
-import static org.testng.Assert.assertNotNull
-import static org.testng.Assert.assertTrue
-import static org.testng.Assert.fail
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarInputStream
+
+import static org.testng.Assert.*
 
 /**
  * Tests the Java plugin.
@@ -60,7 +54,7 @@ class JavaPluginTest {
   void beforeSuite() {
     println "Setup"
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
+    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
       projectDir = Paths.get("../java")
     }
   }

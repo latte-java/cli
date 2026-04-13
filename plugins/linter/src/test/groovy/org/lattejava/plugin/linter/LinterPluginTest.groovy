@@ -15,26 +15,23 @@
  */
 package org.lattejava.plugin.linter
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-
-import org.lattejava.dep.domain.License
 import org.lattejava.cli.domain.Project
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.cli.runtime.RuntimeFailureException
+import org.lattejava.dep.domain.License
 import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.RuntimeFailureException
-import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
 import org.testng.annotations.Test
 
-import static org.testng.AssertJUnit.assertEquals
-import static org.testng.AssertJUnit.assertFalse
-import static org.testng.AssertJUnit.assertTrue
-import static org.testng.AssertJUnit.fail
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+
+import static org.testng.AssertJUnit.*
 
 /**
  * Tests the Linter plugin.
@@ -53,7 +50,7 @@ class LinterPluginTest {
   @BeforeSuite
   static void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
+    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
       projectDir = Paths.get("../linter")
     }
   }

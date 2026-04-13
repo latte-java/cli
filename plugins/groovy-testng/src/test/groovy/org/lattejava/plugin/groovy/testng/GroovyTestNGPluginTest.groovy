@@ -15,39 +15,29 @@
  */
 package org.lattejava.plugin.groovy.testng
 
+import groovy.xml.XmlSlurper
+import org.lattejava.cli.domain.Project
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.domain.*
+import org.lattejava.dep.workflow.FetchWorkflow
+import org.lattejava.dep.workflow.PublishWorkflow
+import org.lattejava.dep.workflow.Workflow
+import org.lattejava.dep.workflow.process.CacheProcess
 import org.lattejava.dep.workflow.process.MavenProcess
+import org.lattejava.domain.Version
+import org.lattejava.io.FileTools
+import org.lattejava.output.Output
+import org.lattejava.output.SystemOutOutput
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.BeforeSuite
+import org.testng.annotations.Test
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-import org.lattejava.dep.domain.Artifact
-import org.lattejava.dep.domain.ArtifactMetaData
-import org.lattejava.dep.domain.Dependencies
-import org.lattejava.dep.domain.DependencyGroup
-import org.lattejava.dep.domain.License
-import org.lattejava.dep.domain.Publication
-import org.lattejava.dep.domain.ReifiedArtifact
-import org.lattejava.dep.workflow.FetchWorkflow
-import org.lattejava.dep.workflow.PublishWorkflow
-import org.lattejava.dep.workflow.Workflow
-import org.lattejava.dep.workflow.process.CacheProcess
-import org.lattejava.dep.workflow.process.URLProcess
-import org.lattejava.cli.domain.Project
-import org.lattejava.domain.Version
-import org.lattejava.io.FileTools
-import org.lattejava.output.Output
-import org.lattejava.output.SystemOutOutput
-import org.lattejava.cli.runtime.RuntimeConfiguration
-import org.testng.annotations.BeforeMethod
-import org.testng.annotations.BeforeSuite
-import org.testng.annotations.Test
-
-import groovy.xml.XmlSlurper
 import static java.util.Arrays.asList
-import static org.testng.Assert.assertEquals
-import static org.testng.Assert.assertFalse
-import static org.testng.Assert.assertTrue
+import static org.testng.Assert.*
 
 /**
  * Tests the TestNG plugin.
@@ -64,7 +54,7 @@ class GroovyTestNGPluginTest {
   @BeforeSuite
   void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("build.savant"))) {
+    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
       projectDir = Paths.get("../groovy-testng")
     }
   }
