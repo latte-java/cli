@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava.plugin", name: "linter", version: "0.1.3", licenses: ["ApacheV2_0"]) {
+project(group: "org.lattejava.plugin", name: "linter", version: "0.1.4", licenses: ["ApacheV2_0"]) {
   workflow {
     standard()
   }
@@ -15,7 +15,7 @@ project(group: "org.lattejava.plugin", name: "linter", version: "0.1.3", license
 
   dependencies {
     group(name: "provided") {
-      dependency(id: "org.lattejava:cli:0.1.3")
+      dependency(id: "org.lattejava:cli:0.1.4")
     }
     group(name: "compile") {
       dependency(id: "net.sourceforge.pmd:pmd-core:7.23.0")
@@ -33,10 +33,10 @@ project(group: "org.lattejava.plugin", name: "linter", version: "0.1.3", license
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.3")
-groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.3")
-groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.3")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.3")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.4")
+groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.1.4")
+groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.1.4")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.4")
 
 // Plugin settings
 groovy.settings.groovyVersion = "5.0"
