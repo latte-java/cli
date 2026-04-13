@@ -13,6 +13,7 @@ import java.nio.file.Path;
 
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.dep.domain.Artifact;
+import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 
@@ -87,7 +88,19 @@ public class ProjectFileTools {
       sb.append(") {\n");
 
       for (Artifact dep : group.dependencies) {
-        sb.append(indent).append("    dependency(id: \"").append(dep.toShortestString()).append("\")\n");
+        sb.append(indent).append("    dependency(id: \"").append(dep.toShortestString()).append("\"");
+        if (dep.skipCompatibilityCheck) {
+          sb.append(", skipCompatibilityCheck: true");
+        }
+        if (dep.exclusions.isEmpty()) {
+          sb.append(")\n");
+        } else {
+          sb.append(") {\n");
+          for (ArtifactID exclusion : dep.exclusions) {
+            sb.append(indent).append("      exclusion(id: \"").append(exclusion.toShortestString()).append("\")\n");
+          }
+          sb.append(indent).append("    }\n");
+        }
       }
 
       sb.append(indent).append("  }\n");

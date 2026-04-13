@@ -19,6 +19,7 @@ import org.lattejava.cli.parser.groovy.GroovySourceTools;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
 import org.lattejava.dep.domain.Artifact;
+import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.ArtifactSpec;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
@@ -594,6 +595,159 @@ public class UpgradeCommandTest extends BaseUnitTest {
 
     GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
     return parser.parse(tempFile, new RuntimeConfiguration());
+  }
+
+  @Test
+  public void upgradeDependencyPreservesSkipCompatibilityCheck() throws IOException {
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.slf4j:slf4j-api:2.0.16", skipCompatibilityCheck: true)
+              dependency(id: "org.lattejava:cli:0.1.0")
+            }
+          }
+
+          publications {
+            standard()
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+
+    Project project = new Project(testDir, output);
+    var slf4j = new Artifact("org.slf4j:slf4j-api:2.0.16", null, true, null);
+    project.dependencies = new Dependencies(
+        new DependencyGroup("compile", true, slf4j, new Artifact("org.lattejava:cli:0.1.0"))
+    );
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependency", "org.lattejava:cli", "0.1.4");
+
+    new UpgradeCommand().run(config, output, project);
+
+    String result = Files.readString(projectFile);
+    assertTrue(result.contains("skipCompatibilityCheck: true"), "skipCompatibilityCheck should be preserved in output");
+    assertTrue(result.contains("org.slf4j:slf4j-api:2.0.16"));
+    assertTrue(result.contains("org.lattejava:cli:0.1.4"));
+
+    Project reparsed = reparseProject();
+    DependencyGroup compile = reparsed.dependencies.groups.get("compile");
+    assertEquals(compile.dependencies.size(), 2);
+
+    Artifact slf4jReparsed = compile.dependencies.stream()
+        .filter(a -> a.id.project.equals("slf4j-api"))
+        .findFirst().orElseThrow();
+    assertTrue(slf4jReparsed.skipCompatibilityCheck, "skipCompatibilityCheck should survive round-trip");
+  }
+
+  @Test
+  public void upgradeDependencyPreservesExclusions() throws IOException {
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.example:has-exclusions:1.0.0") {
+                exclusion(id: "org.example:excluded1")
+                exclusion(id: "org.example:excluded2")
+              }
+              dependency(id: "org.lattejava:cli:0.1.0")
+            }
+          }
+
+          publications {
+            standard()
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+
+    Project project = new Project(testDir, output);
+    var withExclusions = new Artifact("org.example:has-exclusions:1.0.0", null, false,
+        List.of(new ArtifactID("org.example:excluded1"), new ArtifactID("org.example:excluded2")));
+    project.dependencies = new Dependencies(
+        new DependencyGroup("compile", true, withExclusions, new Artifact("org.lattejava:cli:0.1.0"))
+    );
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependency", "org.lattejava:cli", "0.1.4");
+
+    new UpgradeCommand().run(config, output, project);
+
+    String result = Files.readString(projectFile);
+    assertTrue(result.contains("org.example:has-exclusions:1.0.0"), "Dependency with exclusions should be preserved");
+    assertTrue(result.contains("exclusion(id: \"org.example:excluded1\")"), "First exclusion should be preserved");
+    assertTrue(result.contains("exclusion(id: \"org.example:excluded2\")"), "Second exclusion should be preserved");
+    assertTrue(result.contains("org.lattejava:cli:0.1.4"));
+
+    Project reparsed = reparseProject();
+    DependencyGroup compile = reparsed.dependencies.groups.get("compile");
+    assertEquals(compile.dependencies.size(), 2);
+
+    Artifact excluded = compile.dependencies.stream()
+        .filter(a -> a.id.project.equals("has-exclusions"))
+        .findFirst().orElseThrow();
+    assertEquals(excluded.exclusions.size(), 2);
+    assertEquals(excluded.exclusions.get(0).group, "org.example");
+    assertEquals(excluded.exclusions.get(0).project, "excluded1");
+    assertEquals(excluded.exclusions.get(1).group, "org.example");
+    assertEquals(excluded.exclusions.get(1).project, "excluded2");
+  }
+
+  @Test
+  public void upgradeDependencyPreservesNonSemanticVersion() throws IOException {
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "com.googlecode.jarjar:jarjar:1.3")
+              dependency(id: "org.lattejava:cli:0.1.0")
+            }
+          }
+
+          publications {
+            standard()
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+
+    Project project = new Project(testDir, output);
+    // jarjar 1.3 is a non-semantic version (2 parts) — the parser stores "1.3" as nonSemanticVersion
+    // and the semantic version becomes 1.3.0
+    var jarjar = new Artifact(new ArtifactID("com.googlecode.jarjar:jarjar"), new Version("1.3.0"), "1.3", null);
+    project.dependencies = new Dependencies(
+        new DependencyGroup("compile", true, jarjar, new Artifact("org.lattejava:cli:0.1.0"))
+    );
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependency", "org.lattejava:cli", "0.1.4");
+
+    new UpgradeCommand().run(config, output, project);
+
+    String result = Files.readString(projectFile);
+    // The non-semantic version "1.3" should be written back, not the semantic "1.3.0"
+    assertTrue(result.contains("com.googlecode.jarjar:jarjar:1.3"), "Non-semantic version should be preserved, got: " + result);
+    assertFalse(result.contains("jarjar:1.3.0"), "Should not write semantic version 1.3.0 for non-semantic dependency");
+    assertTrue(result.contains("org.lattejava:cli:0.1.4"));
   }
 
   private Project createProject(String content) throws IOException {

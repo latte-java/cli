@@ -329,10 +329,11 @@ public class Artifact {
    * @return The shortest spec string.
    */
   public String toShortestString() {
+    String versionStr = nonSemanticVersion != null ? nonSemanticVersion : version.toString();
     if (id.name.equals(id.project) && id.type.equals("jar")) {
-      return id.group + ":" + id.project + ":" + version;
+      return id.group + ":" + id.project + ":" + versionStr;
     }
-    return toString();
+    return id.group + ":" + id.project + ":" + id.name + ":" + versionStr + ":" + id.type;
   }
 
   private String nonSemanticPrefix() {

@@ -130,6 +130,23 @@ public class ArtifactID implements Comparable<ArtifactID> {
     return result;
   }
 
+  /**
+   * Returns the shortest unambiguous spec string for this artifact ID. Uses the 2-part form {@code group:project}
+   * when the name equals the project and the type is {@code jar}. Uses the 3-part form {@code group:project:type}
+   * when the name equals the project but the type is not {@code jar}. Otherwise uses the full 4-part form.
+   *
+   * @return The shortest spec string.
+   */
+  public String toShortestString() {
+    if (name.equals(project) && type.equals("jar")) {
+      return group + ":" + project;
+    }
+    if (name.equals(project)) {
+      return group + ":" + project + ":" + type;
+    }
+    return toString();
+  }
+
   public String toString() {
     return group + ":" + project + ":" + name + ":" + type;
   }
