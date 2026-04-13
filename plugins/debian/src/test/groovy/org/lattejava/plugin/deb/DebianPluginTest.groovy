@@ -64,7 +64,7 @@ class DebianPluginTest {
     project = new Project(projectDir, output)
     project.group = "org.lattejava.test"
     project.name = "dev-test"
-    project.version = new Version("1.0")
+    project.version = new org.lattejava.domain.Version("1.0")
     project.licenses.add(License.parse("ApacheV2_0", null))
 
     plugin = new DebianPlugin(project, new RuntimeConfiguration(), output)

@@ -16,9 +16,9 @@
 package org.lattejava.plugin.deb
 
 import org.lattejava.cli.domain.Project
-import org.lattejava.output.Output
 import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.output.Output
 
 /**
  * Debian package plugin.
@@ -26,7 +26,6 @@ import org.lattejava.cli.runtime.RuntimeConfiguration
  * @author Brian Pontarelli
  */
 class DebianPlugin extends BaseGroovyPlugin {
-
   DebianPlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
     super(project, runtimeConfiguration, output)
   }

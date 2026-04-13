@@ -1,10 +1,10 @@
 fa435e2668c813e7d7115d0292348985 main-groovy-files/org/lattejava/plugin/deb/ChangeLog.groovy
 3ba45ffa3f8644f019db3c5cfc484f4d main-groovy-files/org/lattejava/plugin/deb/DebDelegate.groovy
-5886465087382823c3bb56577fd3d4ec main-groovy-files/org/lattejava/plugin/deb/DebianPlugin.groovy
+965ebeb40f3f76114fca9d6b65f5db8c main-groovy-files/org/lattejava/plugin/deb/DebianPlugin.groovy
 a4111e78745a2e3ceb2c1367e41eca96 main-groovy-files/org/lattejava/plugin/deb/Description.groovy
 2d123fd48dd2b3597b451ef151eb5f99 main-groovy-files/org/lattejava/plugin/deb/Maintainer.groovy
 e0532d59f47951917632e917dba45c19 main-groovy-files/org/lattejava/plugin/deb/Priority.groovy
 0c91d08276914a6606d3a1dd3744385a main-groovy-files/org/lattejava/plugin/deb/Section.groovy
 e83db665dc1337d8a8ce8211a12f04f3 main-groovy-files/org/lattejava/plugin/deb/Version.groovy
-f83fd7cb5eaec7b0dafc11dc58a5431c test-groovy-files/org/lattejava/plugin/deb/DebianPluginTest.groovy
+6558a90f4c92f4d73c7893553d22f579 test-groovy-files/org/lattejava/plugin/deb/DebianPluginTest.groovy
 8aef7e9366940b08c971a27c17cba026 etc/init.d/init-script
