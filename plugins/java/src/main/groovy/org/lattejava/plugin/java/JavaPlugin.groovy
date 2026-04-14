@@ -15,6 +15,18 @@
  */
 package org.lattejava.plugin.java
 
+import com.tonicsystems.jarjar.Main
+import org.lattejava.cli.domain.Project
+import org.lattejava.cli.parser.groovy.GroovyTools
+import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.domain.ArtifactID
+import org.lattejava.io.FileSet
+import org.lattejava.io.FileTools
+import org.lattejava.output.Output
+import org.lattejava.plugin.dep.DependencyPlugin
+import org.lattejava.plugin.file.FilePlugin
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -22,28 +34,15 @@ import java.util.function.Function
 import java.util.function.Predicate
 import java.util.stream.Collectors
 
-import org.lattejava.dep.domain.ArtifactID
-import org.lattejava.cli.domain.Project
-import org.lattejava.io.FileSet
-import org.lattejava.io.FileTools
-import org.lattejava.output.Output
-import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.plugin.dep.DependencyPlugin
-import org.lattejava.plugin.file.FilePlugin
-import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
-import org.lattejava.cli.runtime.RuntimeConfiguration
-
-import com.tonicsystems.jarjar.Main
-
 /**
  * The Java plugin. The public methods on this class define the features of the plugin.
  */
 class JavaPlugin extends BaseGroovyPlugin {
   public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
 
-  21=/Users/me/.local/share/java/21.0.10+7
-  25=/Users/me/.local/share/java/25.0.2+10
-"""
+  21=%USER_HOME%/.local/share/java/21.0.10+7
+  25=%USER_HOME%/.local/share/java/25.0.2+10
+""".replace("%USER_HOME%", System.getProperty("user.home"))
 
   JavaLayout layout = new JavaLayout()
 

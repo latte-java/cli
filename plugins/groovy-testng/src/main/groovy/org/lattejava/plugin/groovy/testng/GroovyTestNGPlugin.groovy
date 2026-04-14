@@ -15,25 +15,20 @@
  */
 package org.lattejava.plugin.groovy.testng
 
-import java.nio.charset.Charset
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.jar.JarFile
-
-import org.lattejava.dep.domain.ArtifactID
+import groovy.xml.MarkupBuilder
 import org.lattejava.cli.domain.Project
+import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.domain.ArtifactID
 import org.lattejava.io.FileTools
 import org.lattejava.lang.Classpath
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
-import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
-import org.lattejava.cli.runtime.RuntimeConfiguration
 
-import groovy.xml.MarkupBuilder
+import java.nio.charset.Charset
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
+import java.util.jar.JarFile
 
 /**
  * The Groovy TestNG plugin. The public methods on this class define the features of the plugin.
@@ -41,14 +36,15 @@ import groovy.xml.MarkupBuilder
 class GroovyTestNGPlugin extends BaseGroovyPlugin {
   public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.groovy.properties] that contains the system configuration for the Groovy plugin. This file should include the location of the GDK (groovy and groovyc) by version. These properties look like this:
 
-  4.0=/Users/me/.local/share/groovy/4.0.31
-  5.0=/Users/me/.local/share/groovy/5.0.5
-"""
+  4.0=%USER_HOME%/.local/share/groovy/4.0.31
+  5.0=%USER_HOME%/.local/share/groovy/5.0.5
+""".replace("%USER_HOME%", System.getProperty("user.home"))
+
   public static final String JAVA_ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
 
-  21=/Users/me/.local/share/java/21.0.10+7
-  25=/Users/me/.local/share/java/25.0.2+10
-"""
+  21=%USER_HOME%/.local/share/java/21.0.10+7
+  25=%USER_HOME%/.local/share/java/25.0.2+10
+""".replace("%USER_HOME%", System.getProperty("user.home"))
 
   GroovyTestNGSettings settings = new GroovyTestNGSettings()
 

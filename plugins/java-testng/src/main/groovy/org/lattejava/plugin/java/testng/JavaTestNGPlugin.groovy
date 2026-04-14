@@ -15,6 +15,27 @@
  */
 package org.lattejava.plugin.java.testng
 
+import groovy.xml.MarkupBuilder
+import org.jacoco.agent.AgentJar
+import org.jacoco.core.analysis.Analyzer
+import org.jacoco.core.analysis.CoverageBuilder
+import org.jacoco.core.tools.ExecFileLoader
+import org.jacoco.report.DirectorySourceFileLocator
+import org.jacoco.report.FileMultiReportOutput
+import org.jacoco.report.MultiSourceFileLocator
+import org.jacoco.report.html.HTMLFormatter
+import org.lattejava.cli.domain.Project
+import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.domain.ArtifactID
+import org.lattejava.io.FileTools
+import org.lattejava.lang.Classpath
+import org.lattejava.output.Output
+import org.lattejava.plugin.dep.DependencyPlugin
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.NodeList
+
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 import java.nio.charset.Charset
@@ -28,37 +49,15 @@ import java.util.jar.JarFile
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-import org.jacoco.agent.AgentJar
-import org.jacoco.core.analysis.Analyzer
-import org.jacoco.core.tools.ExecFileLoader
-import org.jacoco.core.analysis.CoverageBuilder
-import org.jacoco.report.DirectorySourceFileLocator
-import org.jacoco.report.FileMultiReportOutput
-import org.jacoco.report.MultiSourceFileLocator
-import org.jacoco.report.html.HTMLFormatter
-import org.lattejava.dep.domain.ArtifactID
-import org.lattejava.cli.domain.Project
-import org.lattejava.io.FileTools
-import org.lattejava.lang.Classpath
-import org.lattejava.output.Output
-import org.lattejava.plugin.dep.DependencyPlugin
-import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
-import org.lattejava.cli.runtime.RuntimeConfiguration
-import org.w3c.dom.Document
-import org.w3c.dom.Element
-import org.w3c.dom.NodeList
-
-import groovy.xml.MarkupBuilder
-
 /**
  * The Java TestNG plugin. The public methods on this class define the features of the plugin.
  */
 class JavaTestNGPlugin extends BaseGroovyPlugin {
   public static final String ERROR_MESSAGE = """You must create the file [~/.config/latte/plugins/org.lattejava.plugin.java.properties] that contains the system configuration for the Java system. This file should include the location of the JDK (java and javac) by version. These properties look like this:
 
-  21=/Users/me/.local/share/java/21.0.10+7
-  25=/Users/me/.local/share/java/25.0.2+10
-"""
+  21=%USER_HOME%/.local/share/java/21.0.10+7
+  25=%USER_HOME%/.local/share/java/25.0.2+10
+""".replace("%USER_HOME%", System.getProperty("user.home"))
 
   DependencyPlugin dependencyPlugin
 
@@ -298,7 +297,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
   private void initialize() {
     if (!settings.javaVersion) {
       fail("You must configure the Java version to use with the settings object. It will look something like this:\n\n" +
-          "  javaTestNG.settings.javaVersion=\"1.7\"")
+          "  javaTestNG.settings.javaVersion=\"25\"")
     }
 
     String javaHome = properties.getProperty(settings.javaVersion)
