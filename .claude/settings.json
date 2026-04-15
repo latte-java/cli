@@ -4,6 +4,7 @@
       "Bash(cd *)",
       "Bash(echo *)",
       "Bash(find *)",
+      "Bash(git status *)",
       "Bash(latte *)",
       "Read(**/*)",
       "Skill(update-config)",
