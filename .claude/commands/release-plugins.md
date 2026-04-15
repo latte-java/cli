@@ -2,9 +2,11 @@ Release all Latte plugins in dependency order. Each plugin is updated, committed
 
 ## Steps
 
-1. Read the CLI project version from `project.latte` in the repo root (the `version: "X.Y.Z"` in the project line).
+1. Ensure that the project (including all the plugins) has no uncommitted changes. If there are uncommitted changes, **stop immediately** and report that there are uncommitted changes.
 
-2. For each plugin in this exact order:
+2. Read the CLI project version from `project.latte` in the repo root (the `version: "X.Y.Z"` in the project line)
+
+3. For each plugin in this exact order:
    - dependency
    - file
    - groovy
@@ -32,10 +34,9 @@ Release all Latte plugins in dependency order. Each plugin is updated, committed
    git commit -m "<name> plugin: update to version <version>"
    git push
    ```
-
    **e. Run `latte release`** from the plugin directory to publish the release.
 
-3. If any step fails for any plugin, **stop immediately** and report which plugin and step failed. Do not continue to the next plugin.
+4. If any step fails for any plugin, **stop immediately** and report which plugin and step failed. Do not continue to the next plugin.
 
 ## Important
 
