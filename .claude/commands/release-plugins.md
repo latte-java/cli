@@ -2,7 +2,7 @@ Release all Latte plugins in dependency order. Each plugin is updated, committed
 
 ## Steps
 
-1. Ensure that the project (including all the plugins) has no uncommitted changes. If there are uncommitted changes, **stop immediately** and report that there are uncommitted changes.
+1. Ensure that the project (including all the plugins) has no uncommitted or un-pushed changes. If there are uncommitted or un-pushed changes, **stop immediately** and inform the user they need to manually commit and push their changes.
 
 2. Read the CLI project version from `project.latte` in the repo root (the `version: "X.Y.Z"` in the project line)
 
