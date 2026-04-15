@@ -136,6 +136,17 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
+          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
           <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.4/file-0.1.4.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -185,17 +196,6 @@
         <JAVADOC />
         <SOURCES>
           <root url="jar://$USER_HOME$/.m2/repository/org/webjars/jquery/3.7.1/jquery-3.7.1-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

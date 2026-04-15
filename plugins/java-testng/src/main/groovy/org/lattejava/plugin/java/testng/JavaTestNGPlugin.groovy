@@ -32,6 +32,11 @@ import org.lattejava.io.FileTools
 import org.lattejava.lang.Classpath
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
+import org.lattejava.plugin.file.FilePlugin
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ModuleVisitor
+import org.objectweb.asm.Opcodes
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
@@ -61,6 +66,8 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
 
   DependencyPlugin dependencyPlugin
 
+  FilePlugin filePlugin
+
   Path javaPath
 
   Properties properties
@@ -71,6 +78,12 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     super(project, runtimeConfiguration, output)
     properties = loadConfiguration(new ArtifactID("org.lattejava.plugin", "java", "java", "jar"), ERROR_MESSAGE)
     dependencyPlugin = new DependencyPlugin(project, runtimeConfiguration, output)
+    filePlugin = new FilePlugin(project, runtimeConfiguration, output)
+
+    // Auto-detect module build if module-info.java exists
+    if (Files.isRegularFile(project.directory.resolve("src/main/java/module-info.java"))) {
+      settings.moduleBuild = true
+    }
   }
 
   /**
@@ -102,17 +115,59 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       attributes = [:]
     }
 
-    Classpath classpath = dependencyPlugin.classpath {
-      settings.dependencies.each { deps -> dependencies(deps) }
+    String classpathArgs
+    if (settings.moduleBuild) {
+      String moduleName = resolveModuleName()
 
-      // Publications are already resolved by now, therefore, we convert them to absolute paths so they won't be resolved again
-      project.publications.group("main").each { publication -> path(location: publication.file.toAbsolutePath()) }
-      project.publications.group("test").each { publication -> path(location: publication.file.toAbsolutePath()) }
+      // Main deps + main publications go on --module-path
+      Classpath modulePath = dependencyPlugin.classpath {
+        settings.dependencies.findAll { it.group != "test-compile" && it.group != "test-runtime" }
+            .each { deps -> dependencies(deps) }
+        project.publications.group("main").each { publication -> path(location: publication.file.toAbsolutePath()) }
+      }
+
+      // Test-only deps go on -classpath (unnamed module)
+      Classpath testClasspath = dependencyPlugin.classpath {
+        settings.dependencies.findAll { it.group == "test-compile" || it.group == "test-runtime" }
+            .each { deps -> dependencies(deps) }
+      }
+
+      // Patch test publications into the module
+      String testPubPaths = project.publications.group("test")
+          .collect { it.file.toAbsolutePath().toString() }
+          .join(File.pathSeparator)
+
+      // Extract packages from test JARs for --add-opens so TestNG can reflectively access test classes
+      Set<String> packages = new TreeSet<>()
+      project.publications.group("test").each { publication ->
+        try (JarFile jarFile = new JarFile(publication.file.toFile())) {
+          jarFile.entries().each { entry ->
+            if (!entry.directory && entry.name.endsWith(".class")) {
+              int lastSlash = entry.name.lastIndexOf("/")
+              if (lastSlash > 0) {
+                packages.add(entry.name.substring(0, lastSlash).replace("/", "."))
+              }
+            }
+          }
+        }
+      }
+      String addOpens = packages.collect { "--add-opens ${moduleName}/${it}=ALL-UNNAMED" }.join(" ")
+
+      classpathArgs = "${modulePath.toString("--module-path ")} ${testClasspath.toString("-classpath ")} --add-modules ${moduleName} --patch-module ${moduleName}=${testPubPaths} --add-reads ${moduleName}=ALL-UNNAMED ${addOpens}"
+    } else {
+      Classpath classpath = dependencyPlugin.classpath {
+        settings.dependencies.each { deps -> dependencies(deps) }
+
+        // Publications are already resolved by now, therefore, we convert them to absolute paths so they won't be resolved again
+        project.publications.group("main").each { publication -> path(location: publication.file.toAbsolutePath()) }
+        project.publications.group("test").each { publication -> path(location: publication.file.toAbsolutePath()) }
+      }
+      classpathArgs = classpath.toString("-classpath ")
     }
 
     Path xmlFile = buildXMLFile(attributes["groups"], attributes["exclude"])
-    def jacocoArgs = getCodeCoverageArguments()
-    String command = "${javaPath} ${settings.jvmArguments} ${classpath.toString("-classpath ")}${jacocoArgs} org.testng.TestNG -d ${settings.reportDirectory} ${settings.testngArguments} ${xmlFile}"
+    def jacocoArgs = codeCoverageArguments()
+    String command = "${javaPath} ${settings.jvmArguments} ${classpathArgs} ${jacocoArgs} org.testng.TestNG -d ${settings.reportDirectory} ${settings.testngArguments} ${xmlFile}"
     output.debugln("Running command [%s]", command)
 
     // StringTokenizer handles multiple spaces, etc. for us (jvmArguments is optional)
@@ -120,26 +175,28 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     Process process = new ProcessBuilder(args)
     // need to use inheritIO as opposed to process.consumeProcessOutput(System.out, System.err) because that will
     // cause buffering that hides test output that does not end with a carriage return
-    .inheritIO()
-    .directory(project.directory.toFile())
-    .start()
+        .inheritIO()
+        .directory(project.directory.toFile())
+        .start()
 
     int result = process.waitFor()
+
     if (settings.codeCoverage) {
       produceCodeCoverageReports()
     }
+
+    // Since the XML file is always deleteOnExit, we need to copy it to a safe place
     if (runtimeConfiguration.switches.booleanSwitches.contains("keepXML")) {
-      Path testSuite = project.directory.resolve("build/test/${xmlFile.fileName.toString()}")
-      Files.copy(xmlFile, testSuite)
-      output.infoln("TestNG configuration saved in: $testSuite")
-    } else {
-      Files.delete(xmlFile)
+      def fileName = "build/test/${xmlFile.fileName.toString()}"
+      filePlugin.copyFile(file: xmlFile, to: fileName)
+      output.infoln("TestNG configuration saved to [${fileName}]")
     }
+
     if (result != 0) {
       // Keep a copy of the last set of test results when there is a failure.
       Path testResults = project.directory.resolve("build/test-reports/testng-results.xml")
       if (testResults.toFile().exists()) {
-        Path target = getLastTestResultsPath()
+        Path target = lastTestResultsPath()
         Files.deleteIfExists(target)
         Files.createDirectories(target.getParent())
         Files.createFile(target)
@@ -157,7 +214,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
 
     if (runtimeConfiguration.switches.booleanSwitches.contains("onlyFailed")) {
       output.infoln("Retry previously failed tests.")
-      File testResults = getLastTestResultsPath().toFile()
+      File testResults = lastTestResultsPath().toFile()
       if (testResults.exists()) {
         findFailedTests(testResults, classNames)
         List<String> dashTestFlags = new ArrayList<>()
@@ -193,6 +250,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
           output.debugln("git diff --name-only --pretty=oneline --no-merges origin..HEAD\nreturned these changes:\n%s", committedChanges)
         }
       }
+
       String uncommittedChanges = "git diff -u --name-only HEAD".execute().text
       output.debugln("uncommitted changes:\n%s", committedChanges)
 
@@ -227,8 +285,8 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     MarkupBuilder xml = new MarkupBuilder(writer)
     xml.mkp.xmlDeclaration(version: "1.0", encoding: "UTF-8")
     xml.mkp.yieldUnescaped('<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">\n')
-    xml.suite(name: "All Tests", "allow-return-values": "true", verbose: "${settings.verbosity}") {
-      delegate.test(name: "All Tests") {
+    xml.suite(name: "latte-tests", "allow-return-values": "true", verbose: "${settings.verbosity}") {
+      delegate.test(name: "all") {
         if ((groups != null && groups.size() > 0) || (excludes != null && excludes.size() > 0)) {
           delegate.groups {
             delegate.run {
@@ -284,11 +342,11 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       // Else do a fuzzy match, match all tests with the name in it
       for (String test : requestedTests) {
         if (name.contains(test)) {
-          return true;
+          return true
         }
       }
 
-      return false;
+      return false
     }
 
     return true
@@ -314,7 +372,37 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     }
   }
 
-  private findFailedTests(File testResults, Set<String> classNames) {
+  private String resolveModuleName() {
+    // Extract module-info.class from the first main publication JAR
+    for (def pub : project.publications.group("main")) {
+      try (JarFile jarFile = new JarFile(pub.file.toFile())) {
+        JarEntry moduleInfo = jarFile.getJarEntry("module-info.class")
+        if (moduleInfo == null) {
+          continue
+        }
+
+        byte[] bytes = jarFile.getInputStream(moduleInfo).readAllBytes()
+        ClassReader reader = new ClassReader(bytes)
+        String[] result = new String[1]
+        reader.accept(new ClassVisitor(Opcodes.ASM9) {
+          @Override
+          ModuleVisitor visitModule(String name, int access, String version) {
+            result[0] = name
+            return null
+          }
+        }, 0)
+
+        if (result[0]) {
+          return result[0]
+        }
+      }
+    }
+
+    fail("Module build is enabled but no module-info.class was found in any main publication JAR.")
+    return null
+  }
+
+  private static void findFailedTests(File testResults, Set<String> classNames) {
     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
     Document document = documentBuilder.parse(testResults);
@@ -335,7 +423,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     }
   }
 
-  private Path getLastTestResultsPath() {
+  private Path lastTestResultsPath() {
     String tmpDir = System.getProperty("java.io.tmpdir")
     return Paths.get(tmpDir).resolve(project.name + "/test-reports/last/testng-results.xml")
   }
@@ -378,10 +466,10 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     }
   }
 
-  def produceCodeCoverageReports() {
+  private void produceCodeCoverageReports() {
     def loader = new ExecFileLoader()
     // produced by the Java Agent we instrumented our test run with
-    def execFile = getCodeCoverageFile()
+    def execFile = codeCoverageFile()
     if (!execFile.exists()) {
       fail("${execFile} was not found")
     }
@@ -412,15 +500,15 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     visitor.visitEnd()
   }
 
-  File getCodeCoverageFile() {
-    project.directory.resolve("build/jacoco.exec").toAbsolutePath().toFile()
+  private File codeCoverageFile() {
+    return project.directory.resolve("build/jacoco.exec").toAbsolutePath().toFile()
   }
 
-  String getCodeCoverageArguments() {
+  private String codeCoverageArguments() {
     if (!settings.codeCoverage) {
       return ""
     }
     def jacocoPath = AgentJar.extractToTempLocation()
-    " -javaagent:${jacocoPath}=destfile=${getCodeCoverageFile()}"
+    return "-javaagent:${jacocoPath}=destfile=${codeCoverageFile()}"
   }
 }

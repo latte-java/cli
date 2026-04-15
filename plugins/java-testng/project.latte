@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava.plugin", name: "java-testng", version: "0.1.4", licenses: ["ApacheV2_0"]) {
+project(group: "org.lattejava.plugin", name: "java-testng", version: "0.1.5", licenses: ["ApacheV2_0"]) {
   workflow {
     standard()
   }
@@ -21,6 +21,7 @@ project(group: "org.lattejava.plugin", name: "java-testng", version: "0.1.4", li
       dependency(id: "org.apache.groovy:groovy-xml:5.0.5")
       dependency(id: "org.lattejava.plugin:dependency:0.1.4")
       dependency(id: "org.lattejava.plugin:file:0.1.4")
+      dependency(id: "org.ow2.asm:asm:9.9.1")
       dependency(id: "org.jacoco:org.jacoco.agent:0.8.13")
       dependency(id: "org.jacoco:org.jacoco.core:0.8.13")
       dependency(id: "org.jacoco:org.jacoco.report:0.8.13")

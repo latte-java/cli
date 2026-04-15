@@ -15,6 +15,8 @@
  */
 package org.lattejava.plugin.java
 
+import java.nio.file.Path
+
 /**
  * Settings class that defines the settings used by the Java plugin.
  */
@@ -38,7 +40,7 @@ class JavaSettings {
   /**
    * Additional directories that contain JAR files to include in the compilation classpath. Defaults to {@code []}.
    */
-  List<Object> libraryDirectories = []
+  List<Path> libraryDirectories = []
 
   /**
    * The list of dependencies to include on the classpath when javac is called to compile the main Java source files.
@@ -55,6 +57,15 @@ class JavaSettings {
       [group: "compile", transitive: false, fetchSource: false],
       [group: "provided", transitive: false, fetchSource: false]
   ]
+
+  /**
+   * Enables JPMS module build mode. When true, compilation uses {@code --module-path} instead of {@code -classpath},
+   * and test compilation uses {@code --patch-module} to inject test classes into the main module.
+   * <p>
+   * This is auto-detected based on the presence of {@code module-info.java} in the main source directory, but can
+   * be overridden in {@code project.latte}.
+   */
+  boolean moduleBuild = false
 
   /**
    * The list of dependencies to include on the classpath when java is called to compile the test Java source files.

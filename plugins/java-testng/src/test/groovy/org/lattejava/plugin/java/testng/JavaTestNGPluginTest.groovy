@@ -57,8 +57,8 @@ class JavaTestNGPluginTest {
   @BeforeSuite
   void beforeSuite() {
     projectDir = Paths.get("")
-    if (!Files.isRegularFile(projectDir.resolve("project.latte"))) {
-      projectDir = Paths.get("../java-testng")
+    if (Files.isDirectory(projectDir.resolve("plugins"))) {
+      projectDir = Paths.get("plugins/java-testng")
     }
   }
 
@@ -82,7 +82,7 @@ class JavaTestNGPluginTest {
     project.publications.add("test", new Publication(new ReifiedArtifact("org.lattejava.test:test-project:test-project-test:1.0.0:jar", [License.parse("Commercial", "License")]), new ArtifactMetaData(null, [License.parse("Commercial", "License")]),
         project.directory.resolve("build/jars/test-project-test-1.0.0.jar"), null))
 
-    project.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:6.8.7:jar")))
+    project.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
     project.workflow = new Workflow(
         new FetchWorkflow(output,
             new CacheProcess(output, cacheDir.toString(), cacheDir.toString(), cacheDir.toString()),
@@ -93,12 +93,52 @@ class JavaTestNGPluginTest {
         ),
         output
     )
-    project.workflow.mappings.put("org.beanshell:bsh:2.0b4", new Version("2.0+b4"))
-    project.workflow.mappings.put("org.beanshell:beanshell:2.0b4", new Version("2.0+b4"))
   }
 
   @Test
-  void test() throws Exception {
+  void moduleBuild() throws Exception {
+    def cacheDir = projectDir.resolve("build/cache")
+    FileTools.prune(cacheDir)
+    FileTools.prune(projectDir.resolve("test-module/build/test-reports"))
+
+    Output moduleOutput = new SystemOutOutput(true)
+    moduleOutput.enableDebug()
+
+    Project moduleProject = new Project(projectDir.resolve("test-module"), moduleOutput)
+    moduleProject.group = "org.lattejava.test"
+    moduleProject.name = "test-module"
+    moduleProject.version = new Version("1.0.0")
+    moduleProject.licenses.add(License.parse("ApacheV2_0", null))
+
+    moduleProject.publications.add("main", new Publication(new ReifiedArtifact("org.lattejava.test:test-module:1.0.0", [License.parse("Commercial", "License")]), new ArtifactMetaData(null, [License.parse("Commercial", "License")]),
+        moduleProject.directory.resolve("build/jars/test-module-1.0.0.jar"), null))
+    moduleProject.publications.add("test", new Publication(new ReifiedArtifact("org.lattejava.test:test-module:test-module-test:1.0.0:jar", [License.parse("Commercial", "License")]), new ArtifactMetaData(null, [License.parse("Commercial", "License")]),
+        moduleProject.directory.resolve("build/jars/test-module-test-1.0.0.jar"), null))
+
+    moduleProject.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
+    moduleProject.workflow = new Workflow(
+        new FetchWorkflow(moduleOutput,
+            new CacheProcess(moduleOutput, cacheDir.toString(), cacheDir.toString(), cacheDir.toString()),
+            new MavenProcess(moduleOutput, "https://repo1.maven.org/maven2", null, null)
+        ),
+        new PublishWorkflow(
+            new CacheProcess(moduleOutput, cacheDir.toString(), cacheDir.toString(), cacheDir.toString())
+        ),
+        moduleOutput
+    )
+
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(moduleProject, new RuntimeConfiguration(), moduleOutput)
+    plugin.settings.javaVersion = "25"
+
+    // Verify auto-detection of module build
+    assertTrue(plugin.settings.moduleBuild)
+
+    plugin.test()
+    assertModuleTestsRan("org.lattejava.test.MyClassTest")
+  }
+
+  @Test
+  void all() throws Exception {
     JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
     plugin.settings.javaVersion = "25"
 
@@ -110,7 +150,7 @@ class JavaTestNGPluginTest {
   }
 
   @Test
-  void test_coverage() throws Exception {
+  void coverage() throws Exception {
     JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
     plugin.settings.javaVersion = "25"
     plugin.settings.codeCoverage = true
@@ -139,7 +179,7 @@ class JavaTestNGPluginTest {
   }
 
   @Test
-  void testSwitch() throws Exception {
+  void singleTestSwitch() throws Exception {
     RuntimeConfiguration runtimeConfiguration = new RuntimeConfiguration()
 
     JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, runtimeConfiguration, output)
@@ -188,14 +228,19 @@ class JavaTestNGPluginTest {
     assertTestsRan("org.savantbuild.test.MyClassIntegrationTest")
   }
 
+  static void assertModuleTestsRan(String... classNames) {
+    assertTrue(Files.isDirectory(projectDir.resolve("test-module/build/test-reports")))
+    assertTrue(Files.isReadable(projectDir.resolve("test-module/build/test-reports/latte-tests/all.xml")))
+
+    HashSet<String> tested = findNonIgnoredTestClasses("test-module/build/test-reports/latte-tests/all.xml")
+    assertEquals(tested, new HashSet<>(asList(classNames)))
+  }
+
   static void assertTestsDidNotRun(String... classNames) {
     assertTrue(Files.isDirectory(projectDir.resolve("test-project/build/test-reports")))
-    assertTrue(Files.isReadable(projectDir.resolve("test-project/build/test-reports/All Tests/All Tests.xml")))
+    assertTrue(Files.isReadable(projectDir.resolve("test-project/build/test-reports/latte-tests/all.xml")))
 
-    def testsuite = new XmlSlurper().parse(projectDir.resolve("test-project/build/test-reports/All Tests/All Tests.xml").toFile())
-    Set<String> tested = new HashSet<>()
-    testsuite.testcase.each { testcase -> tested << testcase.@classname.text() }
-
+    HashSet<String> tested = findNonIgnoredTestClasses("test-project/build/test-reports/latte-tests/all.xml")
     for (String className : classNames) {
       if (tested.contains(className)) {
         fail("Test [" + className + "] was not expected to run.")
@@ -205,12 +250,18 @@ class JavaTestNGPluginTest {
 
   static void assertTestsRan(String... classNames) {
     assertTrue(Files.isDirectory(projectDir.resolve("test-project/build/test-reports")))
-    assertTrue(Files.isReadable(projectDir.resolve("test-project/build/test-reports/All Tests/All Tests.xml")))
+    assertTrue(Files.isReadable(projectDir.resolve("test-project/build/test-reports/latte-tests/all.xml")))
 
-    def testsuite = new XmlSlurper().parse(projectDir.resolve("test-project/build/test-reports/All Tests/All Tests.xml").toFile())
-    Set<String> tested = new HashSet<>()
-    testsuite.testcase.each { testcase -> tested << testcase.@classname.text() }
-
+    HashSet<String> tested = findNonIgnoredTestClasses("test-project/build/test-reports/latte-tests/all.xml")
     assertEquals(tested, new HashSet<>(asList(classNames)))
+  }
+
+  private static HashSet<String> findNonIgnoredTestClasses(String file) {
+    def testsuite = new XmlSlurper().parse(projectDir.resolve(file).toFile())
+    Set<String> tested = new HashSet<>()
+    testsuite.testcase
+        .findAll { testcase -> testcase.ignored.isEmpty() }
+        .each { testcase -> tested << testcase.@classname.text() }
+    return tested
   }
 }

@@ -26,6 +26,10 @@ import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
 import org.lattejava.plugin.file.FilePlugin
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ModuleVisitor
+import org.objectweb.asm.Opcodes
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -63,6 +67,11 @@ class JavaPlugin extends BaseGroovyPlugin {
     filePlugin = new FilePlugin(project, runtimeConfiguration, output)
     dependencyPlugin = new DependencyPlugin(project, runtimeConfiguration, output)
     properties = loadConfiguration(new ArtifactID("org.lattejava.plugin", "java", "java", "jar"), ERROR_MESSAGE)
+
+    // Auto-detect module build if module-info.java exists
+    if (Files.isRegularFile(project.directory.resolve(layout.mainSourceDirectory).resolve("module-info.java"))) {
+      settings.moduleBuild = true
+    }
   }
 
   /**
@@ -104,7 +113,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void compileMain() {
-    compileInternal(layout.mainSourceDirectory, layout.mainBuildDirectory, settings.mainDependencies, layout.mainBuildDirectory)
+    compileInternal(layout.mainSourceDirectory, layout.mainBuildDirectory, settings.mainDependencies, "", layout.mainBuildDirectory)
     copyResources(layout.mainResourceDirectory, layout.mainBuildDirectory)
   }
 
@@ -118,7 +127,20 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void compileTest() {
-    compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.testDependencies, layout.mainBuildDirectory, layout.testBuildDirectory)
+    String moduleArgs = ""
+    if (settings.moduleBuild) {
+      String moduleName = resolveModuleName()
+      // Test-only deps (e.g. TestNG) go on -classpath so they land in the unnamed module,
+      // accessible via --add-reads. Main deps + main build dir go on --module-path.
+      String testClasspath = dependencyPlugin.classpath {
+        settings.testDependencies.findAll { it.group != "compile" && it.group != "provided" }
+            .each { deps -> dependencies(deps) }
+      }.toString("-classpath ")
+      moduleArgs = "${testClasspath} --patch-module ${moduleName}=${layout.testSourceDirectory} --add-reads ${moduleName}=ALL-UNNAMED"
+    }
+    compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
+        settings.moduleBuild ? settings.mainDependencies : settings.testDependencies,
+        moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
     copyResources(layout.testResourceDirectory, layout.testBuildDirectory)
   }
 
@@ -142,7 +164,8 @@ class JavaPlugin extends BaseGroovyPlugin {
         .map({ info -> info.relative.getParent().toString().replace("/", ".") })
         .collect(Collectors.toSet())
 
-    String command = "${javaDocPath} ${classpath(settings.mainDependencies, settings.libraryDirectories)} ${settings.docArguments} -sourcepath ${layout.mainSourceDirectory} -d ${layout.docDirectory} ${packages.join(" ")}"
+    String moduleArgs = settings.moduleBuild ? "--module ${resolveModuleName()}" : ""
+    String command = "${javaDocPath} ${pathString(settings.mainDependencies, settings.libraryDirectories)} ${settings.docArguments} -sourcepath ${layout.mainSourceDirectory} -d ${layout.docDirectory} ${moduleArgs} ${packages.join(" ")}"
     output.debugln("Executing JavaDoc command [%s]", command)
 
     Process process = command.execute([], project.directory.toFile())
@@ -258,7 +281,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   String getMainClasspath() {
-    return classpath([
+    return pathString([
         [group: "compile", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
         [group: "runtime", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
         [group: "provided", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
@@ -288,7 +311,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * @param buildDirectory The build directory to compile the Java files to.
    * @param dependencies The dependencies to resolve and include on the compile classpath.
    */
-  private void compileInternal(Path sourceDirectory, Path buildDirectory, List<Map<String, Object>> dependencies, Path... additionalClasspath) {
+  private void compileInternal(Path sourceDirectory, Path buildDirectory, List<Map<String, Object>> dependencies, String extraArgs, Path... additionalClasspath) {
     initialize()
 
     Path resolvedSourceDir = project.directory.resolve(sourceDirectory)
@@ -307,7 +330,7 @@ class JavaPlugin extends BaseGroovyPlugin {
 
     output.infoln("Compiling [${filesToCompile.size()}] Java classes from [${sourceDirectory}] to [${buildDirectory}]")
 
-    String command = "${javacPath} ${settings.compilerArguments} ${classpath(dependencies, settings.libraryDirectories, additionalClasspath)} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
+    String command = "${javacPath} ${settings.compilerArguments} ${pathString(dependencies, settings.libraryDirectories, additionalClasspath)} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
     output.debugln("Executing compiler command [%s]", command)
 
     Files.createDirectories(resolvedBuildDir)
@@ -368,7 +391,31 @@ class JavaPlugin extends BaseGroovyPlugin {
     }
   }
 
-  private String classpath(List<Map<String, Object>> dependenciesList, List<Path> libraryDirectories, Path... additionalPaths) {
+  private String resolveModuleName() {
+    Path moduleInfoClass = project.directory.resolve(layout.mainBuildDirectory).resolve("module-info.class")
+    if (!Files.isRegularFile(moduleInfoClass)) {
+      fail("Module build is enabled but module-info.class was not found in [%s]. Ensure main sources are compiled first.", layout.mainBuildDirectory)
+    }
+
+    byte[] bytes = Files.readAllBytes(moduleInfoClass)
+    ClassReader reader = new ClassReader(bytes)
+    String[] result = new String[1]
+    reader.accept(new ClassVisitor(Opcodes.ASM9) {
+      @Override
+      ModuleVisitor visitModule(String name, int access, String version) {
+        result[0] = name
+        return null
+      }
+    }, 0)
+
+    if (!result[0]) {
+      fail("Failed to extract module name from [%s]", moduleInfoClass)
+    }
+
+    return result[0]
+  }
+
+  private String pathString(List<Map<String, Object>> dependenciesList, List<Path> libraryDirectories, Path... additionalPaths) {
     List<Path> additionalJARs = new ArrayList<>()
     if (libraryDirectories != null) {
       libraryDirectories.each { path ->
@@ -381,11 +428,12 @@ class JavaPlugin extends BaseGroovyPlugin {
       }
     }
 
+    String prefix = settings.moduleBuild ? "--module-path " : "-classpath ";
     return dependencyPlugin.classpath {
       dependenciesList.each { deps -> dependencies(deps) }
       additionalPaths.each { additionalPath -> path(location: additionalPath) }
       additionalJARs.each { additionalJAR -> path(location: additionalJAR) }
-    }.toString("-classpath ")
+    }.toString(prefix)
   }
 
   String getJavaHome() {

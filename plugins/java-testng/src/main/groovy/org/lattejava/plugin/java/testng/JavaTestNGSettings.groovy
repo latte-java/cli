@@ -26,6 +26,13 @@ class JavaTestNGSettings {
 
   String jvmArguments = ""
 
+  /**
+   * When true, tests are run in JPMS module mode using --module-path, --patch-module, --add-reads,
+   * and --add-opens. Auto-detected if module-info.java exists in src/main/java, but can be
+   * explicitly set in the build file.
+   */
+  boolean moduleBuild = false
+
   String testngArguments = ""
 
   int verbosity = 1

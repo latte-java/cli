@@ -75,7 +75,7 @@ class JavaPluginTest {
     project.version = new Version("1.0.0")
     project.licenses.add(License.parse("ApacheV2_0", null))
 
-    project.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:6.8.7:jar")))
+    project.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
     project.workflow = new Workflow(
         new FetchWorkflow(output,
             new CacheProcess(output, cacheDir.toString(), cacheDir.toString(), cacheDir.toString()),
@@ -86,12 +86,10 @@ class JavaPluginTest {
         ),
         output
     )
-    project.workflow.mappings.put("org.beanshell:bsh:2.0b4", new Version("2.0+b4"))
-    project.workflow.mappings.put("org.beanshell:beanshell:2.0b4", new Version("2.0+b4"))
 
     JavaPlugin plugin = new JavaPlugin(project, new RuntimeConfiguration(), output)
-    plugin.settings.javaVersion = "17"
-    plugin.settings.libraryDirectories.add("lib")
+    plugin.settings.javaVersion = "25"
+    plugin.settings.libraryDirectories.add(projectDir.resolve("lib"))
 
     assertTrue(Paths.get(plugin.javaHome, "bin", "java").toFile().exists(),
         "Expected javaHome getter to return the directory containing bin/java")
@@ -124,8 +122,57 @@ class JavaPluginTest {
     plugin.document()
     assertTrue(Files.isRegularFile(projectDir.resolve("test-project/build/doc/index.html")))
 
-    // Smokescreen (Calls getMainClasspath)
+    // Smokescreen
     plugin.printJDKModuleDeps()
+  }
+
+  @Test
+  void moduleBuild() throws Exception {
+    def cacheDir = projectDir.resolve("build/cache")
+    FileTools.prune(cacheDir)
+
+    Output output = new SystemOutOutput(true)
+    output.enableDebug()
+
+    Project project = new Project(projectDir.resolve("test-module"), output)
+    project.group = "org.lattejava.test"
+    project.name = "test-module"
+    project.version = new Version("1.0.0")
+    project.licenses.add(License.parse("ApacheV2_0", null))
+
+    project.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
+    project.workflow = new Workflow(
+        new FetchWorkflow(output,
+            new CacheProcess(output, cacheDir.toString(), cacheDir.toString(), cacheDir.toString()),
+            new MavenProcess(output, "https://repo1.maven.org/maven2", null, null)
+        ),
+        new PublishWorkflow(
+            new CacheProcess(output, cacheDir.toString(), cacheDir.toString(), cacheDir.toString())
+        ),
+        output
+    )
+
+    JavaPlugin plugin = new JavaPlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.javaVersion = "25"
+
+    // Verify auto-detection of module build
+    assertTrue(plugin.settings.moduleBuild)
+
+    plugin.clean()
+    assertFalse(Files.isDirectory(projectDir.resolve("test-module/build")))
+
+    plugin.compileMain()
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-module/build/classes/main/module-info.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-module/build/classes/main/org/lattejava/test/MyClass.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-module/build/classes/main/main.txt")))
+
+    plugin.compileTest()
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-module/build/classes/test/org/lattejava/test/MyClassTest.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-module/build/classes/test/test.txt")))
+
+    plugin.jar()
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-module/build/jars/test-module-1.0.0.jar")))
+    assertJarContains(projectDir.resolve("test-module/build/jars/test-module-1.0.0.jar"), "module-info.class", "org/lattejava/test/MyClass.class", "main.txt")
   }
 
   @Test

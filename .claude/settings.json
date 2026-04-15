@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(latte build:*)",
+      "Bash(latte test:*)",
+      "Skill(update-config)",
+      "WebSearch"
+    ]
+  }
+}
