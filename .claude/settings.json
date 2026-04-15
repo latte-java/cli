@@ -1,10 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(latte build:*)",
-      "Bash(latte test:*)",
+      "Bash(cd *)",
+      "Bash(echo *)",
+      "Bash(find *)",
+      "Bash(latte *)",
+      "Read(**/*)",
       "Skill(update-config)",
       "WebSearch"
-    ]
+    ],
+    "defaultMode": "acceptEdits"
   }
 }
