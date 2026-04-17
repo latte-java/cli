@@ -28,10 +28,21 @@ class JavaTestNGSettings {
 
   /**
    * When true, tests are run in JPMS module mode using --module-path, --patch-module, --add-reads,
-   * and --add-opens. Auto-detected if module-info.java exists in src/main/java, but can be
-   * explicitly set in the build file.
+   * and --add-opens. If left {@code null}, auto-detected lazily on first plugin method call from the
+   * presence of {@code module-info.java} in {@link JavaLayout#mainSourceDirectory}. Explicitly set
+   * this to {@code true} or {@code false} in {@code project.latte} to override auto-detection.
    */
-  boolean moduleBuild = false
+  Boolean moduleBuild
+
+  /**
+   * Enables separate test module mode. When true, tests are run with src/test/java compiled as an
+   * independent JPMS module that {@code requires} the main module, rather than patched into it.
+   * <p>
+   * If left {@code null}, auto-detected lazily on first plugin method call from the presence of
+   * {@code module-info.java} in {@link JavaLayout#testSourceDirectory}. Requires {@link #moduleBuild}
+   * to also be true.
+   */
+  Boolean testModuleBuild
 
   String testngArguments = ""
 

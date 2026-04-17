@@ -62,10 +62,21 @@ class JavaSettings {
    * Enables JPMS module build mode. When true, compilation uses {@code --module-path} instead of {@code -classpath},
    * and test compilation uses {@code --patch-module} to inject test classes into the main module.
    * <p>
-   * This is auto-detected based on the presence of {@code module-info.java} in the main source directory, but can
-   * be overridden in {@code project.latte}.
+   * If left {@code null}, auto-detected lazily on first plugin method call from the presence of
+   * {@code module-info.java} in {@link JavaLayout#mainSourceDirectory}. Explicitly set this to
+   * {@code true} or {@code false} in {@code project.latte} to override auto-detection.
    */
-  boolean moduleBuild = false
+  Boolean moduleBuild
+
+  /**
+   * Enables separate test module mode. When true, src/test/java is compiled as an independent
+   * JPMS module that {@code requires} the main module, rather than being patched into it.
+   * <p>
+   * If left {@code null}, auto-detected lazily on first plugin method call from the presence of
+   * {@code module-info.java} in {@link JavaLayout#testSourceDirectory}. Requires {@link #moduleBuild}
+   * to also be true; if it is not, compilation fails with an error.
+   */
+  Boolean testModuleBuild
 
   /**
    * The list of dependencies to include on the classpath when java is called to compile the test Java source files.

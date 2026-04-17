@@ -130,11 +130,95 @@ class JavaTestNGPluginTest {
     JavaTestNGPlugin plugin = new JavaTestNGPlugin(moduleProject, new RuntimeConfiguration(), moduleOutput)
     plugin.settings.javaVersion = "25"
 
-    // Verify auto-detection of module build
+    plugin.test()
+    // Lazy init ran during test() and auto-detected moduleBuild from the main module-info.java.
     assertTrue(plugin.settings.moduleBuild)
+    assertModuleTestsRan("org.lattejava.test.MyClassTest")
+  }
+
+  @Test
+  void moduleBuildSeparate() throws Exception {
+    def cacheDir = projectDir.resolve("build/cache")
+    FileTools.prune(cacheDir)
+    FileTools.prune(projectDir.resolve("test-module-separate/build/test-reports"))
+
+    Output moduleOutput = new SystemOutOutput(true)
+    moduleOutput.enableDebug()
+
+    Project moduleProject = new Project(projectDir.resolve("test-module-separate"), moduleOutput)
+    moduleProject.group = "org.lattejava.test"
+    moduleProject.name = "test-module-separate"
+    moduleProject.version = new Version("1.0.0")
+    moduleProject.licenses.add(License.parse("ApacheV2_0", null))
+
+    moduleProject.publications.add("main", new Publication(new ReifiedArtifact("org.lattejava.test:test-module-separate:1.0.0", [License.parse("Commercial", "License")]), new ArtifactMetaData(null, [License.parse("Commercial", "License")]),
+        moduleProject.directory.resolve("build/jars/test-module-separate-1.0.0.jar"), null))
+    moduleProject.publications.add("test", new Publication(new ReifiedArtifact("org.lattejava.test:test-module-separate:test-module-separate-test:1.0.0:jar", [License.parse("Commercial", "License")]), new ArtifactMetaData(null, [License.parse("Commercial", "License")]),
+        moduleProject.directory.resolve("build/jars/test-module-separate-test-1.0.0.jar"), null))
+
+    moduleProject.dependencies = new Dependencies(new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
+    moduleProject.workflow = new Workflow(
+        new FetchWorkflow(moduleOutput,
+            new CacheProcess(moduleOutput, cacheDir.toString(), cacheDir.toString(), cacheDir.toString()),
+            new MavenProcess(moduleOutput, "https://repo1.maven.org/maven2", null, null)
+        ),
+        new PublishWorkflow(
+            new CacheProcess(moduleOutput, cacheDir.toString(), cacheDir.toString(), cacheDir.toString())
+        ),
+        moduleOutput
+    )
+
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(moduleProject, new RuntimeConfiguration(), moduleOutput)
+    plugin.settings.javaVersion = "25"
 
     plugin.test()
-    assertModuleTestsRan("org.lattejava.test.MyClassTest")
+    // Lazy init ran during test() and auto-detected both flags from the module-info.java files.
+    assertTrue(plugin.settings.moduleBuild)
+    assertTrue(plugin.settings.testModuleBuild)
+    assertSeparateModuleTestsRan("org.lattejava.test.tests.MyClassTest")
+  }
+
+  static void assertSeparateModuleTestsRan(String... classNames) {
+    assertTrue(Files.isDirectory(projectDir.resolve("test-module-separate/build/test-reports")))
+    assertTrue(Files.isReadable(projectDir.resolve("test-module-separate/build/test-reports/latte-tests/all.xml")))
+
+    HashSet<String> tested = findNonIgnoredTestClasses("test-module-separate/build/test-reports/latte-tests/all.xml")
+    assertEquals(tested, new HashSet<>(asList(classNames)))
+  }
+
+  @Test
+  void autoDetectRespectsLayout() throws Exception {
+    // Use the skipTests switch so test() returns immediately after init() without actually
+    // invoking javac/java — we only want to exercise the lazy auto-detection.
+    RuntimeConfiguration skipConfig = new RuntimeConfiguration()
+    skipConfig.switches.booleanSwitches.add("skipTests")
+
+    // Fresh plugin: both flags are null (pending lazy init) regardless of project contents.
+    JavaTestNGPlugin defaultPlugin = new JavaTestNGPlugin(project, skipConfig, output)
+    assertNull(defaultPlugin.settings.moduleBuild)
+    assertNull(defaultPlugin.settings.testModuleBuild)
+
+    // test-project has no module-info.java. test() triggers init(), which records false/false.
+    defaultPlugin.test()
+    assertFalse(defaultPlugin.settings.moduleBuild)
+    assertFalse(defaultPlugin.settings.testModuleBuild)
+
+    // Override the layout BEFORE calling test() on a fresh plugin so init() sees the new paths.
+    JavaTestNGPlugin layoutPlugin = new JavaTestNGPlugin(project, skipConfig, output)
+    layoutPlugin.layout.mainSourceDirectory = Paths.get("../test-module-separate/src/main/java")
+    layoutPlugin.layout.testSourceDirectory = Paths.get("../test-module-separate/src/test/java")
+    layoutPlugin.test()
+    assertTrue(layoutPlugin.settings.moduleBuild)
+    assertTrue(layoutPlugin.settings.testModuleBuild)
+
+    // Explicit override (non-null) wins over auto-detect: init does not overwrite.
+    Project moduleProject = new Project(projectDir.resolve("test-module-separate"), output)
+    JavaTestNGPlugin explicitPlugin = new JavaTestNGPlugin(moduleProject, skipConfig, output)
+    explicitPlugin.settings.moduleBuild = false
+    explicitPlugin.settings.testModuleBuild = false
+    explicitPlugin.test()
+    assertFalse(explicitPlugin.settings.moduleBuild)
+    assertFalse(explicitPlugin.settings.testModuleBuild)
   }
 
   @Test

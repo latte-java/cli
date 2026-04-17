@@ -67,10 +67,20 @@ class JavaPlugin extends BaseGroovyPlugin {
     filePlugin = new FilePlugin(project, runtimeConfiguration, output)
     dependencyPlugin = new DependencyPlugin(project, runtimeConfiguration, output)
     properties = loadConfiguration(new ArtifactID("org.lattejava.plugin", "java", "java", "jar"), ERROR_MESSAGE)
+  }
 
-    // Auto-detect module build if module-info.java exists
-    if (Files.isRegularFile(project.directory.resolve(layout.mainSourceDirectory).resolve("module-info.java"))) {
-      settings.moduleBuild = true
+  /**
+   * Lazily initializes module-build settings from the on-disk module-info.java files. Runs on first
+   * plugin method invocation rather than in the constructor, so {@code project.latte} overrides of
+   * {@link JavaSettings#moduleBuild}, {@link JavaSettings#testModuleBuild}, and {@link JavaLayout}
+   * paths are honored. Idempotent: settings already set to non-null are left alone.
+   */
+  private void init() {
+    if (settings.moduleBuild == null) {
+      settings.moduleBuild = Files.isRegularFile(project.directory.resolve(layout.mainSourceDirectory).resolve("module-info.java"))
+    }
+    if (settings.testModuleBuild == null) {
+      settings.testModuleBuild = Files.isRegularFile(project.directory.resolve(layout.testSourceDirectory).resolve("module-info.java"))
     }
   }
 
@@ -84,6 +94,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void clean() {
+    init()
     Path buildDir = project.directory.resolve(layout.buildDirectory)
     output.infoln "Cleaning [${buildDir}]"
     FileTools.prune(buildDir)
@@ -99,6 +110,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void compile() {
+    init()
     compileMain()
     compileTest()
   }
@@ -113,6 +125,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void compileMain() {
+    init()
     compileInternal(layout.mainSourceDirectory, layout.mainBuildDirectory, settings.mainDependencies, "", layout.mainBuildDirectory)
     copyResources(layout.mainResourceDirectory, layout.mainBuildDirectory)
   }
@@ -127,8 +140,25 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void compileTest() {
-    String moduleArgs = ""
-    if (settings.moduleBuild) {
+    init()
+    if (settings.testModuleBuild) {
+      if (!settings.moduleBuild) {
+        fail("testModuleBuild is enabled but moduleBuild is not. A separate test module requires " +
+            "src/main/java/module-info.java to also exist.")
+      }
+
+      // Separate test module: all deps (main + test) go on --module-path.
+      // The user's test module-info.java must declare `requires` for everything tests use
+      // (main module, testng, easymock, etc.). Main build dir is on --module-path so the
+      // test module can resolve `requires <mainModule>`. No --patch-module, no --add-reads.
+      //
+      // testBuildDirectory is intentionally NOT on --module-path: doing so would put the
+      // in-progress test module on the path at the same location being compiled, which would
+      // conflict with the source being compiled. Incremental recompiles resolve sibling test
+      // classes via -sourcepath (set inside compileInternal) rather than precompiled classes.
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
+          settings.testDependencies, "", layout.mainBuildDirectory)
+    } else if (settings.moduleBuild) {
       String moduleName = resolveModuleName()
       // Test-only deps (e.g. TestNG) go on -classpath so they land in the unnamed module,
       // accessible via --add-reads. Main deps + main build dir go on --module-path.
@@ -136,11 +166,13 @@ class JavaPlugin extends BaseGroovyPlugin {
         settings.testDependencies.findAll { it.group != "compile" && it.group != "provided" }
             .each { deps -> dependencies(deps) }
       }.toString("-classpath ")
-      moduleArgs = "${testClasspath} --patch-module ${moduleName}=${layout.testSourceDirectory} --add-reads ${moduleName}=ALL-UNNAMED"
+      String moduleArgs = "${testClasspath} --patch-module ${moduleName}=${layout.testSourceDirectory} --add-reads ${moduleName}=ALL-UNNAMED"
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
+          settings.mainDependencies, moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
+    } else {
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
+          settings.testDependencies, "", layout.mainBuildDirectory, layout.testBuildDirectory)
     }
-    compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
-        settings.moduleBuild ? settings.mainDependencies : settings.testDependencies,
-        moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
     copyResources(layout.testResourceDirectory, layout.testBuildDirectory)
   }
 
@@ -154,6 +186,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void document() {
+    init()
     initialize()
 
     output.infoln("Generating JavaDoc to [%s]", layout.docDirectory)
@@ -189,6 +222,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void jar() {
+    init()
     initialize()
 
     jarInternal(project.toArtifact().getArtifactFile(), layout.mainBuildDirectory)
@@ -198,6 +232,7 @@ class JavaPlugin extends BaseGroovyPlugin {
   }
 
   void jarjar(Map<String, Object> attributes, @DelegatesTo(JarJarDelegate.class) Closure closure) {
+    init()
     if (!GroovyTools.attributesValid(attributes, ["dependencyGroup", "operation", "outputDirectory"],
         ["dependencyGroup"],
         ["dependencyGroup": String.class, "operation": String.class, "outputDirectory": String.class])) {
@@ -281,6 +316,7 @@ class JavaPlugin extends BaseGroovyPlugin {
    * </pre>
    */
   String getMainClasspath() {
+    init()
     return pathString([
         [group: "compile", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
         [group: "runtime", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
@@ -289,6 +325,7 @@ class JavaPlugin extends BaseGroovyPlugin {
   }
 
   void printJDKModuleDeps() {
+    init()
     def jdeps = "${properties.get(settings.javaVersion)}/bin/jdeps"
 
     output.debugln("Running [${jdeps} --print-module-deps --recursive --ignore-missing-deps --multi-release ${settings.javaVersion} ${getMainClasspath()} ${project.directory}/build/jars/${project.name}-${project.version}.jar]")

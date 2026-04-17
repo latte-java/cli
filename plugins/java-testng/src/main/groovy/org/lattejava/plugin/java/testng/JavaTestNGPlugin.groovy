@@ -74,15 +74,27 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
 
   JavaTestNGSettings settings = new JavaTestNGSettings()
 
+  JavaLayout layout = new JavaLayout()
+
   JavaTestNGPlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
     super(project, runtimeConfiguration, output)
     properties = loadConfiguration(new ArtifactID("org.lattejava.plugin", "java", "java", "jar"), ERROR_MESSAGE)
     dependencyPlugin = new DependencyPlugin(project, runtimeConfiguration, output)
     filePlugin = new FilePlugin(project, runtimeConfiguration, output)
+  }
 
-    // Auto-detect module build if module-info.java exists
-    if (Files.isRegularFile(project.directory.resolve("src/main/java/module-info.java"))) {
-      settings.moduleBuild = true
+  /**
+   * Lazily initializes module-build settings from the on-disk module-info.java files. Runs on first
+   * plugin method invocation rather than in the constructor, so {@code project.latte} overrides of
+   * {@link JavaTestNGSettings#moduleBuild}, {@link JavaTestNGSettings#testModuleBuild}, and
+   * {@link JavaLayout} paths are honored. Idempotent.
+   */
+  private void init() {
+    if (settings.moduleBuild == null) {
+      settings.moduleBuild = Files.isRegularFile(project.directory.resolve(layout.mainSourceDirectory).resolve("module-info.java"))
+    }
+    if (settings.testModuleBuild == null) {
+      settings.testModuleBuild = Files.isRegularFile(project.directory.resolve(layout.testSourceDirectory).resolve("module-info.java"))
     }
   }
 
@@ -103,6 +115,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
    * @param attributes The named attributes.
    */
   void test(Map<String, Object> attributes) {
+    init()
     if (runtimeConfiguration.switches.booleanSwitches.contains("skipTests")) {
       output.infoln("Skipping tests")
       return
@@ -116,7 +129,33 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     }
 
     String classpathArgs
-    if (settings.moduleBuild) {
+    String testngEntry
+    if (settings.testModuleBuild) {
+      if (!settings.moduleBuild) {
+        fail("testModuleBuild is enabled but moduleBuild is not. A separate test module requires " +
+            "src/main/java/module-info.java to also exist.")
+      }
+
+      String testModuleName = resolveTestModuleName()
+
+      // Everything on --module-path: main deps, test deps, main publication(s), test publication(s).
+      // The test module's module-info.java declares its own requires for main module, testng, etc.
+      Classpath modulePath = dependencyPlugin.classpath {
+        settings.dependencies.each { deps -> dependencies(deps) }
+        project.publications.group("main").each { publication -> path(location: publication.file.toAbsolutePath()) }
+        project.publications.group("test").each { publication -> path(location: publication.file.toAbsolutePath()) }
+      }
+
+      // --add-modules ALL-MODULE-PATH resolves all JARs on the module path (including automatic modules
+      // like slf4j that TestNG depends on). The test module is also explicitly named so its @Test
+      // classes are discoverable.
+      // No --add-opens: the user's test module-info.java must declare `opens <pkg> to org.testng;`
+      // for every package containing test classes.
+      classpathArgs = "${modulePath.toString("--module-path ")} --add-modules ALL-MODULE-PATH,${testModuleName}"
+
+      // TestNG 7+ ships Automatic-Module-Name: org.testng, so it resolves as an automatic module.
+      testngEntry = "--module org.testng/org.testng.TestNG"
+    } else if (settings.moduleBuild) {
       String moduleName = resolveModuleName()
 
       // Main deps + main publications go on --module-path
@@ -154,6 +193,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       String addOpens = packages.collect { "--add-opens ${moduleName}/${it}=ALL-UNNAMED" }.join(" ")
 
       classpathArgs = "${modulePath.toString("--module-path ")} ${testClasspath.toString("-classpath ")} --add-modules ${moduleName} --patch-module ${moduleName}=${testPubPaths} --add-reads ${moduleName}=ALL-UNNAMED ${addOpens}"
+      testngEntry = "org.testng.TestNG"
     } else {
       Classpath classpath = dependencyPlugin.classpath {
         settings.dependencies.each { deps -> dependencies(deps) }
@@ -163,11 +203,12 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
         project.publications.group("test").each { publication -> path(location: publication.file.toAbsolutePath()) }
       }
       classpathArgs = classpath.toString("-classpath ")
+      testngEntry = "org.testng.TestNG"
     }
 
     Path xmlFile = buildXMLFile(attributes["groups"], attributes["exclude"])
     def jacocoArgs = codeCoverageArguments()
-    String command = "${javaPath} ${settings.jvmArguments} ${classpathArgs} ${jacocoArgs} org.testng.TestNG -d ${settings.reportDirectory} ${settings.testngArguments} ${xmlFile}"
+    String command = "${javaPath} ${settings.jvmArguments} ${classpathArgs} ${jacocoArgs} ${testngEntry} -d ${settings.reportDirectory} ${settings.testngArguments} ${xmlFile}"
     output.debugln("Running command [%s]", command)
 
     // StringTokenizer handles multiple spaces, etc. for us (jvmArguments is optional)
@@ -373,8 +414,23 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
   }
 
   private String resolveModuleName() {
-    // Extract module-info.class from the first main publication JAR
-    for (def pub : project.publications.group("main")) {
+    String name = findModuleNameInPublications("main")
+    if (name == null) {
+      fail("Module build is enabled but no module-info.class was found in any main publication JAR.")
+    }
+    return name
+  }
+
+  private String resolveTestModuleName() {
+    String name = findModuleNameInPublications("test")
+    if (name == null) {
+      fail("testModuleBuild is enabled but no module-info.class was found in any test publication JAR. Ensure src/test/java/module-info.java exists and test sources are compiled first.")
+    }
+    return name
+  }
+
+  private String findModuleNameInPublications(String group) {
+    for (def pub : project.publications.group(group)) {
       try (JarFile jarFile = new JarFile(pub.file.toFile())) {
         JarEntry moduleInfo = jarFile.getJarEntry("module-info.class")
         if (moduleInfo == null) {
@@ -397,8 +453,6 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
         }
       }
     }
-
-    fail("Module build is enabled but no module-info.class was found in any main publication JAR.")
     return null
   }
 
