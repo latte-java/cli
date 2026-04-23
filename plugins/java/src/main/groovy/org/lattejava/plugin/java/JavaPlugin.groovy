@@ -23,6 +23,7 @@ import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.lattejava.dep.domain.ArtifactID
 import org.lattejava.io.FileSet
 import org.lattejava.io.FileTools
+import org.lattejava.lang.Classpath
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
 import org.lattejava.plugin.file.FilePlugin
@@ -36,7 +37,11 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.function.Function
 import java.util.function.Predicate
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.Manifest
 import java.util.stream.Collectors
+import java.util.stream.Stream
 
 /**
  * The Java plugin. The public methods on this class define the features of the plugin.
@@ -54,9 +59,11 @@ class JavaPlugin extends BaseGroovyPlugin {
 
   Properties properties
 
-  Path javacPath
-
   Path javaDocPath
+
+  Path javaPath
+
+  Path javacPath
 
   FilePlugin filePlugin
 
@@ -336,6 +343,103 @@ class JavaPlugin extends BaseGroovyPlugin {
   }
 
   /**
+   * Runs a Java main class or a {@code .java} source file using the project's current
+   * module-path/classpath. Returns the child process exit code; fails the build on a non-zero
+   * exit when {@code failOnError} is {@code true} (the default).
+   *
+   * @param attributes Named attributes. See the design doc for the full list.
+   * @return The child process exit code.
+   */
+  int run(Map<String, Object> attributes) {
+    init()
+
+    if (!GroovyTools.attributesValid(attributes,
+        ["additionalClasspath", "arguments", "dependencies", "environment", "failOnError", "jvmArguments", "main", "workingDirectory"],
+        ["main"],
+        ["additionalClasspath": List.class,
+         "arguments": String.class,
+         "dependencies": List.class,
+         "environment": Map.class,
+         "failOnError": Boolean.class,
+         "jvmArguments": String.class,
+         "main": String.class,
+         "workingDirectory": Object.class])) {
+      fail("You must supply the [main] attribute to java.run(), e.g.:\n\n" +
+          "  java.run(main: \"com.example.App\")")
+    }
+
+    GroovyTools.putDefaults(attributes, [
+        "additionalClasspath": [] as List<Path>,
+        "arguments": "",
+        "dependencies": defaultRunDependencies(),
+        "environment": [:] as Map<String, String>,
+        "failOnError": true,
+        "jvmArguments": "",
+        "workingDirectory": project.directory
+    ])
+
+    initialize()
+
+    String main = attributes["main"].toString()
+    String jvmArguments = attributes["jvmArguments"].toString()
+    String arguments = attributes["arguments"].toString()
+    List<Map<String, Object>> dependencies = (List<Map<String, Object>>) attributes["dependencies"]
+    List<Path> additionalClasspath = ((List<Object>) attributes["additionalClasspath"])
+        .collect { FileTools.toPath(it) }
+    Path workingDirectory = FileTools.toPath(attributes["workingDirectory"])
+    Map<String, String> environment = (Map<String, String>) attributes["environment"]
+    boolean failOnError = (Boolean) attributes["failOnError"]
+
+    // Build the additional-paths list: caller extras + the project's main publications.
+    List<Path> publicationPaths = project.publications.group("main")
+        .collect { it.file.toAbsolutePath() }
+    List<Path> allAdditionalPaths = new ArrayList<>(additionalClasspath)
+    allAdditionalPaths.addAll(publicationPaths)
+
+    String pathArgs
+    String entryPoint
+
+    if (main.endsWith(".java")) {
+      Path resolvedSource = workingDirectory.resolve(main)
+      if (!Files.isRegularFile(resolvedSource) || !Files.isReadable(resolvedSource)) {
+        fail("Main source file [%s] does not exist or is not readable", resolvedSource.toAbsolutePath())
+      }
+      pathArgs = pathString(dependencies, settings.libraryDirectories, allAdditionalPaths.toArray(new Path[0]))
+      entryPoint = resolvedSource.toAbsolutePath().toString()
+    } else {
+      Classpath resolved = resolveRunClasspath(dependencies, settings.libraryDirectories, allAdditionalPaths)
+      RunEntryMatch match = findMainClassEntry(resolved.paths, main)
+      if (match == null) {
+        fail("Main class [%s] was not found on the resolved classpath/module-path", main)
+      }
+
+      if (match.moduleName != null) {
+        entryPoint = "--module ${match.moduleName}/${main}"
+        pathArgs = pathString(dependencies, settings.libraryDirectories, allAdditionalPaths.toArray(new Path[0]))
+      } else if (settings.moduleBuild) {
+        // Non-modular entry inside a module build: split paths so the match lands on -classpath.
+        Classpath modulePath = new Classpath()
+        Classpath classpath = new Classpath()
+        resolved.paths.each { p ->
+          if (p == match.entry) {
+            classpath.path(p)
+          } else {
+            modulePath.path(p)
+          }
+        }
+        pathArgs = "${modulePath.toString("--module-path ")} ${classpath.toString("-classpath ")}"
+        entryPoint = main
+      } else {
+        entryPoint = main
+        pathArgs = pathString(dependencies, settings.libraryDirectories, allAdditionalPaths.toArray(new Path[0]))
+      }
+    }
+
+    return executeRun(jvmArguments, pathArgs, entryPoint, arguments,
+        workingDirectory, environment, failOnError)
+  }
+
+  /**
    * Compiles an arbitrary source directory to an arbitrary build directory.
    * <p>
    * Here is an example of calling this method:
@@ -404,6 +508,40 @@ class JavaPlugin extends BaseGroovyPlugin {
     }
   }
 
+  private static List<Map<String, Object>> defaultRunDependencies() {
+    return [
+        [group: "compile", transitive: true, fetchSource: false,
+            transitiveGroups: ["compile", "runtime", "provided"]],
+        [group: "runtime", transitive: true, fetchSource: false,
+            transitiveGroups: ["compile", "runtime", "provided"]],
+        [group: "provided", transitive: true, fetchSource: false,
+            transitiveGroups: ["compile", "runtime", "provided"]]
+    ]
+  }
+
+  private int executeRun(String jvmArguments, String pathArgs, String entryPoint,
+                         String arguments, Path workingDirectory,
+                         Map<String, String> environment, boolean failOnError) {
+    String command = "${javaPath} ${jvmArguments} ${pathArgs} ${entryPoint} ${arguments}"
+    output.debugln("Executing java command [%s]", command)
+
+    List<String> args = new StringTokenizer(command).toList() as List<String>
+
+    ProcessBuilder pb = new ProcessBuilder(args)
+        .inheritIO()
+        .directory(workingDirectory.toFile())
+    pb.environment().putAll(environment)
+
+    Process process = pb.start()
+    int exitCode = process.waitFor()
+
+    if (exitCode != 0 && failOnError) {
+      fail("java command failed with exit code [%d]", exitCode)
+    }
+
+    return exitCode
+  }
+
   /**
    * Creates a single Jar file by adding all of the files in the given directories.
    * <p>
@@ -428,14 +566,56 @@ class JavaPlugin extends BaseGroovyPlugin {
     }
   }
 
-  private String resolveModuleName() {
-    Path moduleInfoClass = project.directory.resolve(layout.mainBuildDirectory).resolve("module-info.class")
-    if (!Files.isRegularFile(moduleInfoClass)) {
-      fail("Module build is enabled but module-info.class was not found in [%s]. Ensure main sources are compiled first.", layout.mainBuildDirectory)
+  static RunEntryMatch findMainClassEntry(List<Path> entries, String main) {
+    String classPath = main.replace('.', '/') + ".class"
+
+    for (Path entry : entries) {
+      if (Files.isDirectory(entry)) {
+        Path classFile = entry.resolve(classPath)
+        if (!Files.isRegularFile(classFile)) {
+          continue
+        }
+
+        RunEntryMatch m = new RunEntryMatch(entry: entry)
+        Path moduleInfo = entry.resolve("module-info.class")
+        if (Files.isRegularFile(moduleInfo)) {
+          m.moduleName = readModuleNameFromBytes(Files.readAllBytes(moduleInfo))
+        }
+        return m
+      }
+
+      if (Files.isRegularFile(entry) && entry.toString().endsWith(".jar")) {
+        try (JarFile jarFile = new JarFile(entry.toFile())) {
+          if (jarFile.getJarEntry(classPath) == null) {
+            continue
+          }
+
+          RunEntryMatch m = new RunEntryMatch(entry: entry)
+
+          JarEntry moduleInfo = jarFile.getJarEntry("module-info.class")
+          if (moduleInfo != null) {
+            byte[] bytes = jarFile.getInputStream(moduleInfo).readAllBytes()
+            m.moduleName = readModuleNameFromBytes(bytes)
+            return m
+          }
+
+          Manifest manifest = jarFile.getManifest()
+          if (manifest != null) {
+            String autoName = manifest.getMainAttributes().getValue("Automatic-Module-Name")
+            if (autoName != null && !autoName.isEmpty()) {
+              m.moduleName = autoName
+            }
+          }
+          return m
+        }
+      }
     }
 
-    byte[] bytes = Files.readAllBytes(moduleInfoClass)
-    ClassReader reader = new ClassReader(bytes)
+    return null
+  }
+
+  private static String readModuleNameFromBytes(byte[] moduleInfoBytes) {
+    ClassReader reader = new ClassReader(moduleInfoBytes)
     String[] result = new String[1]
     reader.accept(new ClassVisitor(Opcodes.ASM9) {
       @Override
@@ -444,12 +624,45 @@ class JavaPlugin extends BaseGroovyPlugin {
         return null
       }
     }, 0)
+    return result[0]
+  }
 
-    if (!result[0]) {
+  private String resolveModuleName() {
+    Path moduleInfoClass = project.directory.resolve(layout.mainBuildDirectory).resolve("module-info.class")
+    if (!Files.isRegularFile(moduleInfoClass)) {
+      fail("Module build is enabled but module-info.class was not found in [%s]. Ensure main sources are compiled first.", layout.mainBuildDirectory)
+    }
+
+    String name = readModuleNameFromBytes(Files.readAllBytes(moduleInfoClass))
+    if (!name) {
       fail("Failed to extract module name from [%s]", moduleInfoClass)
     }
 
-    return result[0]
+    return name
+  }
+
+  private Classpath resolveRunClasspath(List<Map<String, Object>> dependenciesList,
+                                        List<Path> libraryDirectories,
+                                        List<Path> additionalPaths) {
+    List<Path> additionalJARs = new ArrayList<>()
+    if (libraryDirectories != null) {
+      libraryDirectories.each { path ->
+        Path dir = project.directory.resolve(FileTools.toPath(path))
+        if (!Files.isDirectory(dir)) {
+          return
+        }
+        try (Stream<Path> stream = Files.list(dir)) {
+          stream.filter(FileTools.extensionFilter(".jar"))
+              .forEach { file -> additionalJARs.add(file.toAbsolutePath()) }
+        }
+      }
+    }
+
+    return dependencyPlugin.classpath {
+      dependenciesList.each { deps -> dependencies(deps) }
+      additionalPaths.each { p -> path(location: p) }
+      additionalJARs.each { jar -> path(location: jar) }
+    }
   }
 
   private String pathString(List<Map<String, Object>> dependenciesList, List<Path> libraryDirectories, Path... additionalPaths) {
@@ -461,7 +674,9 @@ class JavaPlugin extends BaseGroovyPlugin {
           return
         }
 
-        Files.list(dir).filter(FileTools.extensionFilter(".jar")).forEach { file -> additionalJARs.add(file.toAbsolutePath()) }
+        try (Stream<Path> stream = Files.list(dir)) {
+          stream.filter(FileTools.extensionFilter(".jar")).forEach { file -> additionalJARs.add(file.toAbsolutePath()) }
+        }
       }
     }
 
@@ -507,5 +722,18 @@ class JavaPlugin extends BaseGroovyPlugin {
     if (!Files.isExecutable(javaDocPath)) {
       fail("The javac compiler [%s] is not executable.", javaDocPath.toAbsolutePath())
     }
+
+    javaPath = Paths.get(javaHome, "bin/java")
+    if (!Files.isRegularFile(javaPath)) {
+      fail("The java executable [%s] does not exist.", javaPath.toAbsolutePath())
+    }
+    if (!Files.isExecutable(javaPath)) {
+      fail("The java executable [%s] is not executable.", javaPath.toAbsolutePath())
+    }
+  }
+
+  static class RunEntryMatch {
+    Path entry
+    String moduleName  // null if non-modular
   }
 }
