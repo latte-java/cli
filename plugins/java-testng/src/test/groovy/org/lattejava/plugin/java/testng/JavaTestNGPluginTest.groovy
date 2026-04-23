@@ -370,7 +370,7 @@ class JavaTestNGPluginTest {
     try {
       plugin.handleExitCode(1)
       fail("Expected RuntimeFailureException for exit code 1")
-    } catch (RuntimeFailureException expected) {
+    } catch (RuntimeFailureException ignored) {
       // good
     }
   }
@@ -381,7 +381,7 @@ class JavaTestNGPluginTest {
     try {
       plugin.handleExitCode(8)
       fail("Expected RuntimeFailureException for exit code 8")
-    } catch (RuntimeFailureException expected) {
+    } catch (RuntimeFailureException ignored) {
       // good
     }
   }
@@ -407,14 +407,12 @@ class JavaTestNGPluginTest {
     try {
       plugin.handleExitCode(1)
       fail("Expected RuntimeFailureException for exit code 1")
-    } catch (RuntimeFailureException expected) {
+    } catch (RuntimeFailureException ignored) {
       // good
     }
 
-    assertTrue(Files.isRegularFile(lastResults),
-        "Expected testng-results.xml to be preserved at " + lastResults)
-    assertTrue(Files.isRegularFile(lastFailed),
-        "Expected testng-failed.xml to be preserved at " + lastFailed)
+    assertTrue(Files.isRegularFile(lastResults), "Expected testng-results.xml to be preserved at " + lastResults)
+    assertTrue(Files.isRegularFile(lastFailed), "Expected testng-failed.xml to be preserved at " + lastFailed)
     assertEquals(Files.readString(lastResults), "<results/>")
     assertEquals(Files.readString(lastFailed), "<failed/>")
   }
@@ -435,10 +433,8 @@ class JavaTestNGPluginTest {
 
     plugin.handleExitCode(2)
 
-    assertFalse(Files.exists(lastResults),
-        "Expected no testng-results.xml preserved for exit code 2")
-    assertFalse(Files.exists(lastFailed),
-        "Expected no testng-failed.xml preserved for exit code 2")
+    assertFalse(Files.exists(lastResults), "Expected no testng-results.xml preserved for exit code 2")
+    assertFalse(Files.exists(lastFailed), "Expected no testng-failed.xml preserved for exit code 2")
   }
 
   @Test

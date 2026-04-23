@@ -111,6 +111,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
    */
   void test(Map<String, Object> attributes) {
     init()
+
     if (runtimeConfiguration.switches.booleanSwitches.contains("skipTests")) {
       output.infoln("Skipping tests")
       return
