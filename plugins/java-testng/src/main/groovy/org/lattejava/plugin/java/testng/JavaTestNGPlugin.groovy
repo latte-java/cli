@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2025, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2013-2026, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,7 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ModuleVisitor
 import org.objectweb.asm.Opcodes
-import org.w3c.dom.Document
-import org.w3c.dom.Element
-import org.w3c.dom.NodeList
 
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
@@ -128,6 +123,19 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       attributes = [:]
     }
 
+    // --onlyFailed hands off the preserved testng-failed.xml directly to TestNG.
+    // No XML generation; any groups/exclude attributes are ignored.
+    Path failedXml = null
+    if (runtimeConfiguration.switches.booleanSwitches.contains("onlyFailed")) {
+      Path preserved = lastFailedTestsPath()
+      if (!Files.isRegularFile(preserved)) {
+        output.infoln("No failed tests found from a prior test run. File not found [" + preserved.toString() + "].")
+        return
+      }
+      output.infoln("Re-running failed tests from [" + preserved.toString() + "].")
+      failedXml = preserved
+    }
+
     String classpathArgs
     String testngEntry
     if (settings.testModuleBuild) {
@@ -206,7 +214,7 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       testngEntry = "org.testng.TestNG"
     }
 
-    Path xmlFile = buildXMLFile(attributes["groups"], attributes["exclude"])
+    Path xmlFile = failedXml != null ? failedXml : buildXMLFile(attributes["groups"], attributes["exclude"])
     def jacocoArgs = codeCoverageArguments()
     String command = "${javaPath} ${settings.jvmArguments} ${classpathArgs} ${jacocoArgs} ${testngEntry} -d ${settings.reportDirectory} ${settings.testngArguments} ${xmlFile}"
     output.debugln("Running command [%s]", command)
@@ -233,41 +241,55 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
       output.infoln("TestNG configuration saved to [${fileName}]")
     }
 
-    if (result != 0) {
-      // Keep a copy of the last set of test results when there is a failure.
-      Path testResults = project.directory.resolve("build/test-reports/testng-results.xml")
-      if (testResults.toFile().exists()) {
-        Path target = lastTestResultsPath()
-        Files.deleteIfExists(target)
-        Files.createDirectories(target.getParent())
-        Files.createFile(target)
-        Files.copy(testResults,
-            target,
-            StandardCopyOption.REPLACE_EXISTING)
-      }
+    handleExitCode(result)
+  }
 
-      fail("Build failed.")
+  /**
+   * Reacts to the TestNG process exit code.
+   * <ul>
+   *   <li>0 - all tests passed; return normally.</li>
+   *   <li>2 - tests were skipped but none failed; log and return normally.</li>
+   *   <li>1 - tests failed; preserve testng-results.xml and testng-failed.xml, then {@link #fail}.</li>
+   *   <li>other - configuration error or unknown; preserve what exists, then {@link #fail}.</li>
+   * </ul>
+   */
+  void handleExitCode(int exitCode) {
+    if (exitCode == 0) {
+      return
     }
+
+    if (exitCode == 2) {
+      output.infoln("TestNG exited with code 2 (tests were skipped).")
+      return
+    }
+
+    // Preserve both TestNG outputs when there's a failure. The failed file is what
+    // --onlyFailed uses on the next run.
+    preserveLastRunFile("testng-results.xml", lastTestResultsPath())
+    preserveLastRunFile("testng-failed.xml", lastFailedTestsPath())
+
+    if (exitCode == 1) {
+      fail("Build failed.")
+    } else {
+      fail("Build failed (TestNG exit code %d).", exitCode)
+    }
+  }
+
+  private void preserveLastRunFile(String fileName, Path target) {
+    Path source = project.directory.resolve("build/test-reports").resolve(fileName)
+    if (!source.toFile().exists()) {
+      return
+    }
+
+    Files.deleteIfExists(target)
+    Files.createDirectories(target.getParent())
+    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
   }
 
   Path buildXMLFile(List<String> groups, List<String> excludes) {
     Set<String> classNames = new TreeSet<>()
 
-    if (runtimeConfiguration.switches.booleanSwitches.contains("onlyFailed")) {
-      output.infoln("Retry previously failed tests.")
-      File testResults = lastTestResultsPath().toFile()
-      if (testResults.exists()) {
-        findFailedTests(testResults, classNames)
-        List<String> dashTestFlags = new ArrayList<>()
-        for (String s : classNames) {
-          dashTestFlags.add("--test=" + s)
-        }
-
-        output.infoln("Found [" + classNames.size() + "] failed tests to run. Equivalent to running:\n" + String.join(" ", dashTestFlags))
-      } else {
-        output.infoln("No test results found from a prior test run. File not found [" + testResults.toString() + "].")
-      }
-    } else if (runtimeConfiguration.switches.booleanSwitches.contains("onlyChanges")) {
+    if (runtimeConfiguration.switches.booleanSwitches.contains("onlyChanges")) {
       output.infoln("Only running tests for changed files (⚠️ misses changes in dependencies).")
 
       String committedChanges
@@ -456,30 +478,14 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
     return null
   }
 
-  private static void findFailedTests(File testResults, Set<String> classNames) {
-    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-    Document document = documentBuilder.parse(testResults);
-
-    def testElement = (Element) document.getElementsByTagName("test").item(0);
-    NodeList testClasses = testElement.getElementsByTagName("class")
-    for (int i = 0; i < testClasses.length; i++) {
-      def testClassElement = (Element) testClasses.item(i)
-      NodeList testMethods = testClassElement.getElementsByTagName("test-method")
-      for (int j = 0; j < testMethods.length; j++) {
-        def testMethodElement = (Element) testMethods.item(j)
-        if ("FAIL" == testMethodElement.getAttribute("status")) {
-          // Currently if any methods fail in a class, we are going to re-run the entire test class.
-          classNames.add(testClassElement.getAttribute("name"))
-          break;
-        }
-      }
-    }
-  }
-
-  private Path lastTestResultsPath() {
+  Path lastTestResultsPath() {
     String tmpDir = System.getProperty("java.io.tmpdir")
     return Paths.get(tmpDir).resolve(project.name + "/test-reports/last/testng-results.xml")
+  }
+
+  Path lastFailedTestsPath() {
+    String tmpDir = System.getProperty("java.io.tmpdir")
+    return Paths.get(tmpDir).resolve(project.name + "/test-reports/last/testng-failed.xml")
   }
 
   /**

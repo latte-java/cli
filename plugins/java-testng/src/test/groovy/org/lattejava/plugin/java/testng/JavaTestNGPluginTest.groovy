@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2024, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2026, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.lattejava.plugin.java.testng
 import groovy.xml.XmlSlurper
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.dep.domain.*
 import org.lattejava.dep.workflow.FetchWorkflow
 import org.lattejava.dep.workflow.PublishWorkflow
@@ -347,5 +348,166 @@ class JavaTestNGPluginTest {
         .findAll { testcase -> testcase.ignored.isEmpty() }
         .each { testcase -> tested << testcase.@classname.text() }
     return tested
+  }
+
+  @Test
+  void handleExitCodeZeroDoesNotFail() throws Exception {
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
+    // No throw — all tests passed.
+    plugin.handleExitCode(0)
+  }
+
+  @Test
+  void handleExitCodeSkippedDoesNotFail() throws Exception {
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
+    // Exit code 2 means tests were skipped but none failed — not a build failure.
+    plugin.handleExitCode(2)
+  }
+
+  @Test
+  void handleExitCodeFailureThrows() throws Exception {
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.handleExitCode(1)
+      fail("Expected RuntimeFailureException for exit code 1")
+    } catch (RuntimeFailureException expected) {
+      // good
+    }
+  }
+
+  @Test
+  void handleExitCodeOtherThrows() throws Exception {
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.handleExitCode(8)
+      fail("Expected RuntimeFailureException for exit code 8")
+    } catch (RuntimeFailureException expected) {
+      // good
+    }
+  }
+
+  @Test
+  void handleExitCodeFailurePreservesResultAndFailedFiles() throws Exception {
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
+
+    // Pre-stage synthetic TestNG output files that the real run would have produced.
+    Path reportsDir = project.directory.resolve("build/test-reports")
+    Files.createDirectories(reportsDir)
+    Path results = reportsDir.resolve("testng-results.xml")
+    Path failed = reportsDir.resolve("testng-failed.xml")
+    Files.writeString(results, "<results/>")
+    Files.writeString(failed, "<failed/>")
+
+    // Clear any prior preserved state.
+    Path lastResults = plugin.lastTestResultsPath()
+    Path lastFailed = plugin.lastFailedTestsPath()
+    Files.deleteIfExists(lastResults)
+    Files.deleteIfExists(lastFailed)
+
+    try {
+      plugin.handleExitCode(1)
+      fail("Expected RuntimeFailureException for exit code 1")
+    } catch (RuntimeFailureException expected) {
+      // good
+    }
+
+    assertTrue(Files.isRegularFile(lastResults),
+        "Expected testng-results.xml to be preserved at " + lastResults)
+    assertTrue(Files.isRegularFile(lastFailed),
+        "Expected testng-failed.xml to be preserved at " + lastFailed)
+    assertEquals(Files.readString(lastResults), "<results/>")
+    assertEquals(Files.readString(lastFailed), "<failed/>")
+  }
+
+  @Test
+  void handleExitCodeSkippedDoesNotPreserveFiles() throws Exception {
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, new RuntimeConfiguration(), output)
+
+    // Pre-stage a results file; exit code 2 should NOT copy it.
+    Path reportsDir = project.directory.resolve("build/test-reports")
+    Files.createDirectories(reportsDir)
+    Files.writeString(reportsDir.resolve("testng-results.xml"), "<results/>")
+
+    Path lastResults = plugin.lastTestResultsPath()
+    Path lastFailed = plugin.lastFailedTestsPath()
+    Files.deleteIfExists(lastResults)
+    Files.deleteIfExists(lastFailed)
+
+    plugin.handleExitCode(2)
+
+    assertFalse(Files.exists(lastResults),
+        "Expected no testng-results.xml preserved for exit code 2")
+    assertFalse(Files.exists(lastFailed),
+        "Expected no testng-failed.xml preserved for exit code 2")
+  }
+
+  @Test
+  void onlyFailedNoPriorRunDoesNothing() throws Exception {
+    RuntimeConfiguration runtimeConfiguration = new RuntimeConfiguration()
+    runtimeConfiguration.switches.booleanSwitches.add("onlyFailed")
+
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, runtimeConfiguration, output)
+    plugin.settings.javaVersion = "25"
+
+    // Make sure no failed file exists from a prior test in the same VM.
+    Files.deleteIfExists(plugin.lastFailedTestsPath())
+
+    plugin.test()
+
+    // Early return — no java process launched, no reports dir.
+    assertFalse(Files.isDirectory(projectDir.resolve("test-project/build/test-reports")),
+        "Expected no test-reports directory when --onlyFailed runs with no prior failure")
+  }
+
+  @Test
+  void onlyFailedWithPriorFailureRunsOnlyThoseTests() throws Exception {
+    RuntimeConfiguration runtimeConfiguration = new RuntimeConfiguration()
+    runtimeConfiguration.switches.booleanSwitches.add("onlyFailed")
+
+    JavaTestNGPlugin plugin = new JavaTestNGPlugin(project, runtimeConfiguration, output)
+    plugin.settings.javaVersion = "25"
+
+    // Hand-craft a testng-failed.xml naming only MyClassTest, and place it where
+    // --onlyFailed will find it.
+    Path staged = plugin.lastFailedTestsPath()
+    Files.deleteIfExists(staged)
+    Files.createDirectories(staged.getParent())
+    Files.writeString(staged, '''\
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite parallel="none" name="Failed suite" allow-return-values="true">
+  <test parallel="none" name="failed(failed)">
+    <classes>
+      <class name="org.savantbuild.test.MyClassTest">
+        <methods>
+          <include name="doSomething"/>
+        </methods>
+      </class>
+    </classes>
+  </test>
+</suite>
+''')
+
+    plugin.test()
+
+    // TestNG writes testng-results.xml regardless of suite name, so parse that to verify
+    // only doSomething from MyClassTest ran. (assertTestsRan reads latte-tests/all.xml,
+    // but --onlyFailed feeds a "Failed suite"-named XML, so the per-suite report is
+    // written under a different directory. testng-results.xml is stable.)
+    Path results = projectDir.resolve("test-project/build/test-reports/testng-results.xml")
+    assertTrue(Files.isRegularFile(results), "Expected testng-results.xml at " + results)
+    def parsed = new XmlSlurper().parse(results.toFile())
+    assertEquals(parsed.@total.text(), "1",
+        "Expected exactly one test method to run under --onlyFailed, got total=" + parsed.@total.text())
+    assertEquals(parsed.@passed.text(), "1")
+    assertEquals(parsed.@failed.text(), "0")
+
+    Set<String> ranClasses = new HashSet<>()
+    parsed.'**'.findAll { it.name() == 'class' }.each { cls ->
+      ranClasses << cls.@name.text()
+    }
+    assertTrue(ranClasses.contains("org.savantbuild.test.MyClassTest"))
+    assertFalse(ranClasses.contains("org.savantbuild.test.MyClassIntegrationTest"))
+    assertFalse(ranClasses.contains("org.savantbuild.test.MyClassUnitTest"))
   }
 }

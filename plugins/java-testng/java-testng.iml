@@ -14,11 +14,11 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.1.4/cli-0.1.4.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.1.5/cli-0.1.5.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.1.4/cli-0.1.4-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.1.5/cli-0.1.5-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -124,22 +124,22 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.1.4/dependency-0.1.4.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.1.5/dependency-0.1.5.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.1.4/dependency-0.1.4-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.1.5/dependency-0.1.5-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.4/file-0.1.4.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.5/file-0.1.5.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.4/file-0.1.4-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.5/file-0.1.5-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
