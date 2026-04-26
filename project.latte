@@ -31,12 +31,12 @@ project(group: "org.lattejava", name: "cli", version: "0.1.6", licenses: ["MIT"]
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.4")
-file = loadPlugin(id: "org.lattejava.plugin:file:0.1.4")
-idea = loadPlugin(id: "org.lattejava.plugin:idea:0.1.4")
-java = loadPlugin(id: "org.lattejava.plugin:java:0.1.4")
-javaTestNG = loadPlugin(id: "org.lattejava.plugin:java-testng:0.1.4")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.4")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.5")
+file = loadPlugin(id: "org.lattejava.plugin:file:0.1.5")
+idea = loadPlugin(id: "org.lattejava.plugin:idea:0.1.5")
+java = loadPlugin(id: "org.lattejava.plugin:java:0.1.7")
+javaTestNG = loadPlugin(id: "org.lattejava.plugin:java-testng:0.1.7")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.5")
 
 // Plugin settings
 java.settings.javaVersion = "25"
@@ -67,6 +67,11 @@ target(name: "idea", description: "Updates the IntelliJ IDEA module file") {
   idea.iml()
 }
 
+target(name: "format", description: "Formats the source code using IntelliJ's CLI") {
+  exec(["${SYS["user.home"]}/Applications/IntelliJ IDEA.app/Contents/bin/format.sh", "-r", "-s", ".idea/codeStyles/Project.xml", "src/main/java/"])
+  exec(["${SYS["user.home"]}/Applications/IntelliJ IDEA.app/Contents/bin/format.sh", "-r", "-s", ".idea/codeStyles/Project.xml", "src/test/java/"])
+}
+
 target(name: "bundle", description: "Creates a self-contained runtime bundle", dependsOn: ["build"]) {
   def bundleDir = "build/bundle"
   file.prune(dir: bundleDir)
@@ -85,24 +90,16 @@ target(name: "bundle", description: "Creates a self-contained runtime bundle", d
 }
 
 target(name: "minio", description: "Starts a local MinIO container for S3 testing") {
-  def run = { String cmd, boolean ignoreFailure = false ->
-    def proc = cmd.execute()
-    proc.waitFor()
-    if (!ignoreFailure && proc.exitValue() != 0) {
-      fail("Command failed [exit=${proc.exitValue()}]: ${cmd}\n${proc.err.text}")
-    }
-  }
-
   output.infoln("Stopping MinIO Docker container (if exists)")
-  run("docker rm -f latte-minio", true)
+  exec("docker rm -f latte-minio", true)
 
   output.infoln("Starting MinIO Docker container in the background")
-  run("docker run -d --name latte-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=latte-test -e MINIO_ROOT_PASSWORD=latte-test-secret minio/minio server /data --console-address :9001")
+  exec("docker run -d --name latte-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=latte-test -e MINIO_ROOT_PASSWORD=latte-test-secret minio/minio server /data --console-address :9001")
   Thread.sleep(1000)
 
   output.infoln("Initializing MinIO")
-  run("docker exec latte-minio mc alias set local http://localhost:9000 latte-test latte-test-secret")
-  run("docker exec latte-minio mc mb local/latte-test")
+  exec("docker exec latte-minio mc alias set local http://localhost:9000 latte-test latte-test-secret")
+  exec("docker exec latte-minio mc mb local/latte-test")
 }
 
 target(name: "release", description: "Releases a full version of the project", dependsOn: ["clean", "test", "bundle"]) {
@@ -121,4 +118,12 @@ target(name: "release", description: "Releases a full version of the project", d
     fail("GitHub release creation failed [exit=${proc.exitValue()}]: ${proc.err.text}")
   }
   output.infoln("GitHub release created for ${tag}")
+}
+
+private void exec(cmd, boolean ignoreFailure = false) {
+  def proc = cmd.execute()
+  proc.waitForProcessOutput(System.out, System.err)
+  if (!ignoreFailure && proc.exitValue() != 0) {
+    fail("Command failed [exit=${proc.exitValue()}]: ${cmd}")
+  }
 }

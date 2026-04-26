@@ -47,6 +47,8 @@ import org.lattejava.util.CyclicException;
  * @author Brian Pontarelli
  */
 public class GroovyProjectFileParser implements ProjectFileParser {
+  public static final String SCRIPT_FILE_NAME = "LatteProject.groovy";
+
   private final Output output;
 
   private final TargetGraphBuilder targetGraphBuilder;
@@ -88,7 +90,7 @@ public class GroovyProjectFileParser implements ProjectFileParser {
 
     try (GroovyClassLoader groovyClassLoader = new GroovyClassLoader(ClassLoader.getSystemClassLoader(), compilerConfig)) {
       String text = Files.readString(buildFile);
-      Class<?> buildClass = groovyClassLoader.parseClass(text, "LatteProject.groovy");
+      Class<?> buildClass = groovyClassLoader.parseClass(text, SCRIPT_FILE_NAME);
       ProjectBuildFile script = (ProjectBuildFile) buildClass.getConstructor().newInstance();
       Project project = new Project(buildFile.toAbsolutePath().getParent(), output);
       script.project = project;

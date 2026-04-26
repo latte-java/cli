@@ -67,14 +67,22 @@ public class Main {
     } catch (CompatibilityException e) {
       printCompatibilityError(e, output);
       int lineNumber = determineLineNumber(e);
-      output.errorln(e.getMessage() + (lineNumber > 0 ? " Error occurred on line [" + lineNumber + "]" : ""));
+      if (e.getMessage() != null) {
+        output.errorln(e.getMessage() + (lineNumber > 0 ? " Error occurred on line [" + lineNumber + "]" : ""));
+      } else if (lineNumber > 0) {
+        output.errorln("Error occurred on line [" + lineNumber + "]");
+      }
       output.debug(e);
       System.exit(1);
     } catch (ArtifactMetaDataMissingException | ArtifactMissingException | RunException | RuntimeFailureException |
              LicenseException | ChecksumException | ParseException | PluginLoadException | ProcessFailureException |
              PublishException | VersionException e) {
       int lineNumber = determineLineNumber(e);
-      output.errorln(e.getMessage() + (lineNumber > 0 ? " Error occurred on line [" + lineNumber + "]" : ""));
+      if (e.getMessage() != null) {
+        output.errorln(e.getMessage() + (lineNumber > 0 ? " Error occurred on line [" + lineNumber + "]" : ""));
+      } else if (lineNumber > 0) {
+        output.errorln("Error occurred on line [" + lineNumber + "]");
+      }
       output.debug(e);
       System.exit(1);
     } catch (CyclicException e) {
@@ -136,7 +144,7 @@ public class Main {
   private static int determineLineNumber(Exception e) {
     for (int i = 0; i < e.getStackTrace().length; i++) {
       StackTraceElement ste = e.getStackTrace()[i];
-      if (ste.getFileName() != null && ste.getFileName().endsWith(".latte")) {
+      if (GroovyProjectFileParser.SCRIPT_FILE_NAME.equals(ste.getFileName()) && ste.getLineNumber() > 0) {
         return ste.getLineNumber();
       }
     }
