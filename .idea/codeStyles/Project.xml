@@ -1,11 +1,13 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
+    <option name="AUTODETECT_INDENTS" value="false" />
     <option name="OTHER_INDENT_OPTIONS">
       <value>
         <option name="INDENT_SIZE" value="2" />
         <option name="TAB_SIZE" value="2" />
       </value>
     </option>
+    <option name="LINE_SEPARATOR" value="&#10;" />
     <JavaCodeStyleSettings>
       <option name="DELETE_UNUSED_MODULE_IMPORTS" value="true" />
       <option name="USE_SINGLE_CLASS_IMPORTS" value="false" />
