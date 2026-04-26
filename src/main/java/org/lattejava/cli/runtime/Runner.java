@@ -37,8 +37,8 @@ import org.lattejava.util.CyclicException;
 public interface Runner {
   /**
    * Runs the CLI from the given project directory. This handles global command dispatch, project file parsing, and
-   * target execution. If a global command is specified and no project file exists, the command is executed directly.
-   * If a project file exists and defines a target matching a global command name, the target takes precedence.
+   * target execution. If a global command is specified and no project file exists, the command is executed directly. If
+   * a project file exists and defines a target matching a global command name, the target takes precedence.
    *
    * @param projectDir           The project directory (containing {@code project.latte} if it exists).
    * @param runtimeConfiguration The runtime configuration.

@@ -35,8 +35,8 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 /**
- * Groovy delegate that captures the Workflow configuration from the project file. The methods of this class
- * capture the configuration from the DSL.
+ * Groovy delegate that captures the Workflow configuration from the project file. The methods of this class capture the
+ * configuration from the DSL.
  *
  * @author Brian Pontarelli
  */
@@ -136,8 +136,8 @@ public class WorkflowDelegate {
     }
 
     /**
-     * Adds a {@link CacheProcess} to the workflow that uses the given attributes. Creates a Latte-only cache
-     * (latteDir set, mavenDir null).
+     * Adds a {@link CacheProcess} to the workflow that uses the given attributes. Creates a Latte-only cache (latteDir
+     * set, mavenDir null).
      *
      * @param attributes The attributes.
      */
@@ -167,8 +167,7 @@ public class WorkflowDelegate {
     }
 
     /**
-     * Adds a {@link CacheProcess} to the workflow that handles Maven-sourced artifacts
-     * (mavenDir set, latteDir null).
+     * Adds a {@link CacheProcess} to the workflow that handles Maven-sourced artifacts (mavenDir set, latteDir null).
      *
      * @param attributes Optionally a map that contains a dir attribute.
      */

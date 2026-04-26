@@ -59,7 +59,8 @@ import static java.util.Arrays.asList;
  * It is important to understand how the Graph works internally. Nodes are stored in a Map whose key is the value for
  * the node. If the graph is storing Strings then only a single node can exist with the value <em>foo</em>. This means
  * that the graph does not allow duplicates. Therefore it would be impossible to have two nodes whose values are
- * <em>foo</em> with different edges. The key of the Map is a {@link HashNode} object. The node stores the value as well
+ * <em>foo</em> with different edges. The key of the Map is a {@link HashNode} object. The node stores the value as
+ * well
  * as all the edges.
  * </p>
  * <h3>Node values</h3>
@@ -111,7 +112,7 @@ public class HashGraph<T, U> implements Graph<T, U> {
    * @param rootValue The value of the node to start the traversal from.
    * @param predicate The predicate used to find the node.
    * @return The value of the first node that matches the predicate starting at the rootValue node. Null if the
-   * rootValue not doesn't exist or if no nodes match the predicate.
+   *     rootValue not doesn't exist or if no nodes match the predicate.
    * @throws CyclicException If there is a cycle in the graph.
    */
   @Override

@@ -88,8 +88,8 @@ public class Version implements Comparable<Version> {
    *
    * @param version The version String to parse.
    * @throws VersionException If the string is incorrectly formatted and does not conform to the semantic versioning
-   * scheme (starts with a delimiter (. or -), contains two delimiters in a row, doesn't have
-   * proper pre-release or meta-data information).
+   *                          scheme (starts with a delimiter (. or -), contains two delimiters in a row, doesn't have
+   *                          proper pre-release or meta-data information).
    */
   public Version(String version) {
     char start = version.charAt(0);
@@ -174,7 +174,7 @@ public class Version implements Comparable<Version> {
    *
    * @param other The other Object to compare against.
    * @return A positive integer if this Version is larger than the given version. Zero if the given Version is the exact
-   * same as this Version. A negative integer is this Version is smaller that the given Version.
+   *     same as this Version. A negative integer is this Version is smaller that the given Version.
    */
   public int compareTo(Version other) {
     int result = major - other.major;

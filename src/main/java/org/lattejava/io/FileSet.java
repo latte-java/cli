@@ -115,7 +115,7 @@ public class FileSet {
   /**
    * Constructs a FileSet from a Map of attributes.
    *
-   * @param dir The directory for the FileSet.
+   * @param dir        The directory for the FileSet.
    * @param attributes The attributes.
    * @return The FileSet.
    */

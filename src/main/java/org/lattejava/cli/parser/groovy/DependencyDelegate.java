@@ -70,7 +70,7 @@ public class DependencyDelegate {
     if (!GroovyTools.hasAttributes(attributes, "id")) {
       throw new ParseException("""
           Invalid dependency definition. It must have the id attribute like this:
-
+          
             dependency(id: "org.example:foo:0.1.0", optional: false)
           """);
     }

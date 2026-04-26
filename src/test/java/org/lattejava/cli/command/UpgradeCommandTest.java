@@ -42,7 +42,7 @@ public class UpgradeCommandTest extends BaseUnitTest {
         workflow {
           standard()
         }
-
+      
         dependencies {
           group(name: "compile") {
             dependency(id: "com.fasterxml.jackson.core:jackson-core:2.13.4")
@@ -51,12 +51,12 @@ public class UpgradeCommandTest extends BaseUnitTest {
             dependency(id: "org.testng:testng:6.8.7")
           }
         }
-
+      
         publications {
           standard()
         }
       }
-
+      
       // Plugins
       dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
       java = loadPlugin(id: "org.lattejava.plugin:java:0.1.0")
@@ -320,7 +320,7 @@ public class UpgradeCommandTest extends BaseUnitTest {
           workflow {
             standard()
           }
-
+        
           dependencies {
             group(name: "compile") {
               dependency(id: "org.lattejava:cli:0.1.0")
@@ -329,7 +329,7 @@ public class UpgradeCommandTest extends BaseUnitTest {
               dependency(id: "org.lattejava.plugin:dependency:0.1.0")
             }
           }
-
+        
           publications {
             standard()
           }
@@ -376,14 +376,14 @@ public class UpgradeCommandTest extends BaseUnitTest {
           workflow {
             standard()
           }
-
+        
           dependencies {
             group(name: "compile") {
               dependency(id: "org.lattejava:cli:0.1.0")
               dependency(id: "org.nonexistent:fake-lib:1.0.0")
             }
           }
-
+        
           publications {
             standard()
           }
@@ -411,14 +411,14 @@ public class UpgradeCommandTest extends BaseUnitTest {
 
     // cli should be upgraded
     Artifact cli = compile.dependencies.stream()
-        .filter(a -> a.id.project.equals("cli"))
-        .findFirst().orElseThrow();
+                                       .filter(a -> a.id.project.equals("cli"))
+                                       .findFirst().orElseThrow();
     assertTrue(cli.version.compareTo(new Version("0.1.0")) > 0);
 
     // fake-lib should remain at 1.0.0 (not found in repository, skipped)
     Artifact fakeDep = compile.dependencies.stream()
-        .filter(a -> a.id.project.equals("fake-lib"))
-        .findFirst().orElseThrow();
+                                           .filter(a -> a.id.project.equals("fake-lib"))
+                                           .findFirst().orElseThrow();
     assertEquals(fakeDep.version, new Version("1.0.0"));
   }
 
@@ -466,12 +466,12 @@ public class UpgradeCommandTest extends BaseUnitTest {
           workflow {
             standard()
           }
-
+        
           publications {
             standard()
           }
         }
-
+        
         // Plugins
         dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
         java = loadPlugin(id: "org.lattejava.plugin:java:0.1.0")
@@ -518,7 +518,7 @@ public class UpgradeCommandTest extends BaseUnitTest {
             standard()
           }
         }
-
+        
         dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
         fake = loadPlugin(id: "org.nonexistent:fake-plugin:1.0.0")
         """;
@@ -578,8 +578,8 @@ public class UpgradeCommandTest extends BaseUnitTest {
   }
 
   /**
-   * Reparses the project.latte file from disk, stripping lines outside the project block (loadPlugin calls,
-   * plugin settings, etc.) which would fail without the actual plugins installed.
+   * Reparses the project.latte file from disk, stripping lines outside the project block (loadPlugin calls, plugin
+   * settings, etc.) which would fail without the actual plugins installed.
    */
   private Project reparseProject() throws IOException {
     Path projectFile = testDir.resolve("project.latte");
@@ -604,14 +604,14 @@ public class UpgradeCommandTest extends BaseUnitTest {
           workflow {
             standard()
           }
-
+        
           dependencies {
             group(name: "compile") {
               dependency(id: "org.slf4j:slf4j-api:2.0.16", skipCompatibilityCheck: true)
               dependency(id: "org.lattejava:cli:0.1.0")
             }
           }
-
+        
           publications {
             standard()
           }
@@ -642,8 +642,8 @@ public class UpgradeCommandTest extends BaseUnitTest {
     assertEquals(compile.dependencies.size(), 2);
 
     Artifact slf4jReparsed = compile.dependencies.stream()
-        .filter(a -> a.id.project.equals("slf4j-api"))
-        .findFirst().orElseThrow();
+                                                 .filter(a -> a.id.project.equals("slf4j-api"))
+                                                 .findFirst().orElseThrow();
     assertTrue(slf4jReparsed.skipCompatibilityCheck, "skipCompatibilityCheck should survive round-trip");
   }
 
@@ -654,7 +654,7 @@ public class UpgradeCommandTest extends BaseUnitTest {
           workflow {
             standard()
           }
-
+        
           dependencies {
             group(name: "compile") {
               dependency(id: "org.example:has-exclusions:1.0.0") {
@@ -664,7 +664,7 @@ public class UpgradeCommandTest extends BaseUnitTest {
               dependency(id: "org.lattejava:cli:0.1.0")
             }
           }
-
+        
           publications {
             standard()
           }
@@ -697,8 +697,8 @@ public class UpgradeCommandTest extends BaseUnitTest {
     assertEquals(compile.dependencies.size(), 2);
 
     Artifact excluded = compile.dependencies.stream()
-        .filter(a -> a.id.project.equals("has-exclusions"))
-        .findFirst().orElseThrow();
+                                            .filter(a -> a.id.project.equals("has-exclusions"))
+                                            .findFirst().orElseThrow();
     assertEquals(excluded.exclusions.size(), 2);
     assertEquals(excluded.exclusions.get(0).group, "org.example");
     assertEquals(excluded.exclusions.get(0).project, "excluded1");
@@ -713,14 +713,14 @@ public class UpgradeCommandTest extends BaseUnitTest {
           workflow {
             standard()
           }
-
+        
           dependencies {
             group(name: "compile") {
               dependency(id: "com.googlecode.jarjar:jarjar:1.3")
               dependency(id: "org.lattejava:cli:0.1.0")
             }
           }
-
+        
           publications {
             standard()
           }

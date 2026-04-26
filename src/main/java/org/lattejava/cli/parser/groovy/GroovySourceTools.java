@@ -31,18 +31,19 @@ import org.apache.groovy.parser.antlr4.GroovyLexer;
 public class GroovySourceTools {
   /**
    * A block found in Groovy source. The range {@code [start, end)} covers the entire construct from the identifier
-   * through the closing brace. For example, for {@code dependencies {\n  ...\n}}, start is the index of 'd' and end
-   * is the index after '}'.
+   * through the closing brace. For example, for {@code dependencies {\n  ...\n}}, start is the index of 'd' and end is
+   * the index after '}'.
    *
    * @param start The character index of the first token (the identifier).
    * @param end   The character index one past the closing brace.
    */
-  public record Block(int start, int end) {}
+  public record Block(int start, int end) {
+  }
 
   /**
-   * Finds a top-level method-call block in the source, such as {@code project(...) \{} or {@code dependencies \{}. A
-   * method-call block is an identifier followed by an optional parenthesized argument list and then a brace-delimited
-   * body.
+   * Finds a top-level method-call block in the source, such as
+   * {@code project(...) \{} or {@code dependencies \{}. A method-call block is an identifier followed by an optional
+   * parenthesized argument list and then a brace-delimited body.
    * <p>
    * This method only matches at brace depth {@code nestingDepth}. For example, to find {@code dependencies} inside
    * {@code project(...) \{}, use {@code nestingDepth = 1}.
@@ -101,20 +102,21 @@ public class GroovySourceTools {
   }
 
   /**
-   * A string literal found inside a method call. The range {@code [start, end)} covers the string literal including
-   * its quotes. {@code value} is the unquoted content.
+   * A string literal found inside a method call. The range {@code [start, end)} covers the string literal including its
+   * quotes. {@code value} is the unquoted content.
    *
    * @param start The character index of the opening quote.
    * @param end   The character index one past the closing quote.
    * @param value The string content without quotes.
    */
-  public record StringLiteral(int start, int end, String value) {}
+  public record StringLiteral(int start, int end, String value) {
+  }
 
   /**
    * Finds all string literal arguments inside calls to the named method. For example, given source containing
    * {@code loadPlugin(id: "org.lattejava.plugin:dep:0.1.0")}, calling
-   * {@code findMethodCallStringArguments(source, "loadPlugin")} returns a list with one {@link StringLiteral}
-   * whose value is {@code "org.lattejava.plugin:dep:0.1.0"}.
+   * {@code findMethodCallStringArguments(source, "loadPlugin")} returns a list with one {@link StringLiteral} whose
+   * value is {@code "org.lattejava.plugin:dep:0.1.0"}.
    *
    * @param source The Groovy source text.
    * @param name   The method name to search for (e.g., "loadPlugin").

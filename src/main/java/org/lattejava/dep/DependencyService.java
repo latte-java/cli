@@ -60,8 +60,8 @@ public interface DependencyService {
    * @param workflow     The workflow to use for downloading and caching the AMD files.
    * @return The dependency graph.
    * @throws ArtifactMetaDataMissingException If any artifacts AMD files could not be downloaded or found locally.
-   * @throws ProcessFailureException If a workflow process failed while fetching the meta-data.
-   * @throws ChecksumException If any checksum files didn't match the AMD file when downloading.
+   * @throws ProcessFailureException          If a workflow process failed while fetching the meta-data.
+   * @throws ChecksumException                If any checksum files didn't match the AMD file when downloading.
    */
   DependencyGraph buildGraph(ReifiedArtifact project, Dependencies dependencies, Workflow workflow)
       throws ArtifactMetaDataMissingException, ProcessFailureException, ChecksumException;
@@ -82,7 +82,7 @@ public interface DependencyService {
    * @param graph The dependency graph.
    * @return The reduced graph.
    * @throws CompatibilityException If an dependency has incompatible versions.
-   * @throws CyclicException If the graph has a cycle in it.
+   * @throws CyclicException        If the graph has a cycle in it.
    */
   ArtifactGraph reduce(DependencyGraph graph) throws CompatibilityException, CyclicException;
 
@@ -95,11 +95,11 @@ public interface DependencyService {
    * @param listeners Any listeners that want to receive callbacks when artifacts are resolved.
    * @param rules     The traversal rules that are applied while traversing the graph during the reduction.
    * @return The resolved graph.
-   * @throws ProcessFailureException If a workflow process failed while fetching an artifact or its source.
+   * @throws ProcessFailureException  If a workflow process failed while fetching an artifact or its source.
    * @throws ArtifactMissingException If any of the required artifacts are missing.
-   * @throws CyclicException If any of the artifact graph has any cycles in it.
-   * @throws ChecksumException If the item's checksum file did not match the item.
-   * @throws LicenseException If an invalid license is encountered during the resolution process.
+   * @throws CyclicException          If any of the artifact graph has any cycles in it.
+   * @throws ChecksumException        If the item's checksum file did not match the item.
+   * @throws LicenseException         If an invalid license is encountered during the resolution process.
    */
   ResolvedArtifactGraph resolve(ArtifactGraph graph, Workflow workflow, TraversalRules rules, DependencyListener... listeners)
       throws CyclicException, ArtifactMissingException, ProcessFailureException, ChecksumException, LicenseException;

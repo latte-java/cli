@@ -31,8 +31,8 @@ import org.lattejava.cli.runtime.RuntimeConfiguration;
 import groovy.lang.GroovyObjectSupport;
 
 /**
- * Abstract base class for plugins. This defines some helper methods that all plugins will need and it also allows
- * Latte to pass the {@link Project} and {@link Output} objects to plugins.
+ * Abstract base class for plugins. This defines some helper methods that all plugins will need and it also allows Latte
+ * to pass the {@link Project} and {@link Output} objects to plugins.
  *
  * @author Brian Pontarelli
  */

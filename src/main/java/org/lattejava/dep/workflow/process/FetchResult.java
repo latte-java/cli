@@ -19,4 +19,5 @@ import java.nio.file.Path;
 
 import org.lattejava.dep.domain.ResolvableItem;
 
-public record FetchResult(Path file, ItemSource source, ResolvableItem item) {}
+public record FetchResult(Path file, ItemSource source, ResolvableItem item) {
+}

@@ -52,7 +52,7 @@ public class FetchWorkflow {
    * @param publishWorkflow The PublishWorkflow that is used to store the item if it can be found.
    * @return A FetchResult that contains the item file and source, or null if the item was not found.
    * @throws ProcessFailureException If any of the processes failed while attempting to fetch the artifact.
-   * @throws ChecksumException If the item's checksum file did not match the item.
+   * @throws ChecksumException       If the item's checksum file did not match the item.
    */
   public FetchResult fetchItem(ResolvableItem item, PublishWorkflow publishWorkflow)
       throws ProcessFailureException, ChecksumException {

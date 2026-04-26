@@ -92,7 +92,7 @@ public class NetTools {
    * @param password (Optional) The password that might be used to connect to the resource.
    * @param checksum (Optional) The Checksum of the resource (to verify).
    * @return A temp file that stores the resource or null if the given URI doesn't exist.
-   * @throws IOException If the resource could not be downloaded.
+   * @throws IOException       If the resource could not be downloaded.
    * @throws ChecksumException If the file was downloaded but doesn't match the checksum.
    */
   public static Path downloadToPath(URI uri, String username, String password, Checksum checksum) throws IOException, ChecksumException {

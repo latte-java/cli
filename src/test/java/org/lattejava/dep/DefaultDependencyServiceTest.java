@@ -961,8 +961,8 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
    *              |----------------------|
    * </pre>
    * <p>
-   * Notice that Project depends on version 1.1.0 of B but version 1.0.0 is the version that depends on D, therefore
-   * D is pruned because it was not a dependency of the newer version of B (1.1.0). This is an upgrade of a dependency
+   * Notice that Project depends on version 1.1.0 of B but version 1.0.0 is the version that depends on D, therefore D
+   * is pruned because it was not a dependency of the newer version of B (1.1.0). This is an upgrade of a dependency
    * that dropped one of its dependencies.
    */
   @Test
@@ -970,10 +970,10 @@ public class DefaultDependencyServiceTest extends BaseUnitTest {
     // Try many different group names to ensure we hit a HashSet ordering where `a-child` is iterated before `a`, which is
     // a bug from Latte that we are fixing here
     String[] groups = {
-            "org.test.aaa", "org.test.bbb", "org.test.ccc", "org.test.ddd",
-            "org.test.eee", "org.test.fff", "org.test.ggg", "org.test.hhh",
-            "org.test.iii", "org.test.jjj", "org.test.kkk", "org.test.lll",
-            "org.test.mmm", "org.test.nnn", "org.test.ooo", "org.test.ppp"
+        "org.test.aaa", "org.test.bbb", "org.test.ccc", "org.test.ddd",
+        "org.test.eee", "org.test.fff", "org.test.ggg", "org.test.hhh",
+        "org.test.iii", "org.test.jjj", "org.test.kkk", "org.test.lll",
+        "org.test.mmm", "org.test.nnn", "org.test.ooo", "org.test.ppp"
     };
 
     for (String group : groups) {

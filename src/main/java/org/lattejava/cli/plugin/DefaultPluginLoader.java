@@ -71,7 +71,7 @@ public class DefaultPluginLoader implements PluginLoader {
         project.workflow.publishWorkflow == null || project.workflow.publishWorkflow.processes.isEmpty()) {
       output.errorln("""
           Your project uses plugins but doesn't have a workflow defined to fetch them. Define a workflow in your project definition section like this:
-
+          
             project(...) {
               workflow {
                 standard()

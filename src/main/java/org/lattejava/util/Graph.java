@@ -105,7 +105,7 @@ public interface Graph<T, U> {
    * @param origin      The origin value.
    * @param destination The destination value.
    * @return A list of all the paths between the two nodes or an empty list if there are none or null if either of the
-   * nodes don't exist.
+   *     nodes don't exist.
    */
   List<Path<T>> getPaths(T origin, T destination);
 
@@ -303,7 +303,7 @@ public interface Graph<T, U> {
      * An edge filter that only returns true if an edge has not been traversed yet.
      */
     class SingleTraversalEdgeFilter<T, U> implements EdgeFilter<T, U> {
-      private final Set<Edge<T,U>> visited = new HashSet<>();
+      private final Set<Edge<T, U>> visited = new HashSet<>();
 
       @Override
       public boolean filter(Edge<T, U> edge, Edge<T, U> entryPoint) {
@@ -334,7 +334,7 @@ public interface Graph<T, U> {
      * @param depth       The current depth in the graph.
      * @param isLast      If this is the last node at this depth.
      * @return True if the traversal should continue down from the destination node. False if the traversal should exit
-     * and resume from the origin node.
+     *     and resume from the origin node.
      */
     boolean consume(T origin, T destination, U edgeValue, int depth, boolean isLast);
   }
@@ -370,6 +370,7 @@ public interface Graph<T, U> {
     List<T> get();
 
   }
+
   /**
    * A simple implementation for the Path interface. This takes a constructor parameter that is the Path list and
    * shallow copies it to a new unmodifiable LinkedList.

@@ -24,8 +24,8 @@ import org.lattejava.domain.Version;
 /**
  * <p>
  * This class defines an artifact as it exists across all projects, dependencies, etc. This class is the representation
- * of the artifact that is defined by its group, project, name, type, and version. This object is also the representation
- * of a dependency between two project's.
+ * of the artifact that is defined by its group, project, name, type, and version. This object is also the
+ * representation of a dependency between two project's.
  * </p>
  * <p>
  * See the {@link #Artifact(String)} constructor for String formats of artifacts.
@@ -322,9 +322,8 @@ public class Artifact {
   }
 
   /**
-   * Returns the shortest unambiguous spec string for this artifact. Uses the 3-part form
-   * {@code group:project:version} when the name equals the project and the type is {@code jar}, otherwise uses the
-   * full 5-part form.
+   * Returns the shortest unambiguous spec string for this artifact. Uses the 3-part form {@code group:project:version}
+   * when the name equals the project and the type is {@code jar}, otherwise uses the full 5-part form.
    *
    * @return The shortest spec string.
    */

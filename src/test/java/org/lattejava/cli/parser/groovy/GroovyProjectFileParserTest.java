@@ -49,6 +49,7 @@ import org.lattejava.util.LattePaths;
 import org.testng.annotations.Test;
 
 import groovy.lang.MissingPropertyException;
+
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

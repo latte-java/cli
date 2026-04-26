@@ -70,9 +70,9 @@ public class Workflow {
    * @param artifact The artifact to fetch.
    * @return The Path of the artifact and never null.
    * @throws ArtifactMissingException If the artifact could not be found.
-   * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the
-   *     artifact.
-   * @throws ChecksumException If the item's checksum file did not match the item.
+   * @throws ProcessFailureException  If any of the processes encountered a failure while attempting to fetch the
+   *                                  artifact.
+   * @throws ChecksumException        If the item's checksum file did not match the item.
    */
   public Path fetchArtifact(Artifact artifact) throws ArtifactMissingException, ProcessFailureException, ChecksumException {
     // Try the non-semantic version first since it is the real version on disk and in remote repositories
@@ -96,16 +96,16 @@ public class Workflow {
   }
 
   /**
-   * Fetches the artifact metadata. Every artifact in Latte is required to have an AMD file. Otherwise, it is
-   * considered a missing artifact entirely. Therefore, Latte never negative caches AMD files and this method will
-   * always return an AMD file or throw an ArtifactMetaDataMissingException.
+   * Fetches the artifact metadata. Every artifact in Latte is required to have an AMD file. Otherwise, it is considered
+   * a missing artifact entirely. Therefore, Latte never negative caches AMD files and this method will always return an
+   * AMD file or throw an ArtifactMetaDataMissingException.
    *
    * @param artifact The artifact to fetch the metadata for.
    * @return The ArtifactMetaData object and never null.
    * @throws ArtifactMetaDataMissingException If the AMD file could not be found.
-   * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the AMD
-   *     file.
-   * @throws ChecksumException If the item's checksum file did not match the item.
+   * @throws ProcessFailureException          If any of the processes encountered a failure while attempting to fetch
+   *                                          the AMD file.
+   * @throws ChecksumException                If the item's checksum file did not match the item.
    */
   public ArtifactMetaData fetchMetaData(Artifact artifact) throws ArtifactMetaDataMissingException, ProcessFailureException, ChecksumException {
     // Defined here in case an exception is thrown in the catch block below
@@ -167,9 +167,9 @@ public class Workflow {
    *
    * @param artifact The artifact to fetch the source for.
    * @return The Path of the source or null if it doesn't exist.
-   * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the
-   *     source file.
-   * @throws ChecksumException If the item's checksum file did not match the item.
+   * @throws ProcessFailureException If any of the processes encountered a failure while attempting to fetch the source
+   *                                 file.
+   * @throws ChecksumException       If the item's checksum file did not match the item.
    */
   public Path fetchSource(Artifact artifact) throws ProcessFailureException, ChecksumException {
     try {

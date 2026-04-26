@@ -50,9 +50,9 @@ import org.lattejava.security.ChecksumException;
  */
 public class S3Process extends BaseProcess {
   private static final HttpClient httpClient = HttpClient.newBuilder()
-      .connectTimeout(Duration.ofMillis(10_000))
-      .followRedirects(HttpClient.Redirect.NORMAL)
-      .build();
+                                                         .connectTimeout(Duration.ofMillis(10_000))
+                                                         .followRedirects(HttpClient.Redirect.NORMAL)
+                                                         .build();
 
   public final String bucket;
 
@@ -86,8 +86,8 @@ public class S3Process extends BaseProcess {
    */
   private static void applyHeaders(Map<String, String> headers, HttpRequest.Builder requestBuilder) {
     headers.entrySet().stream()
-        .filter(e -> !e.getKey().equalsIgnoreCase("host"))
-        .forEach(e -> requestBuilder.header(e.getKey(), e.getValue()));
+           .filter(e -> !e.getKey().equalsIgnoreCase("host"))
+           .forEach(e -> requestBuilder.header(e.getKey(), e.getValue()));
   }
 
   private static String objectKey(ResolvableItem item) {
@@ -228,9 +228,9 @@ public class S3Process extends BaseProcess {
     signer.sign("PUT", uri, headers, payloadHash);
 
     var requestBuilder = HttpRequest.newBuilder()
-        .uri(uri)
-        .PUT(HttpRequest.BodyPublishers.ofByteArray(body))
-        .timeout(Duration.ofMillis(60_000));
+                                    .uri(uri)
+                                    .PUT(HttpRequest.BodyPublishers.ofByteArray(body))
+                                    .timeout(Duration.ofMillis(60_000));
     applyHeaders(headers, requestBuilder);
 
     HttpResponse<String> response;

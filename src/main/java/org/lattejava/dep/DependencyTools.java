@@ -27,7 +27,7 @@ public final class DependencyTools {
    * Determines if the given artifact ID matches the given exclusion, taking into consideration wildcards in the
    * exclusion.
    *
-   * @param artifact The artifact ID.
+   * @param artifact  The artifact ID.
    * @param exclusion The exclusion.
    * @return True if it matches, false if not.
    */

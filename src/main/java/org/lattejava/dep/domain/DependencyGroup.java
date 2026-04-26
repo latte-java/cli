@@ -71,6 +71,6 @@ public class DependencyGroup {
 
   @Override
   public String toString() {
-    return name + ": [\n\t\t"  + dependencies.stream().map(Artifact::toString).collect(Collectors.joining("\n\t\t")) + "\n\t]\n";
+    return name + ": [\n\t\t" + dependencies.stream().map(Artifact::toString).collect(Collectors.joining("\n\t\t")) + "\n\t]\n";
   }
 }

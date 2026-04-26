@@ -90,8 +90,8 @@ public abstract class ProjectBuildFile extends Script {
 
   /**
    * <p>
-   * Loads a plugin and returns a new instance of the Plugin class. This method is called with the information used
-   * to load the plugin like this:
+   * Loads a plugin and returns a new instance of the Plugin class. This method is called with the information used to
+   * load the plugin like this:
    * </p>
    * <pre>
    *   java = loadPlugin(id: "org.lattejava.cli.plugin:java:0.1.0")
@@ -118,8 +118,8 @@ public abstract class ProjectBuildFile extends Script {
 
   /**
    * <p>
-   * Sets up the project information in the project file. This method is called with a Map of values and a closure
-   * like this:
+   * Sets up the project information in the project file. This method is called with a Map of values and a closure like
+   * this:
    * </p>
    * <pre>
    *   project(group: "org.example", name: "my-project", version: "1.1", licenses: ["Commercial"]) {
@@ -141,10 +141,10 @@ public abstract class ProjectBuildFile extends Script {
   protected Project project(Map<String, Object> attributes, @DelegatesTo(ProjectDelegate.class) Closure<?> closure) {
     List<String> attrs = asList("group", "name", "version", "licenses");
     Map<String, Class<?>> attrTypes = new MapBuilder<String, Class<?>>().put("group", String.class)
-        .put("name", String.class)
-        .put("version", String.class)
-        .put("licenses", List.class)
-        .done();
+                                                                        .put("name", String.class)
+                                                                        .put("version", String.class)
+                                                                        .put("licenses", List.class)
+                                                                        .done();
     if (!GroovyTools.attributesValid(attributes, attrs, attrs, attrTypes)) {
       throw new ParseException("""
           Invalid project definition. One of the required attributes is missing (i.e. licenses). It should look like:

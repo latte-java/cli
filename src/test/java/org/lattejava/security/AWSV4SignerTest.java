@@ -45,8 +45,7 @@ public class AWSV4SignerTest {
   /**
    * Tests GET Object — the primary example from the AWS S3 SigV4 documentation.
    * <p>
-   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-   * "Example: GET Object"
+   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html "Example: GET Object"
    */
   @Test
   public void getObject() {
@@ -110,8 +109,8 @@ public class AWSV4SignerTest {
   /**
    * Tests GET Bucket Lifecycle — uses query parameters.
    * <p>
-   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-   * "Example: GET Bucket Lifecycle"
+   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html "Example: GET Bucket
+   * Lifecycle"
    */
   @Test
   public void getBucketLifecycle() {
@@ -207,8 +206,8 @@ public class AWSV4SignerTest {
   /**
    * Tests GET with List Objects (query parameter with value).
    * <p>
-   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-   * "Example: GET Bucket (List Objects)"
+   * Reference: https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html "Example: GET Bucket (List
+   * Objects)"
    */
   @Test
   public void getBucketListObjects() {

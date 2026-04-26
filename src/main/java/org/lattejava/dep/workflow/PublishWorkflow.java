@@ -69,8 +69,8 @@ public class PublishWorkflow {
   }
 
   /**
-   * Publishes a negative file for the item. This file is empty, but signals Latte not to attempt to fetch that
-   * specific item again, since it doesn't exist.
+   * Publishes a negative file for the item. This file is empty, but signals Latte not to attempt to fetch that specific
+   * item again, since it doesn't exist.
    *
    * @param item   The item that the negative is being published for.
    * @param source The source to tag the negative marker with.

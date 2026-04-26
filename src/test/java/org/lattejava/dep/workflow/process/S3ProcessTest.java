@@ -85,7 +85,7 @@ public class S3ProcessTest {
       HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
       HttpResponse<String> response = client.send(
           HttpRequest.newBuilder().uri(URI.create(ENDPOINT + "/minio/health/live")).GET()
-              .timeout(Duration.ofSeconds(2)).build(),
+                     .timeout(Duration.ofSeconds(2)).build(),
           HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() != 200) {
         throw new RuntimeException("MinIO returned HTTP " + response.statusCode());
@@ -93,15 +93,15 @@ public class S3ProcessTest {
     } catch (Exception e) {
       throw new RuntimeException("""
           MinIO is not running. Start it with:
-
+          
             docker run -d --name latte-minio \\
               -p 9000:9000 -p 9001:9001 \\
               -e MINIO_ROOT_USER=latte-test \\
               -e MINIO_ROOT_PASSWORD=latte-test-secret \\
               minio/minio server /data --console-address ":9001"
-
+          
           Then create the test bucket:
-
+          
             docker exec latte-minio mc alias set local http://localhost:9000 latte-test latte-test-secret
             docker exec latte-minio mc mb local/latte-test
           """, e);

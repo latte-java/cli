@@ -29,8 +29,8 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 
 /**
- * Groovy delegate that captures the Project configuration from the project file. The methods of this class
- * capture the configuration from the DSL.
+ * Groovy delegate that captures the Project configuration from the project file. The methods of this class capture the
+ * configuration from the DSL.
  *
  * @author Brian Pontarelli
  */

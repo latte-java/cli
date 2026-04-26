@@ -26,9 +26,9 @@ import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
 
 /**
- * This is an implementation of the Process that uses local caches to fetch and publish artifacts.
- * It manages up to three cache directories: one for Latte-sourced artifacts, one for integration-version
- * artifacts, and one for Maven-sourced artifacts. Any directory can be null to disable that cache.
+ * This is an implementation of the Process that uses local caches to fetch and publish artifacts. It manages up to
+ * three cache directories: one for Latte-sourced artifacts, one for integration-version artifacts, and one for
+ * Maven-sourced artifacts. Any directory can be null to disable that cache.
  *
  * @author Brian Pontarelli
  */
@@ -41,7 +41,8 @@ public class CacheProcess implements Process {
 
   public final String latteDir;
 
-  private record CacheHit(Path file, String matchedItem) {}
+  private record CacheHit(Path file, String matchedItem) {
+  }
 
   public CacheProcess(Output output, String latteDir, String integrationDir, String mavenDir) {
     this.output = output;
@@ -51,15 +52,15 @@ public class CacheProcess implements Process {
   }
 
   /**
-   * Checks the cache directories for the item. Tries the Latte cache first (tagging hits as LATTE),
-   * then the Maven cache (tagging hits as MAVEN). If found in either, the result is returned.
-   * If not found in either, null is returned.
+   * Checks the cache directories for the item. Tries the Latte cache first (tagging hits as LATTE), then the Maven
+   * cache (tagging hits as MAVEN). If found in either, the result is returned. If not found in either, null is
+   * returned.
    *
    * @param item            The item being fetched.
    * @param publishWorkflow The PublishWorkflow that is used to store the item if it can be found.
    * @return The FetchResult from the cache or null if it doesn't exist.
-   * @throws NegativeCacheException If there is a negative cache record of the file, meaning it doesn't exist
-   *     anywhere in the world.
+   * @throws NegativeCacheException If there is a negative cache record of the file, meaning it doesn't exist anywhere
+   *                                in the world.
    */
   @Override
   public FetchResult fetch(ResolvableItem item, PublishWorkflow publishWorkflow) throws NegativeCacheException {
@@ -94,9 +95,9 @@ public class CacheProcess implements Process {
   }
 
   /**
-   * Publishes the given artifact item into the appropriate cache. Items are routed based on the
-   * FetchResult's source: LATTE items go to latteDir, MAVEN items go to mavenDir. Returns null
-   * if the relevant directory is null or the source doesn't match either cache.
+   * Publishes the given artifact item into the appropriate cache. Items are routed based on the FetchResult's source:
+   * LATTE items go to latteDir, MAVEN items go to mavenDir. Returns null if the relevant directory is null or the
+   * source doesn't match either cache.
    *
    * @param fetchResult The fetch result containing the item, file, and source.
    * @return The path to the published file, or null if the source doesn't match.

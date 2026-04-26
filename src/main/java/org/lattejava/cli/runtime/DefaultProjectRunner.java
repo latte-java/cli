@@ -50,19 +50,19 @@ public class DefaultProjectRunner implements ProjectRunner {
    * @param project The project.
    * @param targets The targets to run.
    * @throws ArtifactMetaDataMissingException If any dependencies of the project are missing an AMD file in the
-   * repository or local cache.
-   * @throws ArtifactMissingException If any dependencies of the project are missing in the repository or local
-   * cache.
-   * @throws RunException If the build can not be run (internally not due to a failure of the build
-   * itself).
-   * @throws RuntimeFailureException If the build fails while running.
-   * @throws CompatibilityException If the project has incompatible versions of a dependency.
-   * @throws CyclicException If the project has cyclic dependencies.
-   * @throws LicenseException If the project has a dependency with an invalid license.
-   * @throws ChecksumException If a dependency is corrupt.
-   * @throws PublishException If there was an error publishing an artifact.
-   * @throws ProcessFailureException If the downloading of a dependency fails.
-   * @throws VersionException If any of the versions are not semantic.
+   *                                          repository or local cache.
+   * @throws ArtifactMissingException         If any dependencies of the project are missing in the repository or local
+   *                                          cache.
+   * @throws RunException                     If the build can not be run (internally not due to a failure of the build
+   *                                          itself).
+   * @throws RuntimeFailureException          If the build fails while running.
+   * @throws CompatibilityException           If the project has incompatible versions of a dependency.
+   * @throws CyclicException                  If the project has cyclic dependencies.
+   * @throws LicenseException                 If the project has a dependency with an invalid license.
+   * @throws ChecksumException                If a dependency is corrupt.
+   * @throws PublishException                 If there was an error publishing an artifact.
+   * @throws ProcessFailureException          If the downloading of a dependency fails.
+   * @throws VersionException                 If any of the versions are not semantic.
    */
   @Override
   public void run(Project project, Iterable<String> targets) throws ArtifactMetaDataMissingException, ArtifactMissingException,

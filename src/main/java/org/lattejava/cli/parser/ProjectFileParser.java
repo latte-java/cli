@@ -50,7 +50,7 @@ public interface ProjectFileParser {
    *                                          cache.
    * @throws RunException                     If the build cannot be run (internally, not due to a failure of the build
    *                                          itself).
-   * @throws RuntimeFailureException            If the build fails while running.
+   * @throws RuntimeFailureException          If the build fails while running.
    * @throws CompatibilityException           If the project has incompatible versions of a dependency.
    * @throws CyclicException                  If the project has cyclic dependencies.
    * @throws LicenseException                 If the project has a dependency with an invalid license.

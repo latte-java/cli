@@ -59,14 +59,14 @@ public class InitCommandTest extends BaseUnitTest {
     }
 
     try (var stream = Files.walk(root)) {
-         stream.sorted(Comparator.reverseOrder())
-         .forEach(p -> {
-           try {
-             Files.deleteIfExists(p);
-           } catch (IOException ignored) {
-           }
-         });
-      }
+      stream.sorted(Comparator.reverseOrder())
+            .forEach(p -> {
+              try {
+                Files.deleteIfExists(p);
+              } catch (IOException ignored) {
+              }
+            });
+    }
   }
 
   @AfterMethod

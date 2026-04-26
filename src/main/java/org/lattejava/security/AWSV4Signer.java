@@ -70,8 +70,8 @@ public class AWSV4Signer {
   }
 
   /**
-   * Signs an HTTP request for an S3-compatible API using AWS Signature V4 with an explicit timestamp. This overload
-   * is useful for testing with known date/time values.
+   * Signs an HTTP request for an S3-compatible API using AWS Signature V4 with an explicit timestamp. This overload is
+   * useful for testing with known date/time values.
    *
    * @param method      The HTTP method (GET, PUT, HEAD, DELETE).
    * @param uri         The full request URI.
@@ -95,8 +95,8 @@ public class AWSV4Signer {
     }
 
     String canonicalHeaders = sorted.entrySet().stream()
-        .map(e -> e.getKey() + ":" + e.getValue() + "\n")
-        .collect(Collectors.joining());
+                                    .map(e -> e.getKey() + ":" + e.getValue() + "\n")
+                                    .collect(Collectors.joining());
     String signedHeaders = String.join(";", sorted.keySet());
 
     // Canonical request
@@ -149,8 +149,8 @@ public class AWSV4Signer {
           URLEncoder.encode(value, StandardCharsets.UTF_8));
     }
     return params.entrySet().stream()
-        .map(e -> e.getKey() + "=" + e.getValue())
-        .collect(Collectors.joining("&"));
+                 .map(e -> e.getKey() + "=" + e.getValue())
+                 .collect(Collectors.joining("&"));
   }
 
   private static byte[] hmac(byte[] key, String data) {
