@@ -60,8 +60,7 @@ import static java.util.Arrays.asList;
  * the node. If the graph is storing Strings then only a single node can exist with the value <em>foo</em>. This means
  * that the graph does not allow duplicates. Therefore it would be impossible to have two nodes whose values are
  * <em>foo</em> with different edges. The key of the Map is a {@link HashNode} object. The node stores the value as
- * well
- * as all the edges.
+ * well as all the edges.
  * </p>
  * <h3>Node values</h3>
  * <p>
