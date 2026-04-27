@@ -33,11 +33,9 @@ import org.lattejava.lang.Classpath
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
 import org.lattejava.plugin.file.FilePlugin
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ModuleVisitor
-import org.objectweb.asm.Opcodes
 
+import java.lang.module.ModuleFinder
+import java.lang.module.ModuleReference
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
@@ -454,25 +452,10 @@ class JavaTestNGPlugin extends BaseGroovyPlugin {
 
   private String findModuleNameInPublications(String group) {
     for (def pub : project.publications.group(group)) {
-      try (JarFile jarFile = new JarFile(pub.file.toFile())) {
-        JarEntry moduleInfo = jarFile.getJarEntry("module-info.class")
-        if (moduleInfo == null) {
-          continue
-        }
-
-        byte[] bytes = jarFile.getInputStream(moduleInfo).readAllBytes()
-        ClassReader reader = new ClassReader(bytes)
-        String[] result = new String[1]
-        reader.accept(new ClassVisitor(Opcodes.ASM9) {
-          @Override
-          ModuleVisitor visitModule(String name, int access, String version) {
-            result[0] = name
-            return null
-          }
-        }, 0)
-
-        if (result[0]) {
-          return result[0]
+      ModuleFinder finder = ModuleFinder.of(pub.file)
+      for (ModuleReference ref : finder.findAll()) {
+        if (!ref.descriptor().isAutomatic()) {
+          return ref.descriptor().name()
         }
       }
     }

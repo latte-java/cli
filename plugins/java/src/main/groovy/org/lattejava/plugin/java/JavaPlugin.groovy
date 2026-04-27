@@ -27,17 +27,14 @@ import org.lattejava.lang.Classpath
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
 import org.lattejava.plugin.file.FilePlugin
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ModuleVisitor
-import org.objectweb.asm.Opcodes
 
+import java.lang.module.ModuleFinder
+import java.lang.module.ModuleReference
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.function.Function
 import java.util.function.Predicate
-import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.Manifest
 import java.util.stream.Collectors
@@ -357,25 +354,25 @@ class JavaPlugin extends BaseGroovyPlugin {
         ["additionalClasspath", "arguments", "dependencies", "environment", "failOnError", "jvmArguments", "main", "workingDirectory"],
         ["main"],
         ["additionalClasspath": List.class,
-         "arguments": String.class,
-         "dependencies": List.class,
-         "environment": Map.class,
-         "failOnError": Boolean.class,
-         "jvmArguments": String.class,
-         "main": String.class,
-         "workingDirectory": Object.class])) {
+         "arguments"          : String.class,
+         "dependencies"       : List.class,
+         "environment"        : Map.class,
+         "failOnError"        : Boolean.class,
+         "jvmArguments"       : String.class,
+         "main"               : String.class,
+         "workingDirectory"   : Object.class])) {
       fail("You must supply the [main] attribute to java.run(), e.g.:\n\n" +
           "  java.run(main: \"com.example.App\")")
     }
 
     GroovyTools.putDefaults(attributes, [
         "additionalClasspath": [] as List<Path>,
-        "arguments": "",
-        "dependencies": defaultRunDependencies(),
-        "environment": [:] as Map<String, String>,
-        "failOnError": true,
-        "jvmArguments": "",
-        "workingDirectory": project.directory
+        "arguments"          : "",
+        "dependencies"       : defaultRunDependencies(),
+        "environment"        : [:] as Map<String, String>,
+        "failOnError"        : true,
+        "jvmArguments"       : "",
+        "workingDirectory"   : project.directory
     ])
 
     initialize()
@@ -404,7 +401,21 @@ class JavaPlugin extends BaseGroovyPlugin {
       if (!Files.isRegularFile(resolvedSource) || !Files.isReadable(resolvedSource)) {
         fail("Main source file [%s] does not exist or is not readable", resolvedSource.toAbsolutePath())
       }
-      pathArgs = pathString(dependencies, settings.libraryDirectories, allAdditionalPaths.toArray(new Path[0]))
+
+      Classpath resolved = resolveRunClasspath(dependencies, settings.libraryDirectories, allAdditionalPaths)
+      if (settings.moduleBuild) {
+        // Source-file runs have no module-info, so the source compiles into the unnamed
+        // module. Modules on --module-path aren't auto-resolved without --add-modules,
+        // so collect every module name on the path and add it explicitly.
+        pathArgs = resolved.toString("--module-path ")
+        Set<String> modules = collectModuleNames(resolved.paths)
+        if (!modules.isEmpty()) {
+          jvmArguments = "${jvmArguments} --add-modules ${modules.join(',')}".trim()
+        }
+      } else {
+        pathArgs = resolved.toString("-classpath ")
+      }
+
       entryPoint = resolvedSource.toAbsolutePath().toString()
     } else {
       Classpath resolved = resolveRunClasspath(dependencies, settings.libraryDirectories, allAdditionalPaths)
@@ -435,8 +446,7 @@ class JavaPlugin extends BaseGroovyPlugin {
       }
     }
 
-    return executeRun(jvmArguments, pathArgs, entryPoint, arguments,
-        workingDirectory, environment, failOnError)
+    return executeRun(jvmArguments, pathArgs, entryPoint, arguments, workingDirectory, environment, failOnError)
   }
 
   /**
@@ -510,12 +520,12 @@ class JavaPlugin extends BaseGroovyPlugin {
 
   private static List<Map<String, Object>> defaultRunDependencies() {
     return [
-        [group: "compile", transitive: true, fetchSource: false,
-            transitiveGroups: ["compile", "runtime", "provided"]],
-        [group: "runtime", transitive: true, fetchSource: false,
-            transitiveGroups: ["compile", "runtime", "provided"]],
-        [group: "provided", transitive: true, fetchSource: false,
-            transitiveGroups: ["compile", "runtime", "provided"]]
+        [group           : "compile", transitive: true, fetchSource: false,
+         transitiveGroups: ["compile", "runtime", "provided"]],
+        [group           : "runtime", transitive: true, fetchSource: false,
+         transitiveGroups: ["compile", "runtime", "provided"]],
+        [group           : "provided", transitive: true, fetchSource: false,
+         transitiveGroups: ["compile", "runtime", "provided"]]
     ]
   }
 
@@ -577,10 +587,7 @@ class JavaPlugin extends BaseGroovyPlugin {
         }
 
         RunEntryMatch m = new RunEntryMatch(entry: entry)
-        Path moduleInfo = entry.resolve("module-info.class")
-        if (Files.isRegularFile(moduleInfo)) {
-          m.moduleName = readModuleNameFromBytes(Files.readAllBytes(moduleInfo))
-        }
+        m.moduleName = readExplicitModuleName(entry)
         return m
       }
 
@@ -592,10 +599,11 @@ class JavaPlugin extends BaseGroovyPlugin {
 
           RunEntryMatch m = new RunEntryMatch(entry: entry)
 
-          JarEntry moduleInfo = jarFile.getJarEntry("module-info.class")
-          if (moduleInfo != null) {
-            byte[] bytes = jarFile.getInputStream(moduleInfo).readAllBytes()
-            m.moduleName = readModuleNameFromBytes(bytes)
+          // Prefer an explicit module-info.class. Fall back to Automatic-Module-Name in the
+          // manifest. Filename-derived automatic module names are intentionally not used here.
+          String name = readExplicitModuleName(entry)
+          if (name != null) {
+            m.moduleName = name
             return m
           }
 
@@ -614,26 +622,35 @@ class JavaPlugin extends BaseGroovyPlugin {
     return null
   }
 
-  private static String readModuleNameFromBytes(byte[] moduleInfoBytes) {
-    ClassReader reader = new ClassReader(moduleInfoBytes)
-    String[] result = new String[1]
-    reader.accept(new ClassVisitor(Opcodes.ASM9) {
-      @Override
-      ModuleVisitor visitModule(String name, int access, String version) {
-        result[0] = name
-        return null
+  private static Set<String> collectModuleNames(List<Path> paths) {
+    if (paths == null || paths.isEmpty()) {
+      return Collections.emptySet()
+    }
+
+    ModuleFinder finder = ModuleFinder.of(paths.toArray(new Path[0]))
+    Set<String> names = new TreeSet<>()
+    finder.findAll().each { ref -> names.add(ref.descriptor().name()) }
+    return names
+  }
+
+  private static String readExplicitModuleName(Path entry) {
+    ModuleFinder finder = ModuleFinder.of(entry)
+    for (ModuleReference ref : finder.findAll()) {
+      if (!ref.descriptor().isAutomatic()) {
+        return ref.descriptor().name()
       }
-    }, 0)
-    return result[0]
+    }
+    return null
   }
 
   private String resolveModuleName() {
-    Path moduleInfoClass = project.directory.resolve(layout.mainBuildDirectory).resolve("module-info.class")
+    Path buildDir = project.directory.resolve(layout.mainBuildDirectory)
+    Path moduleInfoClass = buildDir.resolve("module-info.class")
     if (!Files.isRegularFile(moduleInfoClass)) {
       fail("Module build is enabled but module-info.class was not found in [%s]. Ensure main sources are compiled first.", layout.mainBuildDirectory)
     }
 
-    String name = readModuleNameFromBytes(Files.readAllBytes(moduleInfoClass))
+    String name = readExplicitModuleName(buildDir)
     if (!name) {
       fail("Failed to extract module name from [%s]", moduleInfoClass)
     }

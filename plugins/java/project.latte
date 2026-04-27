@@ -4,7 +4,7 @@
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with the License.
  */
-project(group: "org.lattejava.plugin", name: "java", version: "0.1.7", licenses: ["ApacheV2_0"]) {
+project(group: "org.lattejava.plugin", name: "java", version: "0.1.8", licenses: ["ApacheV2_0"]) {
   workflow {
     standard()
   }
@@ -21,7 +21,6 @@ project(group: "org.lattejava.plugin", name: "java", version: "0.1.7", licenses:
       dependency(id: "com.googlecode.jarjar:jarjar:1.3")
       dependency(id: "org.lattejava.plugin:dependency:0.1.5")
       dependency(id: "org.lattejava.plugin:file:0.1.5")
-      dependency(id: "org.ow2.asm:asm:9.9.1")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.testng:testng:7.12.0")

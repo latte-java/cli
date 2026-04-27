@@ -470,6 +470,25 @@ class JavaPluginTest {
   }
 
   @Test
+  void runSourceFileWithImportModuleSucceeds() throws Exception {
+    JavaPlugin plugin = setupPluginForTestProject("test-import-module")
+    plugin.output.enableDebug()
+
+    Path marker = Files.createTempFile("latte-run", ".txt")
+    Files.deleteIfExists(marker)
+
+    int rc = plugin.run(
+        main: "src/main/java/Main.java",
+        jvmArguments: "-Dlatte.run.marker=" + marker.toAbsolutePath()
+    )
+
+    assertEquals(rc, 0, "Expected java to exit 0")
+    assertTrue(Files.isRegularFile(marker), "Expected marker file [" + marker + "] to be written")
+    assertEquals(Files.readString(marker),
+        '{"greeting":"hello from import module","module":"com.fasterxml.jackson.databind"}')
+  }
+
+  @Test
   void testModuleBuildWithoutMainModuleBuildFails() throws Exception {
     FileTools.prune(projectDir.resolve("build/cache"))
 
@@ -511,8 +530,21 @@ class JavaPluginTest {
     project.name = projectName
     project.version = new Version("1.0.0")
     project.licenses.add(License.parse("ApacheV2_0", null))
-    project.dependencies = new Dependencies(
-        new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
+    if (projectName == "test-module") {
+      project.dependencies = new Dependencies(
+          new DependencyGroup("compile", false,
+              new Artifact("com.fasterxml.jackson.core:jackson-annotations:2.13.4:jar"),
+              new Artifact("com.fasterxml.jackson.core:jackson-core:2.13.4:jar"),
+              new Artifact("com.fasterxml.jackson.core:jackson-databind:2.13.4:jar")),
+          new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
+    } else if (projectName == "test-import-module") {
+      project.dependencies = new Dependencies(
+          new DependencyGroup("compile", false,
+              new Artifact("com.fasterxml.jackson.core:jackson-databind:2.13.4:jar")))
+    } else {
+      project.dependencies = new Dependencies(
+          new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
+    }
     project.workflow = new Workflow(
         new FetchWorkflow(output,
             new CacheProcess(output, cacheDir.toString(), cacheDir.toString(), cacheDir.toString()),
@@ -528,6 +560,12 @@ class JavaPluginTest {
     plugin.settings.javaVersion = "25"
     if (projectName == "test-project") {
       plugin.settings.libraryDirectories.add(projectDir.resolve("lib"))
+    }
+    if (projectName == "test-import-module") {
+      // No module-info.java in this project, so auto-detection would set moduleBuild=false.
+      // Force it on (mirroring the web template) so deps land on --module-path and the
+      // source-file run resolves `import module` against them.
+      plugin.settings.moduleBuild = true
     }
     return plugin
   }

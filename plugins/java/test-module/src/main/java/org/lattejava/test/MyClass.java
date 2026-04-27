@@ -1,5 +1,8 @@
 package org.lattejava.test;
 
+import module com.fasterxml.jackson.databind;
+import module java.base;
+
 public class MyClass {
   public String doSomething() {
     return "Hello World";
@@ -13,13 +16,14 @@ public class MyClass {
     String exitCodeStr = System.getProperty("latte.run.exitCode", "0");
     int exitCode = Integer.parseInt(exitCodeStr);
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("pwd=").append(new java.io.File("").getAbsolutePath()).append('\n');
-    sb.append("args=").append(String.join(",", args)).append('\n');
-    sb.append("env.LATTE_RUN_TEST=").append(String.valueOf(System.getenv("LATTE_RUN_TEST"))).append('\n');
-    sb.append("env.PATH.present=").append(System.getenv("PATH") != null).append('\n');
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("pwd", new File("").getAbsolutePath());
+    data.put("args", String.join(",", args));
+    data.put("env.LATTE_RUN_TEST", String.valueOf(System.getenv("LATTE_RUN_TEST")));
+    data.put("env.PATH.present", System.getenv("PATH") != null);
 
-    java.nio.file.Files.writeString(java.nio.file.Path.of(markerPath), sb.toString());
+    String json = new ObjectMapper().writeValueAsString(data);
+    Files.writeString(Path.of(markerPath), json);
     System.exit(exitCode);
   }
 }
