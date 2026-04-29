@@ -160,8 +160,7 @@ class JavaPlugin extends BaseGroovyPlugin {
       // in-progress test module on the path at the same location being compiled, which would
       // conflict with the source being compiled. Incremental recompiles resolve sibling test
       // classes via -sourcepath (set inside compileInternal) rather than precompiled classes.
-      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
-          settings.testDependencies, "", layout.mainBuildDirectory)
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.testDependencies, "", layout.mainBuildDirectory)
     } else if (settings.moduleBuild) {
       String moduleName = resolveModuleName()
       // Test-only deps (e.g. TestNG) go on -classpath so they land in the unnamed module,
@@ -171,11 +170,9 @@ class JavaPlugin extends BaseGroovyPlugin {
             .each { deps -> dependencies(deps) }
       }.toString("-classpath ")
       String moduleArgs = "${testClasspath} --patch-module ${moduleName}=${layout.testSourceDirectory} --add-reads ${moduleName}=ALL-UNNAMED"
-      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
-          settings.mainDependencies, moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.mainDependencies, moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
     } else {
-      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory,
-          settings.testDependencies, "", layout.mainBuildDirectory, layout.testBuildDirectory)
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.testDependencies, "", layout.mainBuildDirectory, layout.testBuildDirectory)
     }
     copyResources(layout.testResourceDirectory, layout.testBuildDirectory)
   }
@@ -202,7 +199,9 @@ class JavaPlugin extends BaseGroovyPlugin {
         .collect(Collectors.toSet())
 
     String moduleArgs = settings.moduleBuild ? "--module ${resolveModuleName()}" : ""
-    String command = "${javaDocPath} ${pathString(settings.mainDependencies, settings.libraryDirectories)} ${settings.docArguments} -sourcepath ${layout.mainSourceDirectory} -d ${layout.docDirectory} ${moduleArgs} ${packages.join(" ")}"
+    Classpath classpath = resolveRunClasspath(settings.mainDependencies, settings.libraryDirectories, [])
+    String pathArgs = classpath.toString(settings.moduleBuild ? "--module-path " : "-classpath ")
+    String command = "${javaDocPath} ${pathArgs} ${settings.docArguments} -sourcepath ${layout.mainSourceDirectory} -d ${layout.docDirectory} ${moduleArgs} ${packages.join(" ")}"
     output.debugln("Executing JavaDoc command [%s]", command)
 
     Process process = command.execute([], project.directory.toFile())
@@ -321,11 +320,13 @@ class JavaPlugin extends BaseGroovyPlugin {
    */
   String getMainClasspath() {
     init()
-    return pathString([
-        [group: "compile", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
-        [group: "runtime", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
-        [group: "provided", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
-    ], settings.libraryDirectories, layout.mainBuildDirectory)
+    Classpath classpath = resolveRunClasspath(
+        [
+            [group: "compile", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
+            [group: "runtime", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
+            [group: "provided", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime", "provided"]],
+        ], settings.libraryDirectories, [layout.mainBuildDirectory])
+    return classpath.toString(settings.moduleBuild ? "--module-path " : "-classpath ")
   }
 
   void printJDKModuleDeps() {
@@ -424,9 +425,14 @@ class JavaPlugin extends BaseGroovyPlugin {
         fail("Main class [%s] was not found on the resolved classpath/module-path", main)
       }
 
+      // The default pathArgs is a module-path or classpath. However, a non-module entry point with a module-build will overwrite this
+      // Similarly, the entry point defaults to main, unless it is in a module, which is handled below
+      pathArgs = resolved.toString(settings.moduleBuild ? "--module-path " : "-classpath ")
+      entryPoint = main
+
+      // Handle overrides
       if (match.moduleName != null) {
         entryPoint = "--module ${match.moduleName}/${main}"
-        pathArgs = pathString(dependencies, settings.libraryDirectories, allAdditionalPaths.toArray(new Path[0]))
       } else if (settings.moduleBuild) {
         // Non-modular entry inside a module build: split paths so the match lands on -classpath.
         Classpath modulePath = new Classpath()
@@ -439,10 +445,6 @@ class JavaPlugin extends BaseGroovyPlugin {
           }
         }
         pathArgs = "${modulePath.toString("--module-path ")} ${classpath.toString("-classpath ")}"
-        entryPoint = main
-      } else {
-        entryPoint = main
-        pathArgs = pathString(dependencies, settings.libraryDirectories, allAdditionalPaths.toArray(new Path[0]))
       }
     }
 
@@ -481,7 +483,9 @@ class JavaPlugin extends BaseGroovyPlugin {
 
     output.infoln("Compiling [${filesToCompile.size()}] Java classes from [${sourceDirectory}] to [${buildDirectory}]")
 
-    String command = "${javacPath} ${settings.compilerArguments} ${pathString(dependencies, settings.libraryDirectories, additionalClasspath)} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
+    Classpath classpath = resolveRunClasspath(dependencies, settings.libraryDirectories, List.of(additionalClasspath))
+    String pathArgs = classpath.toString(settings.moduleBuild ? "--module-path " : "-classpath ")
+    String command = "${javacPath} ${settings.compilerArguments} ${pathArgs} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
     output.debugln("Executing compiler command [%s]", command)
 
     Files.createDirectories(resolvedBuildDir)
@@ -669,8 +673,7 @@ class JavaPlugin extends BaseGroovyPlugin {
           return
         }
         try (Stream<Path> stream = Files.list(dir)) {
-          stream.filter(FileTools.extensionFilter(".jar"))
-              .forEach { file -> additionalJARs.add(file.toAbsolutePath()) }
+          stream.filter(FileTools.extensionFilter(".jar")).forEach { file -> additionalJARs.add(file.toAbsolutePath()) }
         }
       }
     }
@@ -680,29 +683,6 @@ class JavaPlugin extends BaseGroovyPlugin {
       additionalPaths.each { p -> path(location: p) }
       additionalJARs.each { jar -> path(location: jar) }
     }
-  }
-
-  private String pathString(List<Map<String, Object>> dependenciesList, List<Path> libraryDirectories, Path... additionalPaths) {
-    List<Path> additionalJARs = new ArrayList<>()
-    if (libraryDirectories != null) {
-      libraryDirectories.each { path ->
-        Path dir = project.directory.resolve(FileTools.toPath(path))
-        if (!Files.isDirectory(dir)) {
-          return
-        }
-
-        try (Stream<Path> stream = Files.list(dir)) {
-          stream.filter(FileTools.extensionFilter(".jar")).forEach { file -> additionalJARs.add(file.toAbsolutePath()) }
-        }
-      }
-    }
-
-    String prefix = settings.moduleBuild ? "--module-path " : "-classpath ";
-    return dependencyPlugin.classpath {
-      dependenciesList.each { deps -> dependencies(deps) }
-      additionalPaths.each { additionalPath -> path(location: additionalPath) }
-      additionalJARs.each { additionalJAR -> path(location: additionalJAR) }
-    }.toString(prefix)
   }
 
   String getJavaHome() {
