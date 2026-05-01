@@ -289,14 +289,14 @@ public class InitCommandTest extends BaseUnitTest {
       String projectLatte = Files.readString(testDir.resolve("project.latte"));
       assertTrue(projectLatte.contains("group: \"org.example\""));
       assertTrue(projectLatte.contains("name: \"my-web\""));
-      assertTrue(projectLatte.contains("org.lattejava:web:0.1.0"));
-      assertTrue(projectLatte.contains("java.run(main: \"src/main/java/Main.java\")"));
+      assertTrue(projectLatte.contains("org.lattejava:web"));
+      assertTrue(projectLatte.contains("java.run(main: \"org.example.my_web.Main\")"));
 
-      Path main = testDir.resolve("src/main/java/Main.java");
+      Path main = testDir.resolve("src/main/java/org/example/my_web/Main.java");
       assertTrue(Files.isRegularFile(main));
       assertTrue(Files.readString(main).contains("import module org.lattejava.web;"));
 
-      Path mainTest = testDir.resolve("src/test/java/MainTest.java");
+      Path mainTest = testDir.resolve("src/test/java/org/example/my_web/tests/MainTest.java");
       assertTrue(Files.isRegularFile(mainTest));
       assertTrue(Files.readString(mainTest).contains("public class MainTest"));
 
