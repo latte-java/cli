@@ -67,6 +67,11 @@ target(name: "idea", description: "Updates the IntelliJ IDEA module file") {
   idea.iml()
 }
 
+target(name: "format", description: "Formats the source code using IntelliJ's CLI") {
+  exec(["${SYS["user.home"]}/Applications/IntelliJ IDEA.app/Contents/bin/format.sh", "-r", "-s", ".idea/codeStyles/Project.xml", "src/main/java/"])
+  exec(["${SYS["user.home"]}/Applications/IntelliJ IDEA.app/Contents/bin/format.sh", "-r", "-s", ".idea/codeStyles/Project.xml", "src/test/java/"])
+}
+
 target(name: "print-dependency-tree", description: "Prints the dependency tree") {
   dependency.printFull()
 }
