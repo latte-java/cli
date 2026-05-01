@@ -6,10 +6,10 @@ project(group: "${group}", name: "${name}", version: "0.1.0", licenses: ["${lice
   dependencies {
     group(name: "compile") {
       dependency(id: "org.lattejava:http:0.1.4")
-      dependency(id: "org.lattejava:web:0.1.0")
+      dependency(id: "org.lattejava:web:0.1.1-{integration}")
     }
     group(name: "test-compile", export: false) {
-      dependency(id: "org.testng:testng:7.10.2")
+      dependency(id: "org.testng:testng:7.12.0")
     }
   }
 
@@ -26,7 +26,6 @@ release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.5")
 
 // Plugin settings (module build ensures that the modules are made available to the `run` target)
 java.settings.javaVersion = "25"
-java.settings.moduleBuild = true
 javaTestNG.settings.javaVersion = "25"
 
 target(name: "clean", description: "Cleans the project") {
@@ -42,8 +41,8 @@ target(name: "test", description: "Runs the project's tests", dependsOn: ["build
   javaTestNG.test()
 }
 
-target(name: "run", description: "Runs the web server") {
-  java.run(main: "src/main/java/Main.java")
+target(name: "run", description: "Runs the web server", dependsOn: ["build"]) {
+  java.run(main: "${package}.Main")
 }
 
 target(name: "int", description: "Releases a local integration build of the project", dependsOn: ["test"]) {
