@@ -67,11 +67,6 @@ target(name: "idea", description: "Updates the IntelliJ IDEA module file") {
   idea.iml()
 }
 
-target(name: "format", description: "Formats the source code using IntelliJ's CLI") {
-  exec(["${SYS["user.home"]}/Applications/IntelliJ IDEA.app/Contents/bin/format.sh", "-r", "-s", ".idea/codeStyles/Project.xml", "src/main/java/"])
-  exec(["${SYS["user.home"]}/Applications/IntelliJ IDEA.app/Contents/bin/format.sh", "-r", "-s", ".idea/codeStyles/Project.xml", "src/test/java/"])
-}
-
 target(name: "print-dependency-tree", description: "Prints the dependency tree") {
   dependency.printFull()
 }
@@ -106,7 +101,7 @@ target(name: "minio", description: "Starts a local MinIO container for S3 testin
   exec("docker exec latte-minio mc mb local/latte-test")
 }
 
-target(name: "release", description: "Releases a full version of the project", dependsOn: ["clean", "test", "format", "bundle"]) {
+target(name: "release", description: "Releases a full version of the project", dependsOn: ["clean", "test", "bundle"]) {
   release.release()
 
   // Create a tarball of the bundle and publish it as a GitHub release
