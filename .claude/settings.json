@@ -1,5 +1,8 @@
 {
   "permissions": {
+    "additionalDirectories": [
+      "../*"
+    ],
     "allow": [
       "Bash(cd *)",
       "Bash(echo *)",

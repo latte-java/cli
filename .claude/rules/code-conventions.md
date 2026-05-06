@@ -131,3 +131,7 @@ Inside a class, the order should always be:
 - Inner classes (ordered by visibility then alphabetically)
 - Enum constants (ordered alphabetically)
 - Nested classes (ordered alphabetically)
+
+## Javadoc
+
+When Javadoc is written, use sentence structure, punctuation, and capitalization of common American English publications. This rule applies to @param, @return, @throws, and the main comment block.
