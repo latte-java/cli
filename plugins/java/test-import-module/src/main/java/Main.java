@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 The Latte Project
+ * SPDX-License-Identifier: MIT
+ */
 import module com.fasterxml.jackson.databind;
 import module java.base;
 

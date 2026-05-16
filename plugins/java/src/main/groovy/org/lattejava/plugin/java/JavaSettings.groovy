@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific
- * language governing permissions and limitations under the License.
+ * Copyright (c) 2014-2026 The Latte Project
+ * SPDX-License-Identifier: MIT
  */
 package org.lattejava.plugin.java
 
@@ -94,5 +83,23 @@ class JavaSettings {
       [group: "compile", transitive: false, fetchSource: false],
       [group: "test-compile", transitive: false, fetchSource: false],
       [group: "provided", transitive: false, fetchSource: false]
+  ]
+
+  /**
+   * Dependency groups whose artifacts are JPMS modules containing annotation processors. Each entry
+   * has the same shape as {@link #mainDependencies}/{@link #testDependencies}. The resolved artifacts
+   * are passed to javac via {@code --processor-module-path}; javac auto-discovers processors from
+   * these modules via {@code ServiceLoader} (each module must
+   * {@code provides javax.annotation.processing.Processor}). Resolved transitively so each
+   * processor's own library dependencies join the module graph. Applied to both main and test
+   * compilation.
+   * <p>
+   * Defaults to a single group named {@code "compile-processors"}, resolved transitively through the
+   * {@code "compile"} and {@code "runtime"} groups. A project opts in simply by declaring a
+   * {@code "compile-processors"} dependency group in {@code project.latte}; projects that do not
+   * declare it are unaffected (no {@code --processor-module-path} is emitted).
+   */
+  List<Map<String, Object>> processorDependencies = [
+      [group: "compile-processors", transitive: true, fetchSource: false, transitiveGroups: ["compile", "runtime"]]
   ]
 }

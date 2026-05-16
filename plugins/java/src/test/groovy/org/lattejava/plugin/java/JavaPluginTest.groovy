@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2014-2024, Inversoft Inc., All Rights Reserved
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific
- * language governing permissions and limitations under the License.
+ * Copyright (c) 2014-2026 The Latte Project
+ * SPDX-License-Identifier: MIT
  */
 package org.lattejava.plugin.java
 
@@ -511,6 +500,37 @@ class JavaPluginTest {
     }
   }
 
+  @Test
+  void processorModulePath() throws Exception {
+    FileTools.prune(projectDir.resolve("build/cache"))
+
+    RecordingOutput output = new RecordingOutput(true)
+    output.enableDebug()
+    JavaPlugin plugin = setupPluginForTestProject("test-processor", output)
+
+    plugin.clean()
+    plugin.compileMain()
+
+    // The record-builder annotation processor ran via --processor-module-path (auto-discovered
+    // through ServiceLoader) and generated an observable artifact.
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/main/org/lattejava/test/PointBuilder.class")),
+        "Expected the record-builder processor to generate PointBuilder.class")
+
+    // The constructed javac command opted into module-path processor discovery.
+    assertTrue(output.commands.any { it.contains("--processor-module-path") },
+        "Expected the javac command to contain --processor-module-path; commands:\n" + output.commands.join("\n"))
+
+    // Regression guard: a project that declares no compile-processors group emits no
+    // --processor-module-path flag, leaving the javac command unchanged from prior behavior.
+    RecordingOutput plainOutput = new RecordingOutput(true)
+    plainOutput.enableDebug()
+    JavaPlugin plainPlugin = setupPluginForTestProject("test-project", plainOutput)
+    plainPlugin.clean()
+    plainPlugin.compileMain()
+    assertFalse(plainOutput.commands.any { it.contains("--processor-module-path") },
+        "Expected no --processor-module-path for a project without a compile-processors group; commands:\n" + plainOutput.commands.join("\n"))
+  }
+
   private static JavaPlugin compileAndJarTestProject(String projectName) {
     JavaPlugin plugin = setupPluginForTestProject(projectName)
     FileTools.prune(projectDir.resolve("build/cache"))
@@ -521,9 +541,11 @@ class JavaPluginTest {
   }
 
   private static JavaPlugin setupPluginForTestProject(String projectName) {
-    def cacheDir = projectDir.resolve("build/cache")
+    return setupPluginForTestProject(projectName, new SystemOutOutput(true))
+  }
 
-    Output output = new SystemOutOutput(true)
+  private static JavaPlugin setupPluginForTestProject(String projectName, Output output) {
+    def cacheDir = projectDir.resolve("build/cache")
 
     Project project = new Project(projectDir.resolve(projectName), output)
     project.group = "org.lattejava.test"
@@ -541,6 +563,19 @@ class JavaPluginTest {
       project.dependencies = new Dependencies(
           new DependencyGroup("compile", false,
               new Artifact("com.fasterxml.jackson.core:jackson-databind:2.13.4:jar")))
+    } else if (projectName == "test-processor") {
+      // record-builder-core supplies the @RecordBuilder annotation on the regular compile
+      // classpath. record-builder-processor goes in the "compile-processors" group; the Java
+      // plugin resolves that group transitively (pulling java-composer + record-builder-core)
+      // onto --processor-module-path, where javac auto-discovers the processor via ServiceLoader.
+      // record-builder uses single-integer Maven versions ("47"), so the real repository path is
+      // the non-semantic version. Transitive deps (java-composer, record-builder-core) get their
+      // non-semantic version automatically from the processor POM.
+      project.dependencies = new Dependencies(
+          new DependencyGroup("compile", false,
+              new Artifact("io.soabase.record-builder:record-builder-core:47:jar", "47", false, null)),
+          new DependencyGroup("compile-processors", false,
+              new Artifact("io.soabase.record-builder:record-builder-processor:47:jar", "47", false, null)))
     } else {
       project.dependencies = new Dependencies(
           new DependencyGroup("test-compile", false, new Artifact("org.testng:testng:7.12.0:jar")))
@@ -596,6 +631,24 @@ class JavaPluginTest {
     ArtifactMetaData metaData = new ArtifactMetaData(null, project.licenses)
     Publication publication = new Publication(artifact, metaData, jarPath, null)
     project.publications.add("main", publication)
+  }
+
+  /**
+   * A {@link SystemOutOutput} that records every formatted debugln message so tests can assert on
+   * the javac/java commands the plugin logs.
+   */
+  private static class RecordingOutput extends SystemOutOutput {
+    List<String> commands = []
+
+    RecordingOutput(boolean colorize) {
+      super(colorize)
+    }
+
+    @Override
+    Output debugln(String message, Object... values) {
+      commands.add(values.length > 0 ? String.format(message, values) : message)
+      return super.debugln(message, values)
+    }
   }
 
   private static void assertJarContains(Path jarFile, String... entries) {

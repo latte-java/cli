@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2026, The Latte Project, All Rights Reserved
- *
- * Licensed under the MIT License (the "License");
- * you may not use this file except in compliance with the License.
+ * Copyright (c) 2026 The Latte Project
+ * SPDX-License-Identifier: MIT
  */
 package org.lattejava.plugin.release
 

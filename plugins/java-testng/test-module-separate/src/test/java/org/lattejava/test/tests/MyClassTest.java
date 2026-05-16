@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 The Latte Project
+ * SPDX-License-Identifier: MIT
+ */
 package org.lattejava.test.tests;
 
 import org.lattejava.test.MyClass;

@@ -1,17 +1,6 @@
 /*
- * Copyright (c) 2013-2024, Inversoft Inc., All Rights Reserved
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific
- * language governing permissions and limitations under the License.
+ * Copyright (c) 2013-2026 The Latte Project
+ * SPDX-License-Identifier: MIT
  */
 package org.lattejava.plugin.java
 
@@ -485,7 +474,16 @@ class JavaPlugin extends BaseGroovyPlugin {
 
     Classpath classpath = resolveRunClasspath(dependencies, settings.libraryDirectories, List.of(additionalClasspath))
     String pathArgs = classpath.toString(settings.moduleBuild ? "--module-path " : "-classpath ")
-    String command = "${javacPath} ${settings.compilerArguments} ${pathArgs} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
+
+    // Resolve annotation-processor modules (dependency groups only — no libraryDirectories, no
+    // build dirs) and pass them via --processor-module-path so javac auto-discovers processors
+    // through ServiceLoader. Returns "" when no compile-processors group is declared, in which
+    // case no flag is emitted and the command is unchanged from prior behavior. Orthogonal to
+    // moduleBuild: this never affects the -classpath/--module-path selection above.
+    Classpath processorClasspath = resolveRunClasspath(settings.processorDependencies, [], [])
+    String processorArgs = processorClasspath.toString("--processor-module-path ")
+
+    String command = "${javacPath} ${settings.compilerArguments} ${pathArgs} ${processorArgs} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
     output.debugln("Executing compiler command [%s]", command)
 
     Files.createDirectories(resolvedBuildDir)
