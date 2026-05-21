@@ -11,7 +11,7 @@ Enhances: test3
 Conflicts: nothing
 Provides: test5
 Replaces: test7
-Installed-Size: 31
+Installed-Size: 26
 Maintainer: Inversoft <sales@inversoft.com>
 Homepage: http://www.inversoft.com
 Description: Description synopsis
