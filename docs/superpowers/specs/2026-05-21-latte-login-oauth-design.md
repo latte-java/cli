@@ -17,7 +17,7 @@ for later use when publishing artifacts to the Latte repository.
 - Capture the OAuth redirect locally and exchange the authorization code for tokens.
 - Persist the access and refresh tokens to the existing global config file.
 - Work zero-config against production, and against the local FusionAuth Docker setup
-  with only an issuer override.
+  by passing the local issuer URL as an argument.
 
 ## Non-goals
 
@@ -30,22 +30,34 @@ for later use when publishing artifacts to the Latte repository.
 
 ## Decisions
 
-| Decision | Choice |
-| --- | --- |
-| OAuth flow | Authorization Code + PKCE, loopback redirect |
-| Client type | Public client (no secret), PKCE required |
-| Loopback redirect | Fixed port `8888`, `http://localhost:8888/callback` |
-| IdP configuration | Hardcoded prod defaults, overridable via `config.properties` |
-| Prod issuer | `https://auth.lattejava.org` |
-| Client ID | Single fixed UUID, hardcoded as the default and used in kickstart |
-| Scopes | `openid offline_access` |
-| Token storage | `latte.auth.accessToken`, `latte.auth.refreshToken` in `config.properties` |
-| Success identity | Decode access-token JWT payload (no signature check), read `email` claim |
+| Decision          | Choice                                                                     |
+|-------------------|----------------------------------------------------------------------------|
+| OAuth flow        | Authorization Code + PKCE, loopback redirect                               |
+| Client type       | Public client (no secret), PKCE required                                   |
+| Loopback redirect | Fixed port `8888`, `http://localhost:8888/callback`                        |
+| IdP configuration | Issuer from optional positional argument; client ID hardcoded constant     |
+| Prod issuer       | `https://auth.lattejava.org` (default when no argument is given)            |
+| Client ID         | Single fixed UUID, hardcoded as the default and used in kickstart          |
+| Scopes            | `openid offline_access`                                                    |
+| Token storage     | `latte.auth.accessToken`, `latte.auth.refreshToken` in `config.properties` |
+| Success identity  | Decode access-token JWT payload (no signature check), read `email` claim   |
+
+## Usage
+
+```
+latte login                          # production: https://auth.lattejava.org
+latte login http://localhost:9011    # local FusionAuth Docker setup
+```
+
+The single optional positional argument is the FusionAuth issuer base URL. When omitted
+it defaults to `https://auth.lattejava.org`. The client ID is always the hardcoded
+constant.
 
 ## Flow
 
 ```
-latte login
+latte login [issuer]
+  ├─ resolve issuer (argument or default https://auth.lattejava.org)
   ├─ generate PKCE code_verifier (32 random bytes, base64url) + code_challenge (S256)
   ├─ generate random `state`
   ├─ start loopback HTTP server on http://localhost:8888/callback
@@ -76,9 +88,10 @@ and independently testable. All components use only the JDK
 so no module declarations are required.
 
 - **`LoginCommand implements Command`** (`org.lattejava.cli.command`) — orchestrates the
-  steps and prints output. Registered as `"login"` in `DefaultRunner.COMMANDS`; a help
-  line is added to `Main.printHelp`. Does not require a project file (`project` may be
-  null).
+  steps and prints output. Reads the optional issuer from the first positional argument
+  (`configuration.args`), defaulting to `https://auth.lattejava.org`. Registered as
+  `"login"` in `DefaultRunner.COMMANDS`; a help line is added to `Main.printHelp`. Does
+  not require a project file (`project` may be null).
 - **`PKCE`** — generates the `code_verifier` (32 random bytes from `SecureRandom`,
   base64url-encoded, no padding) and the `code_challenge`
   (`BASE64URL(SHA-256(code_verifier))`). Pure and unit-testable.
@@ -95,24 +108,22 @@ so no module declarations are required.
   object, sets `latte.auth.accessToken` and `latte.auth.refreshToken`, and writes the
   file back with `0600` permissions, preserving other properties. (`Properties.store`
   drops comments and ordering — acceptable for this generated config file.)
-- **`AuthConfiguration`** — resolves the issuer and client ID. Defaults are hardcoded
-  constants (`https://auth.lattejava.org` and the fixed CLI client-ID UUID); both are
-  overridable via `latte.auth.issuer` and `latte.auth.clientId` in `config.properties`.
-  Also provides cross-platform browser opening (`java.awt.Desktop` when available,
-  falling back to `open`/`xdg-open`), with a printed URL fallback when no browser can be
-  launched.
+- **`AuthConfiguration`** — holds the resolved issuer (from the command argument or the
+  `https://auth.lattejava.org` default) and the hardcoded client-ID UUID constant, and
+  derives the authorize/token endpoint URLs and the fixed `http://localhost:8888/callback`
+  redirect URI. No config-file reading. Also provides cross-platform browser opening
+  (`java.awt.Desktop` when available, falling back to `open`/`xdg-open`), with a printed
+  URL fallback when no browser can be launched.
 
 ## Configuration keys (`~/.config/latte/config.properties`)
 
-| Key | Meaning | Default |
-| --- | --- | --- |
-| `latte.auth.issuer` | FusionAuth issuer base URL | `https://auth.lattejava.org` |
-| `latte.auth.clientId` | CLI OAuth client (application) ID | fixed UUID constant |
-| `latte.auth.accessToken` | Written on success | — |
-| `latte.auth.refreshToken` | Written on success | — |
+The config file is only ever *written* by this command — never read for OAuth settings
+(issuer comes from the argument, client ID is a hardcoded constant).
 
-For local testing the user sets only `latte.auth.issuer=http://localhost:9011`; the
-client ID already matches the kickstart-provisioned CLI application.
+| Key                       | Meaning            |
+|---------------------------|--------------------|
+| `latte.auth.accessToken`  | Written on success |
+| `latte.auth.refreshToken` | Written on success |
 
 ## FusionAuth kickstart changes
 
@@ -158,8 +169,9 @@ brackets (per project convention):
     input.
   - `CredentialStore`: merging preserves pre-existing properties and sets the two new
     keys; file is written with `0600`.
-  - `AuthConfiguration`: override precedence (config beats default) for issuer and client
-    ID.
+  - `AuthConfiguration`: issuer defaults to `https://auth.lattejava.org` when no argument
+    is given and uses the argument when present; derives correct authorize/token/redirect
+    URLs.
 - **Integration**
   - `OAuthClient` / `LoopbackServer` against a stub `HttpServer` (same pattern as
     `NetToolsTest` / `BaseUnitTest`): simulate the redirect to `/callback` and a canned
@@ -168,7 +180,6 @@ brackets (per project convention):
 
 ## Out-of-suite manual verification
 
-With the FusionAuth Docker compose running and
-`latte.auth.issuer=http://localhost:9011` set in `config.properties`, run `latte login`,
+With the FusionAuth Docker compose running, run `latte login http://localhost:9011`,
 authenticate as the ordinary user in the browser, and confirm the success message and
 that the two token keys appear in `config.properties`.
