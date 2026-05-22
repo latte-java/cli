@@ -105,6 +105,9 @@ public class Main {
     output.infoln("   install         Adds a dependency and downloads it");
     output.infoln("                   Usage: latte install <artifact-id> [version] [group]");
     output.infoln("                   Resolves latest version if omitted. Group defaults to compile");
+    output.infoln("   login           Logs into the Latte IdP and stores the auth tokens");
+    output.infoln("                   Usage: latte login [issuer-url]");
+    output.infoln("                   Defaults to the production IdP; pass a URL for local testing");
     output.infoln("   upgrade         Upgrades runtime, plugins, or dependencies");
     output.infoln("                   Usage: latte upgrade <parameter>");
     output.infoln("                   Run 'latte upgrade help' for details");

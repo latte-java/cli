@@ -36,7 +36,7 @@ for later use when publishing artifacts to the Latte repository.
 | Client type       | Public client (no secret), PKCE required                                   |
 | Loopback redirect | Fixed port `8888`, `http://localhost:8888/callback`                        |
 | IdP configuration | Issuer from optional positional argument; client ID hardcoded constant     |
-| Prod issuer       | `https://auth.lattejava.org` (default when no argument is given)            |
+| Prod issuer       | `https://auth.lattejava.org` (default when no argument is given)           |
 | Client ID         | Single fixed UUID, hardcoded as the default and used in kickstart          |
 | Scopes            | `openid offline_access`                                                    |
 | Token storage     | `latte.auth.accessToken`, `latte.auth.refreshToken` in `config.properties` |

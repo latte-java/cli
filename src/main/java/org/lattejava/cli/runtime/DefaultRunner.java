@@ -11,6 +11,7 @@ import java.util.Map;
 import org.lattejava.cli.command.Command;
 import org.lattejava.cli.command.InitCommand;
 import org.lattejava.cli.command.InstallCommand;
+import org.lattejava.cli.command.LoginCommand;
 import org.lattejava.cli.command.UpgradeCommand;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.parser.ParseException;
@@ -39,6 +40,7 @@ public class DefaultRunner implements Runner {
   public static final Map<String, Command> COMMANDS = Map.of(
       "init", new InitCommand(),
       "install", new InstallCommand(),
+      "login", new LoginCommand(),
       "upgrade", new UpgradeCommand()
   );
 

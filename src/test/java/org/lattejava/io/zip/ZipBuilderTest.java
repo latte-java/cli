@@ -110,7 +110,7 @@ public class ZipBuilderTest extends BaseUnitTest {
     assertZipContainsDirectory(file, "org/lattejava/io/jar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/tar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/zip/", 0x755);
-    assertEquals(count, 212);
+    assertEquals(count, 230);
   }
 
   @Test
@@ -150,7 +150,7 @@ public class ZipBuilderTest extends BaseUnitTest {
     assertZipContainsDirectory(file, "org/lattejava/io/jar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/tar/", 0x755);
     assertZipContainsDirectory(file, "org/lattejava/io/zip/", 0x755);
-    assertEquals(count, 211);
+    assertEquals(count, 229);
   }
 
   @Test
