@@ -1,0 +1,11 @@
+project(group: "org.example", name: "latte-test", version: "1.0.0", licenses: ["MIT"]) {
+  workflow {
+    publish {
+      latte()
+      latte(apiURL: "http://localhost:8080")
+    }
+  }
+}
+
+target(name: "build", description: "Builds the project") {
+}

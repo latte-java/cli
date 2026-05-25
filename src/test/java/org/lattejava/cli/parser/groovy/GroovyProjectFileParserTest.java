@@ -4,46 +4,22 @@
  */
 package org.lattejava.cli.parser.groovy;
 
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.nio.file.*;
+import java.util.*;
 
-import org.lattejava.BaseUnitTest;
-import org.lattejava.dep.domain.Artifact;
-import org.lattejava.dep.domain.ArtifactID;
-import org.lattejava.dep.domain.ArtifactMetaData;
-import org.lattejava.dep.domain.Dependencies;
-import org.lattejava.dep.domain.DependencyGroup;
-import org.lattejava.dep.domain.License;
-import org.lattejava.dep.domain.Publication;
-import org.lattejava.dep.domain.ReifiedArtifact;
-import org.lattejava.dep.workflow.process.CacheProcess;
-import org.lattejava.dep.workflow.process.MavenProcess;
-import org.lattejava.dep.workflow.process.S3Process;
-import org.lattejava.dep.workflow.process.URLProcess;
-import org.lattejava.cli.domain.Project;
-import org.lattejava.cli.domain.Publications;
-import org.lattejava.cli.domain.Target;
-import org.lattejava.domain.Version;
-import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
-import org.lattejava.cli.parser.ParseException;
-import org.lattejava.cli.runtime.RuntimeConfiguration;
-import org.lattejava.util.Graph;
-import org.lattejava.util.HashGraph;
-import org.lattejava.util.LattePaths;
-import org.testng.annotations.Test;
+import groovy.lang.*;
+import org.lattejava.*;
+import org.lattejava.cli.domain.*;
+import org.lattejava.cli.parser.*;
+import org.lattejava.cli.runtime.*;
+import org.lattejava.dep.domain.*;
+import org.lattejava.dep.workflow.process.*;
+import org.lattejava.domain.*;
+import org.lattejava.util.*;
+import org.testng.annotations.*;
 
-import groovy.lang.MissingPropertyException;
-
-import static java.util.Arrays.asList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static java.util.Arrays.*;
+import static org.testng.Assert.*;
 
 /**
  * Tests the groovy project file parser.
@@ -88,8 +64,8 @@ public class GroovyProjectFileParserTest extends BaseUnitTest {
 
     // Verify the workflow
     assertEquals(project.workflow.fetchWorkflow.processes.size(), 4);
-    assertTrue(project.workflow.fetchWorkflow.processes.get(0) instanceof CacheProcess);
-    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).latteDir, LattePaths.get().cacheDir().toString());
+    assertTrue(project.workflow.fetchWorkflow.processes.getFirst() instanceof CacheProcess);
+    assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.getFirst()).latteDir, LattePaths.get().cacheDir().toString());
     assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).integrationDir, LattePaths.get().cacheDir().toString());
     assertEquals(((CacheProcess) project.workflow.fetchWorkflow.processes.get(0)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
     assertTrue(project.workflow.fetchWorkflow.processes.get(1) instanceof CacheProcess);
@@ -102,7 +78,7 @@ public class GroovyProjectFileParserTest extends BaseUnitTest {
     assertEquals(((MavenProcess) project.workflow.fetchWorkflow.processes.get(3)).username, "username");
     assertEquals(((MavenProcess) project.workflow.fetchWorkflow.processes.get(3)).password, "password");
     assertEquals(project.workflow.publishWorkflow.processes.size(), 2);
-    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).latteDir, LattePaths.get().cacheDir().toString());
+    assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.getFirst()).latteDir, LattePaths.get().cacheDir().toString());
     assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).integrationDir, LattePaths.get().cacheDir().toString());
     assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(0)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
     assertEquals(((CacheProcess) project.workflow.publishWorkflow.processes.get(1)).mavenDir, System.getProperty("user.home") + "/.m2/repository");
@@ -215,7 +191,7 @@ public class GroovyProjectFileParserTest extends BaseUnitTest {
         .groups
         .get("compile")
         .dependencies
-        .get(0);
+        .getFirst();
     assertEquals(nonSemanticVersionedArtifact.nonSemanticVersion, "1.0");
   }
 
@@ -236,11 +212,26 @@ public class GroovyProjectFileParserTest extends BaseUnitTest {
 
     // Verify publish workflow has s3 with explicit region
     assertEquals(project.workflow.publishWorkflow.processes.size(), 1);
-    assertTrue(project.workflow.publishWorkflow.processes.get(0) instanceof S3Process);
+    assertTrue(project.workflow.publishWorkflow.processes.getFirst() instanceof S3Process);
 
-    S3Process publishS3 = (S3Process) project.workflow.publishWorkflow.processes.get(0);
+    S3Process publishS3 = (S3Process) project.workflow.publishWorkflow.processes.getFirst();
     assertEquals(publishS3.endpoint, "https://abc123.r2.cloudflarestorage.com");
     assertEquals(publishS3.bucket, "my-repo");
+  }
+
+  @Test
+  public void parseLatteWorkflow() {
+    GroovyProjectFileParser parser = new GroovyProjectFileParser(output, new DefaultTargetGraphBuilder());
+    Path buildFile = projectDir.resolve("src/test/java/org/lattejava/cli/parser/groovy/latte-workflow.latte");
+    Project project = parser.parse(buildFile, new RuntimeConfiguration());
+
+    // Verify publish workflow has a default-URL latte process and an explicit-URL latte process
+    assertEquals(project.workflow.publishWorkflow.processes.size(), 2);
+    assertTrue(project.workflow.publishWorkflow.processes.get(0) instanceof LatteProcess);
+    assertTrue(project.workflow.publishWorkflow.processes.get(1) instanceof LatteProcess);
+
+    assertEquals(((LatteProcess) project.workflow.publishWorkflow.processes.get(0)).apiURL, LatteProcess.DEFAULT_API_URL);
+    assertEquals(((LatteProcess) project.workflow.publishWorkflow.processes.get(1)).apiURL, "http://localhost:8080");
   }
 
   @Test

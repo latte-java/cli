@@ -4,24 +4,16 @@
  */
 package org.lattejava.cli.parser.groovy;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.lattejava.dep.workflow.FetchWorkflow;
-import org.lattejava.dep.workflow.PublishWorkflow;
-import org.lattejava.dep.workflow.Workflow;
-import org.lattejava.dep.workflow.process.CacheProcess;
-import org.lattejava.dep.workflow.process.MavenProcess;
+import groovy.lang.*;
+import org.lattejava.cli.parser.*;
+import org.lattejava.dep.workflow.*;
+import org.lattejava.dep.workflow.process.*;
 import org.lattejava.dep.workflow.process.Process;
-import org.lattejava.dep.workflow.process.S3Process;
-import org.lattejava.dep.workflow.process.URLProcess;
-import org.lattejava.domain.Version;
-import org.lattejava.output.Output;
-import org.lattejava.cli.parser.ParseException;
-import org.lattejava.util.LattePaths;
-
-import groovy.lang.Closure;
-import groovy.lang.DelegatesTo;
+import org.lattejava.domain.*;
+import org.lattejava.output.*;
+import org.lattejava.util.*;
 
 /**
  * Groovy delegate that captures the Workflow configuration from the project file. The methods of this class capture the
@@ -139,6 +131,18 @@ public class WorkflowDelegate {
           dir != null ? dir : cache,
           intDir != null ? intDir : cache,
           mavenDir != null ? mavenDir : defaultMavenDir));
+    }
+
+    /**
+     * Adds a {@link LatteProcess} to the workflow, which publishes to the Latte repository through its authenticated
+     * publish API using the tokens stored by {@code latte login}.
+     *
+     * @param attributes Optionally a map that contains an apiURL attribute (defaults to
+     *                   {@link LatteProcess#DEFAULT_API_URL}).
+     */
+    public void latte(Map<String, Object> attributes) {
+      String apiURL = GroovyTools.toString(attributes, "apiURL");
+      processes.add(new LatteProcess(output, apiURL != null ? apiURL : LatteProcess.DEFAULT_API_URL));
     }
 
     /**

@@ -28,6 +28,25 @@ public class CredentialStore {
     this.configFile = configFile;
   }
 
+  /**
+   * Reads the stored OAuth tokens from the configuration file. Either token is {@code null} when the file is absent or
+   * does not contain that property.
+   *
+   * @return The stored tokens.
+   */
+  public Tokens load() {
+    Properties properties = new Properties();
+    if (Files.isRegularFile(configFile)) {
+      try (InputStream is = Files.newInputStream(configFile)) {
+        properties.load(is);
+      } catch (IOException e) {
+        throw new RuntimeFailureException("Unable to read the configuration file [" + configFile + "]. Message was [" + e.getMessage() + "]", e);
+      }
+    }
+
+    return new Tokens(properties.getProperty(ACCESS_TOKEN_KEY), properties.getProperty(REFRESH_TOKEN_KEY));
+  }
+
   public void store(Tokens tokens) {
     Properties properties = new Properties();
     if (Files.isRegularFile(configFile)) {

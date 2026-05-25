@@ -36,6 +36,29 @@ public class CredentialStoreTest extends BaseUnitTest {
   }
 
   @Test
+  public void loadReturnsNullsWhenFileAbsent() throws Exception {
+    Path dir = Files.createTempDirectory("latte-credential-test");
+    Path configFile = dir.resolve("config.properties");
+
+    Tokens tokens = new CredentialStore(configFile).load();
+
+    assertNull(tokens.accessToken());
+    assertNull(tokens.refreshToken());
+  }
+
+  @Test
+  public void loadReturnsStoredTokens() throws Exception {
+    Path dir = Files.createTempDirectory("latte-credential-test");
+    Path configFile = dir.resolve("config.properties");
+    new CredentialStore(configFile).store(new Tokens("the-access-token", "the-refresh-token"));
+
+    Tokens tokens = new CredentialStore(configFile).load();
+
+    assertEquals(tokens.accessToken(), "the-access-token");
+    assertEquals(tokens.refreshToken(), "the-refresh-token");
+  }
+
+  @Test
   public void omitsRefreshTokenWhenNull() throws Exception {
     Path dir = Files.createTempDirectory("latte-credential-test");
     Path configFile = dir.resolve("config.properties");

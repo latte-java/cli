@@ -110,7 +110,7 @@ public class TarBuilderTest extends BaseUnitTest {
     assertTarContainsDirectory(file, "org/lattejava/", null, null, null);
     assertTarContainsDirectory(file, "org/lattejava/io/", null, null, null);
     assertTarContainsDirectory(file, "test/directory/", 0x755, "root", "root");
-    assertEquals(count, 230);
+    assertEquals(count, 235);
   }
 
   @Test
@@ -137,7 +137,7 @@ public class TarBuilderTest extends BaseUnitTest {
     assertTarContainsDirectory(file, "usr/local/main/org/lattejava/io/", null, null, null);
     assertTarContainsDirectory(file, "usr/local/test/org/lattejava/io/", null, null, null);
     assertTarContainsDirectory(file, "test/directory/", 0x755, "root", "root");
-    assertEquals(count, 260);
+    assertEquals(count, 265);
   }
 
   @Test
@@ -156,7 +156,7 @@ public class TarBuilderTest extends BaseUnitTest {
     assertTrue(Files.isReadable(file));
     assertTarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertTarFileEquals(file, "org/lattejava/io/FileSet.java", projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
-    assertEquals(count, 229);
+    assertEquals(count, 234);
   }
 
   @Test
@@ -191,6 +191,6 @@ public class TarBuilderTest extends BaseUnitTest {
     assertTrue(Files.isReadable(file));
     assertTarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
     assertTarFileEquals(file, "org/lattejava/io/FileSet.java", projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
-    assertEquals(count, 229);
+    assertEquals(count, 234);
   }
 }

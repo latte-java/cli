@@ -4,30 +4,24 @@
  */
 package org.lattejava.cli.runtime;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashSet;
+import java.nio.file.*;
+import java.util.*;
 
-import org.lattejava.cli.parser.DefaultTargetGraphBuilder;
-import org.lattejava.cli.parser.ParseException;
-import org.lattejava.cli.parser.groovy.GroovyProjectFileParser;
-import org.lattejava.cli.plugin.PluginLoadException;
-import org.lattejava.dep.DependencyTreePrinter;
-import org.lattejava.dep.LicenseException;
-import org.lattejava.dep.PublishException;
-import org.lattejava.dep.domain.CompatibilityException;
-import org.lattejava.dep.graph.DependencyGraph;
-import org.lattejava.dep.graph.DependencyGraph.Dependency;
-import org.lattejava.dep.workflow.ArtifactMetaDataMissingException;
-import org.lattejava.dep.workflow.ArtifactMissingException;
-import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.domain.VersionException;
-import org.lattejava.output.Output;
-import org.lattejava.output.SystemOutOutput;
-import org.lattejava.security.ChecksumException;
-import org.lattejava.util.CyclicException;
+import org.lattejava.cli.parser.*;
+import org.lattejava.cli.parser.groovy.*;
+import org.lattejava.cli.plugin.*;
+import org.lattejava.dep.*;
+import org.lattejava.dep.domain.*;
+import org.lattejava.dep.graph.*;
+import org.lattejava.dep.graph.DependencyGraph.*;
+import org.lattejava.dep.workflow.*;
+import org.lattejava.dep.workflow.process.*;
+import org.lattejava.domain.*;
+import org.lattejava.output.*;
+import org.lattejava.security.*;
+import org.lattejava.util.*;
 
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 
 /**
  * Main entry point for Latte CLI runtime.
@@ -79,7 +73,8 @@ public class Main {
       output.debug(e);
       System.exit(1);
     } catch (Throwable t) {
-      output.errorln("Build failed due to an exception or error." + (runtimeConfiguration.debug ? "" : " Enable debug using the %s switch to see the stack trace."), RuntimeConfiguration.DEBUG_SWITCH);
+      output.errorln("Build failed due to an exception or error. The error message is [" + t.getMessage() + "]." +
+          (runtimeConfiguration.debug ? "" : " Enable debug using the [%s] switch to see the stack trace."), RuntimeConfiguration.DEBUG_SWITCH);
       output.debug(t);
       System.exit(1);
     }

@@ -2,6 +2,9 @@ project(group: "${group}", name: "${name}", version: "0.1.0", licenses: ["${lice
   workflow {
     standard()
   }
+  publishWorkflow {
+    latte()
+  }
 
   dependencies {
     group(name: "compile") {
