@@ -66,26 +66,33 @@ public class LoopbackServer {
   private void handle(HttpExchange exchange) throws IOException {
     Map<String, String> params = parseQuery(exchange.getRequestURI().getRawQuery());
 
-    String message;
+    String code = null;
+    RuntimeFailureException failure = null;
     if (params.containsKey("error")) {
-      codeFuture.completeExceptionally(new RuntimeFailureException("Authorization failed with error [" + params.get("error") + "]"));
-      message = "Login failed. You can close this tab and return to the terminal.";
+      failure = new RuntimeFailureException("Authorization failed with error [" + params.get("error") + "]");
     } else if (!Objects.equals(expectedState, params.get("state"))) {
-      codeFuture.completeExceptionally(new RuntimeFailureException("The login response state did not match. This may indicate a CSRF attempt or a stale login."));
-      message = "Login failed. You can close this tab and return to the terminal.";
+      failure = new RuntimeFailureException("The login response state did not match. This may indicate a CSRF attempt or a stale login.");
     } else if (params.get("code") == null) {
-      codeFuture.completeExceptionally(new RuntimeFailureException("The login response did not contain an authorization code."));
-      message = "Login failed. You can close this tab and return to the terminal.";
+      failure = new RuntimeFailureException("The login response did not contain an authorization code.");
     } else {
-      codeFuture.complete(params.get("code"));
-      message = "Login complete. You can close this tab and return to the terminal.";
+      code = params.get("code");
     }
 
-    byte[] body = ("<!DOCTYPE html><html><body><h2>" + message + "</h2></body></html>").getBytes(StandardCharsets.UTF_8);
+    // Send and flush the full response to the browser BEFORE completing the future. Completing the future unblocks the
+    // main thread in awaitCode, which immediately stops the server in its finally block; if that happened first the
+    // server would tear down while this response was still in flight and the browser would render a broken page.
+    byte[] body = renderPage(failure == null).getBytes(StandardCharsets.UTF_8);
     exchange.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");
     exchange.sendResponseHeaders(200, body.length);
-    exchange.getResponseBody().write(body);
-    exchange.getResponseBody().close();
+    try (OutputStream out = exchange.getResponseBody()) {
+      out.write(body);
+    }
+
+    if (failure != null) {
+      codeFuture.completeExceptionally(failure);
+    } else {
+      codeFuture.complete(code);
+    }
   }
 
   private Map<String, String> parseQuery(String query) {
@@ -102,5 +109,268 @@ public class LoopbackServer {
     }
 
     return result;
+  }
+
+  /**
+   * Renders the fully styled HTML page shown in the browser once the OAuth redirect lands. It is a coffee-shop themed
+   * confirmation built to match the Latte Java brand: the slate palette and blue accent from lattejava.org, the inline
+   * Latte logo, and a bit of barista humor. The {@code success} variant prints a mock receipt; the failure variant dims
+   * the logo and voids the order. The page is entirely self-contained — the logo is inlined and the type uses the
+   * system font stack — so it renders with no external network requests.
+   *
+   * @param success Whether the login succeeded.
+   * @return The complete HTML document.
+   */
+  private String renderPage(boolean success) {
+    String check = "✓";
+    String cross = "✗";
+    String times = "×";
+    String rule = "— ".repeat(20).trim();
+
+    String bodyClass = success ? "" : "error";
+    String title = success ? "Login complete · Latte" : "Login failed · Latte";
+    String kicker = success ? "Order up" : "Spilled";
+    String headline = success ? "Your build is <em>caffeinated.</em>" : "We dropped your <em>latte.</em>";
+    String sub = success
+        ? "We frothed your credentials, steamed your tokens, and dusted a little cinnamon on the refresh token. You're logged in."
+        : "Something went sideways during login and the espresso machine sputtered. No tokens were brewed — head back to the terminal and order another.";
+
+    String panel = success
+        ? "<div class='receipt'>"
+            + "<div class='row'><span>1" + times + " OAuth Espresso</span><span>$0.00</span></div>"
+            + "<div class='row'><span>1" + times + " PKCE Foam</span><span>$0.00</span></div>"
+            + "<div class='row'><span>1" + times + " Bearer Token, oat</span><span>$0.00</span></div>"
+            + "<div class='rule'>" + rule + "</div>"
+            + "<div class='row total'><span>TOTAL</span><span>ON THE HOUSE</span></div>"
+            + "</div>"
+        : "<div class='receipt'>"
+            + "<div class='row'><span>1" + times + " OAuth Espresso</span><span>VOID</span></div>"
+            + "<div class='row'><span>1" + times + " PKCE Foam</span><span>VOID</span></div>"
+            + "<div class='rule'>" + rule + "</div>"
+            + "<div class='row total'><span>ORDER STATUS</span><span>SPILLED</span></div>"
+            + "</div>";
+
+    String footer = success
+        ? "<p class='footer'><span class='prompt'>~ $</span> latte login <span style='color:var(--accent)'>" + check + "</span><span class='cursor'></span>"
+            + "<span class='note'>You can close this tab now — your terminal is getting lonely.</span></p>"
+        : "<p class='footer'><span class='prompt'>~ $</span> latte login <span style='color:var(--accent)'>" + cross + "</span><span class='cursor'></span>"
+            + "<span class='note'>Close this tab and try again — the beans are still good.</span></p>";
+
+    String logo = "<svg class='logo' viewBox='81 700 2004 649' xmlns='http://www.w3.org/2000/svg' role='img' aria-label='Latte'>"
+        + "<path transform='translate(0,0)' fill='rgb(53,165,212)' d='M103.643 907.085C101.278 879.074 104.741 853.642 124.385 831.74c87.534-97.596 229.017-111.511 353.959-107.201C571.175 727.74 757.115 770.978 771.499 887.047 772.135 892.183 771.129 906.858 769.665 911.604 778.934 916.276 780.109 915.157 790.563 912.224 823.964 903.349 857.373 902.686 888.646 919.475 928.508 940.875 940.431 1003.17 921.753 1041.99 895.723 1116.9 816.199 1155.1 744.208 1173.22 727.053 1177.54 710.153 1179.84 693.005 1183.54 655.213 1244.73 593.155 1298.38 522.155 1313.78 515.934 1315.13 497.793 1319.08 491.825 1319.05 488.445 1319.55 485.052 1319.96 481.651 1320.29 400.244 1328.54 316.339 1315.36 251.975 1261.63c-90.403-75.48-133.064-189.12-144.468-303.638C105.82 941.047 105.255 924.083 103.643 907.085zM762.01 1015.17C757.778 1027.4 755.56 1040.18 752.005 1052.53 745.932 1073.63 739.117 1096.41 730.528 1116.61 745.112 1114.2 758.108 1112.19 772.385 1108.1 797.161 1098.9 812.146 1091.65 833.804 1076.14 868.891 1051 908.37 991.447 848.569 967.342 842.821 965.025 836.193 964.045 829.98 965.357 799.172 969.991 795.558 983.291 776.185 1004.03 772.504 1007.96 766.438 1011.86 762.01 1015.17z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(249,230,185)' d='M103.643 907.085C101.278 879.074 104.741 853.642 124.385 831.74c87.534-97.596 229.017-111.511 353.959-107.201C571.175 727.74 757.115 770.978 771.499 887.047 772.135 892.183 771.129 906.858 769.665 911.604 764.786 917.701 761.044 933.669 755.122 942.045 723.97 986.104 676.495 1008.59 627.903 1027.78 617.42 1032.53 590.623 1039.54 579.053 1042.15 482.223 1063.99 372.398 1062.83 276.581 1036.31 220.491 1020.78 159.403 993.353 123.851 945.503 115.093 933.715 111.365 920.67 104.258 908.146L103.643 907.085z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(201,125,58)' d='M186.762 963.888C159.902 948.127 137.689 913.721 141.186 881.829 147.208 826.922 197.829 797.697 244.067 778.658 328.1 744.058 421.678 738.538 511.185 748.536 571.636 755.397 670.034 781.29 709.105 829.785 724.28 843.865 734.051 866.101 734.689 886.595 735.341 907.521 723.649 931.189 709.023 945.924 647.184 1008.22 536.401 1027.96 452.228 1029.89 376.537 1031.62 297.937 1020.85 229.247 988.561 214.992 981.86 198.955 973.472 186.762 963.888z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(160,89,37)' d='M186.762 963.888C159.902 948.127 137.689 913.721 141.186 881.829 147.208 826.922 197.829 797.697 244.067 778.658 328.1 744.058 421.678 738.538 511.185 748.536 571.636 755.397 670.034 781.29 709.105 829.785 700.932 829.908 685.302 813.852 677.079 809.862 579.334 762.434 463.171 750.059 356.459 768.802 308.213 777.276 247.848 797.066 207.651 826.209 184.564 842.947 165.537 870.491 162.396 898.434 157.232 931.93 185.915 955.136 186.762 963.888z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(254,254,254)' d='M372.089 789.398C381.172 788.702 391.814 788.922 401.035 788.891L401.055 803.999C327.031 803.25 397.022 859.049 328.422 881.143 386.225 904.838 347.627 928.224 366.347 949.045 373.951 957.502 389.345 958.53 400.032 959.129L400.087 975.897C394.202 975.427 387.701 975.245 381.75 974.97 381.5 974.961 381.25 974.963 381 974.943 290.573 967.854 338.695 925.253 313.835 898 305.443 888.801 292.739 888.298 281.164 887.924L280.918 873.91C293.092 872.988 307.33 871.916 315.474 861.329 327.948 845.115 316.008 821.957 330.096 805.698c10.641-12.28 26.776-14.675 41.993-16.3z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(254,254,254)' d='M491.984 788.915C517.314 788.872 568.49 788.682 569.371 821.14 570.363 857.618 569.825 865.978 611.196 874.325 611.233 878.759 611.432 883.39 611.554 887.841 604.632 888.706 595.68 889.694 589.187 892.055 557.383 903.614 579.146 930.23 567.949 951.919c-6.024 11.669-20.18 16.149-31.761 19.645C519.843 975.105 509.008 975.037 492.41 975.315L492.751 958.987C567.92 957.542 495.595 895.912 567.15 880.967 550.907 874.624 532.347 867.666 530.709 847.425 529.848 836.787 534.172 820.358 525.731 812.177 517.618 804.312 502.518 803.941 491.976 803.826L491.984 788.915z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(49,121,155)' d='M790.563 912.224C823.964 903.349 857.373 902.686 888.646 919.475 928.508 940.875 940.431 1003.17 921.753 1041.99 895.723 1116.9 816.199 1155.1 744.208 1173.22 727.053 1177.54 710.153 1179.84 693.005 1183.54 655.213 1244.73 593.155 1298.38 522.155 1313.78 515.934 1315.13 497.793 1319.08 491.825 1319.05 493.638 1314.59 527.1 1283.73 534.075 1275.57 595.49 1203.71 624.453 1120.96 627.903 1027.78 676.495 1008.59 723.97 986.104 755.122 942.045 761.044 933.669 764.786 917.701 769.665 911.604 778.934 916.276 780.109 915.157 790.563 912.224zM762.01 1015.17C757.778 1027.4 755.56 1040.18 752.005 1052.53 745.932 1073.63 739.117 1096.41 730.528 1116.61 745.112 1114.2 758.108 1112.19 772.385 1108.1 797.161 1098.9 812.146 1091.65 833.804 1076.14 868.891 1051 908.37 991.447 848.569 967.342 842.821 965.025 836.193 964.045 829.98 965.357 799.172 969.991 795.558 983.291 776.185 1004.03 772.504 1007.96 766.438 1011.86 762.01 1015.17z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(53,165,212)' d='M790.563 912.224C823.964 903.349 857.373 902.686 888.646 919.475 928.508 940.875 940.431 1003.17 921.753 1041.99 917.614 1035.32 920.056 1017.73 917.861 1008.68 903.734 950.388 851.012 935.14 796.471 950.396 794.418 937.546 793.488 924.987 790.563 912.224z'></path>"
+        + "<path transform='translate(0,0)' fill='rgb(114,194,228)' d='M157.615 1020.37C162.41 1022.15 180.82 1035.28 187.535 1038.88 209.526 1050.65 231.504 1059.34 255.211 1066.83 260.657 1123.79 268.898 1168.9 297.277 1220.29 307.117 1238.11 318.707 1252.39 327.218 1271.23 317.132 1268 300.493 1258.15 292.029 1251.9 215.761 1195.56 172.795 1111.76 157.615 1020.37z'></path>"
+        + "<path transform='translate(60,0)' fill='currentColor' d='M1296.15 955.386C1299.09 955.168 1302.05 955.068 1305 955.086 1332.22 955.445 1361.52 960.91 1381.28 981.118 1408.33 1008.76 1404.03 1053.28 1403.89 1088.96L1403.46 1157.48C1385.36 1157.61 1366.62 1157.99 1348.57 1157.55L1347.88 1137.14C1308.18 1169.05 1269.06 1173.33 1229.25 1139.71 1220.03 1128.04 1214.19 1117.54 1214.06 1102.05 1213.46 1032.46 1295.15 1035.65 1344.22 1037.08 1327.77 984.208 1280.01 998.504 1242.97 1018.35 1236.4 1006.67 1227.76 990.998 1222.66 978.759 1248.09 962.595 1266.71 959.255 1296.15 955.386zm22 163.954C1340.72 1108.98 1343.66 1097.3 1342.81 1073.58 1328.66 1072.95 1310.63 1072.57 1296.5 1073.22 1248.2 1086.39 1276.51 1133.45 1318.15 1119.34z'></path>"
+        + "<path transform='translate(60,0)' fill='currentColor' d='M1831.6 956.358C1833.63 956.269 1835.67 956.203 1837.71 956.158 1883.05 955.231 1922.74 972.881 1938.27 1018.04 1944.8 1037.04 1944.41 1055.19 1944.59 1074.98L1797.2 1075.1C1812.73 1123.76 1865.01 1125.21 1899.15 1093.83 1903.29 1097.55 1906.03 1100.63 1909.71 1104.71 1916.77 1112.92 1924.33 1120.29 1931.33 1128.87 1919.89 1145.73 1891.62 1157.55 1872.16 1160.65 1839.33 1165.88 1804.01 1159.22 1777.04 1139.26 1756.83 1124.46 1743.44 1102.13 1739.91 1077.34 1730.87 1012.27 1766.93 965.286 1831.6 956.358zm-36.8 82.902C1810.12 1038.98 1825.45 1038.84 1840.77 1038.84 1856.65 1038.73 1873.23 1038.37 1889.04 1038.88 1881.75 1016.6 1868.85 998.328 1842.81 999.297 1816.13 1003.77 1803.97 1013.89 1794.8 1039.26z'></path>"
+        + "<path transform='translate(60,0)' fill='currentColor' d='M1009.85 887.004C1031.18 887.206 1051.38 887.514 1072.75 887.067 1072.21 897.378 1072.15 908.428 1072.24 918.762 1072.73 981.215 1071.03 1044.13 1072.55 1106.54 1110.44 1105.12 1156.57 1106.65 1195.1 1107.02 1195.44 1123.05 1195.43 1139.09 1195.07 1155.12L1194.43 1156.92C1190.23 1157.8 1147.93 1157.59 1141.63 1157.59L1010.01 1157.91C1010.54 1067.57 1008.59 977.298 1009.85 887.004z'></path>"
+        + "<path transform='translate(60,0)' fill='currentColor' d='M1456.25 912.021 1514.47 912.013C1515.09 928.267 1514.64 947.149 1514.74 963.668 1528.67 962.373 1548.84 963.119 1563.29 963.256 1562.75 977.761 1563.06 994.189 1563.01 1008.84 1548.78 1009.56 1528.56 1009.3 1514.24 1008.97 1513.86 1041.35 1506.61 1083.29 1524.76 1110.73 1528.11 1112.31 1532.29 1113.86 1535.79 1115.26 1543.33 1113.35 1554.04 1109.37 1561.64 1106.8 1565.06 1116.01 1568.26 1127.7 1571.14 1137.26 1572.56 1141.74 1574.02 1146.2 1575.51 1150.66 1560.15 1156.93 1548.28 1161.38 1531.46 1161.66 1512.21 1161.97 1489.56 1158.77 1475.48 1144.32 1450.28 1118.46 1453.91 1080.57 1454.69 1047.51 1454.99 1034.92 1454.54 1022.52 1454.57 1010.05L1426.44 1009.76 1426.32 964.048 1456.11 964.131 1456.25 912.021z'></path>"
+        + "<path transform='translate(60,0)' fill='currentColor' d='M1608.92 912.039 1668.74 912.075 1668.89 964.083C1684.46 963.719 1701.19 964.074 1716.84 964.129 1716.51 978.984 1716.69 994.38 1716.55 1009.32 1703.78 1009.6 1679.12 1010.4 1667.03 1009.11 1667.26 1025.12 1667.65 1041.24 1666.9 1058.53 1666 1079.13 1666.04 1118.99 1697.94 1113.69 1701.04 1113.17 1710.96 1108.7 1714.28 1107.33 1717.81 1116.36 1721.54 1128.06 1724.96 1137.5L1729.79 1151.24C1697.93 1161.3 1660.2 1171.18 1631.27 1146.16 1606.41 1124.67 1609.22 1086.53 1609.48 1056.46 1609.76 1040.72 1609.59 1024.97 1608.99 1009.24L1579.79 1008.95 1580.19 964.019C1589.85 964.093 1599.51 964.115 1609.17 964.084 1609.48 950.026 1610.45 925.467 1608.92 912.039z'></path>"
+        + "</svg>";
+
+    String page = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>${TITLE}</title>
+        <style>
+          :root {
+            --bg: oklch(12.9% .042 264.695);
+            --panel: oklch(20.8% .042 265.755);
+            --panel-deep: oklch(16% .042 265);
+            --border: oklch(27.9% .041 260.031);
+            --border-soft: oklch(37.2% .044 257.287);
+            --ink: oklch(96.8% .007 247.896);
+            --muted: oklch(70.4% .04 256.788);
+            --faint: oklch(55.4% .046 257.417);
+            --accent: oklch(70% .15 230);
+            --accent-strong: oklch(60% .18 230);
+          }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          html, body { height: 100%; }
+          body {
+            min-height: 100%;
+            display: grid;
+            place-items: center;
+            padding: 40px 20px;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: var(--ink);
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+          }
+          body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+              radial-gradient(90% 60% at 50% -15%, color-mix(in oklch, var(--accent) 22%, transparent), transparent 60%),
+              linear-gradient(transparent 31px, color-mix(in oklch, var(--border) 45%, transparent) 32px),
+              linear-gradient(90deg, transparent 31px, color-mix(in oklch, var(--border) 45%, transparent) 32px);
+            background-size: 100% 100%, 32px 32px, 32px 32px;
+            mask-image: radial-gradient(80% 70% at 50% 35%, #000 30%, transparent 80%);
+            opacity: 0.6;
+          }
+          .card {
+            position: relative;
+            z-index: 1;
+            width: min(600px, 100%);
+            padding: 48px 44px 36px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: color-mix(in oklch, var(--panel) 88%, transparent);
+            box-shadow: 0 30px 70px -28px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.04);
+            backdrop-filter: blur(10px);
+          }
+          .logo-wrap {
+            position: relative;
+            display: inline-block;
+            opacity: 0;
+            animation: rise 0.7s cubic-bezier(.2,.8,.2,1) forwards;
+          }
+          .logo-wrap::after {
+            content: "";
+            position: absolute;
+            left: 6%; top: 50%;
+            width: 90px; height: 90px;
+            transform: translateY(-50%);
+            background: radial-gradient(circle, color-mix(in oklch, var(--accent) 45%, transparent), transparent 70%);
+            filter: blur(10px);
+            z-index: -1;
+            animation: breathe 4s ease-in-out infinite;
+          }
+          .logo { display: block; width: 232px; height: auto; color: var(--ink); }
+          .steam {
+            position: absolute;
+            top: -14px; left: 9%;
+            width: 46px; height: 30px;
+            pointer-events: none;
+          }
+          .steam i {
+            position: absolute;
+            bottom: 0;
+            width: 6px; height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(to top, color-mix(in oklch, var(--accent) 60%, transparent), transparent);
+            filter: blur(2px);
+            opacity: 0;
+            animation: steam 3s ease-in-out infinite;
+          }
+          .steam i:nth-child(1) { left: 6px;  animation-delay: 0s; }
+          .steam i:nth-child(2) { left: 20px; height: 30px; animation-delay: 0.9s; }
+          .steam i:nth-child(3) { left: 34px; animation-delay: 1.7s; }
+          .kicker {
+            margin-top: 26px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--accent);
+            opacity: 0;
+            animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.15s forwards;
+          }
+          h1 {
+            margin-top: 12px;
+            font-size: clamp(30px, 5.5vw, 40px);
+            font-weight: 700;
+            line-height: 1.08;
+            letter-spacing: -0.02em;
+            opacity: 0;
+            animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.25s forwards;
+          }
+          h1 em { font-style: normal; color: var(--accent); }
+          .sub {
+            margin: 16px auto 0;
+            max-width: 432px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--muted);
+            opacity: 0;
+            animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.35s forwards;
+          }
+          .receipt {
+            margin: 26px auto 0;
+            max-width: 348px;
+            padding: 16px 20px;
+            text-align: left;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12.5px;
+            line-height: 1.95;
+            color: oklch(86.9% .022 252.894);
+            background: var(--panel-deep);
+            border: 1px dashed var(--border-soft);
+            border-radius: 12px;
+            opacity: 0;
+            animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.45s forwards;
+          }
+          .receipt .row { display: flex; justify-content: space-between; gap: 12px; }
+          .receipt .rule { color: var(--border-soft); overflow: hidden; white-space: nowrap; }
+          .receipt .total { color: var(--accent); font-weight: 600; }
+          .footer {
+            margin-top: 26px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12.5px;
+            color: var(--faint);
+            opacity: 0;
+            animation: rise 0.7s cubic-bezier(.2,.8,.2,1) 0.55s forwards;
+          }
+          .prompt { color: var(--accent); }
+          .cursor {
+            display: inline-block;
+            width: 7px; height: 14px;
+            margin-left: 3px;
+            vertical-align: -2px;
+            background: var(--accent);
+            animation: blink 1.1s steps(1) infinite;
+          }
+          .footer .note { display: block; margin-top: 10px; color: var(--faint); }
+          @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes steam { 0% { opacity: 0; transform: translateY(2px) scaleX(1); } 20% { opacity: 0.8; } 100% { opacity: 0; transform: translateY(-22px) scaleX(1.5); } }
+          @keyframes breathe { 0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(1); } 50% { opacity: 0.85; transform: translateY(-50%) scale(1.12); } }
+          @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+          @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; }
+            .steam, .cursor { display: none; }
+          }
+          body.error { --accent: oklch(70.4% .191 22.216); --accent-strong: oklch(63.7% .208 25.331); }
+          body.error .logo { filter: grayscale(0.7) brightness(0.8); }
+          body.error .steam { display: none; }
+          body.error .logo-wrap::after { animation: none; opacity: 0.4; }
+        </style>
+        </head>
+        <body class="${BODYCLASS}">
+          <main class="card">
+            <div class="logo-wrap">
+              ${LOGO}
+              <span class="steam"><i></i><i></i><i></i></span>
+            </div>
+            <p class="kicker">${KICKER}</p>
+            <h1>${HEADLINE}</h1>
+            <p class="sub">${SUB}</p>
+            ${PANEL}
+            ${FOOTER}
+          </main>
+        </body>
+        </html>
+        """;
+
+    return page.replace("${TITLE}", title)
+               .replace("${BODYCLASS}", bodyClass)
+               .replace("${LOGO}", logo)
+               .replace("${KICKER}", kicker)
+               .replace("${HEADLINE}", headline)
+               .replace("${SUB}", sub)
+               .replace("${PANEL}", panel)
+               .replace("${FOOTER}", footer);
   }
 }

@@ -7,6 +7,7 @@ package org.lattejava.cli.auth;
 import java.net.*;
 import java.net.http.*;
 import java.time.*;
+import java.util.concurrent.*;
 
 import org.lattejava.*;
 import org.lattejava.cli.runtime.*;
@@ -29,6 +30,31 @@ public class LoopbackServerTest extends BaseUnitTest {
       assertEquals(server.awaitCode(Duration.ofSeconds(5)), "the-code");
     } finally {
       server.stop();
+    }
+  }
+
+  @Test
+  public void deliversFullResponseEvenWhenServerStopsImmediately() throws Exception {
+    // Mirrors LoginCommand: the browser request is in flight while the main thread awaits the code and then immediately
+    // stops the server in its finally block. The full HTML response must reach the browser before the server tears down,
+    // otherwise the browser renders a blank/broken page. Looped because the failure is a race.
+    for (int i = 0; i < 25; i++) {
+      int port = 8810 + i;
+      LoopbackServer server = new LoopbackServer(port, "good-state");
+      server.start();
+
+      HttpResponse<String> response;
+      try (var client = HttpClient.newHttpClient()) {
+        CompletableFuture<HttpResponse<String>> responseFuture = client.sendAsync(
+            HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + "/callback?code=the-code&state=good-state")).GET().build(),
+            HttpResponse.BodyHandlers.ofString());
+        assertEquals(server.awaitCode(Duration.ofSeconds(5)), "the-code");
+        server.stop();
+        response = responseFuture.get(5, TimeUnit.SECONDS);
+      }
+
+      assertEquals(response.statusCode(), 200, "Iteration [" + i + "]");
+      assertTrue(response.body().contains("ON THE HOUSE"), "Iteration [" + i + "] body was [" + response.body() + "]");
     }
   }
 
