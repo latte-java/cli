@@ -24,24 +24,48 @@ public final class Browsers {
     output.infoln("Opening your browser to log in. If it does not open automatically, visit:");
     output.infoln("%s", url);
 
-    try {
-      if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-        Desktop.getDesktop().browse(URI.create(url));
-        return;
-      }
-    } catch (Exception e) {
-      // Fall through to the OS-specific command.
+    // Launch the browser with the native OS command rather than java.awt.Desktop. On macOS, touching AWT turns this CLI
+    // into a GUI application: it gets a Dock icon and appears in the Cmd-Tab app switcher. Shelling out avoids
+    // initializing AWT entirely, so the process stays invisible (and the CLI starts a little faster).
+    if (launch(browserCommand(url))) {
+      return;
     }
 
-    String os = System.getProperty("os.name").toLowerCase();
+    // Fall back to AWT for any platform the native command did not cover, or when it was unavailable. Mark the process
+    // as a UI element first so this path also stays out of the Dock and app switcher on macOS.
     try {
-      if (os.contains("mac")) {
-        new ProcessBuilder("open", url).start();
-      } else if (os.contains("nix") || os.contains("nux")) {
-        new ProcessBuilder("xdg-open", url).start();
+      System.setProperty("apple.awt.UIElement", "true");
+      if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+        Desktop.getDesktop().browse(URI.create(url));
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       // The printed URL above is the fallback.
+    }
+  }
+
+  private static String[] browserCommand(String url) {
+    String os = System.getProperty("os.name").toLowerCase();
+    if (os.contains("mac")) {
+      return new String[]{"open", url};
+    } else if (os.contains("nix") || os.contains("nux")) {
+      return new String[]{"xdg-open", url};
+    } else if (os.contains("win")) {
+      return new String[]{"rundll32", "url.dll,FileProtocolHandler", url};
+    }
+
+    return null;
+  }
+
+  private static boolean launch(String[] command) {
+    if (command == null) {
+      return false;
+    }
+
+    try {
+      new ProcessBuilder(command).start();
+      return true;
+    } catch (IOException e) {
+      return false;
     }
   }
 }
