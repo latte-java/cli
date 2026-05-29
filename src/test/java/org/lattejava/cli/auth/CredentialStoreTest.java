@@ -21,6 +21,51 @@ import static org.testng.Assert.*;
  */
 public class CredentialStoreTest extends BaseUnitTest {
   @Test
+  public void clearRemovesTokensAndPreservesOtherProperties() throws Exception {
+    Path dir = Files.createTempDirectory("latte-credential-test");
+    Path configFile = dir.resolve("config.properties");
+    Files.writeString(configFile, """
+        existing.key=existing-value
+        latte.auth.accessToken=the-access-token
+        latte.auth.refreshToken=the-refresh-token
+        """);
+
+    assertTrue(new CredentialStore(configFile).clear());
+
+    Properties loaded = new Properties();
+    try (InputStream is = Files.newInputStream(configFile)) {
+      loaded.load(is);
+    }
+    assertEquals(loaded.getProperty("existing.key"), "existing-value");
+    assertFalse(loaded.containsKey("latte.auth.accessToken"));
+    assertFalse(loaded.containsKey("latte.auth.refreshToken"));
+  }
+
+  @Test
+  public void clearReturnsFalseWhenFileAbsent() throws Exception {
+    Path dir = Files.createTempDirectory("latte-credential-test");
+    Path configFile = dir.resolve("config.properties");
+
+    assertFalse(new CredentialStore(configFile).clear());
+    assertFalse(Files.exists(configFile));
+  }
+
+  @Test
+  public void clearReturnsFalseWhenNoTokensPresent() throws Exception {
+    Path dir = Files.createTempDirectory("latte-credential-test");
+    Path configFile = dir.resolve("config.properties");
+    Files.writeString(configFile, "existing.key=existing-value\n");
+
+    assertFalse(new CredentialStore(configFile).clear());
+
+    Properties loaded = new Properties();
+    try (InputStream is = Files.newInputStream(configFile)) {
+      loaded.load(is);
+    }
+    assertEquals(loaded.getProperty("existing.key"), "existing-value");
+  }
+
+  @Test
   public void createsFileAndParentDirectoriesWhenMissing() throws Exception {
     Path dir = Files.createTempDirectory("latte-credential-test");
     Path configFile = dir.resolve("nested/config.properties");

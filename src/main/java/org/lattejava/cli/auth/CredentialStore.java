@@ -29,39 +29,67 @@ public class CredentialStore {
   }
 
   /**
+   * Removes the stored OAuth tokens from the configuration file, preserving any unrelated properties. This is a no-op
+   * when the file is absent.
+   *
+   * @return Whether either token was present and removed.
+   */
+  public boolean clear() {
+    if (!Files.isRegularFile(configFile)) {
+      return false;
+    }
+
+    Properties properties = read();
+    boolean removed = properties.remove(ACCESS_TOKEN_KEY) != null;
+    removed |= properties.remove(REFRESH_TOKEN_KEY) != null;
+    if (removed) {
+      write(properties);
+    }
+
+    return removed;
+  }
+
+  /**
    * Reads the stored OAuth tokens from the configuration file. Either token is {@code null} when the file is absent or
    * does not contain that property.
    *
    * @return The stored tokens.
    */
   public Tokens load() {
-    Properties properties = new Properties();
-    if (Files.isRegularFile(configFile)) {
-      try (InputStream is = Files.newInputStream(configFile)) {
-        properties.load(is);
-      } catch (IOException e) {
-        throw new RuntimeFailureException("Unable to read the configuration file [" + configFile + "]. Message was [" + e.getMessage() + "]", e);
-      }
-    }
-
+    Properties properties = read();
     return new Tokens(properties.getProperty(ACCESS_TOKEN_KEY), properties.getProperty(REFRESH_TOKEN_KEY));
   }
 
   public void store(Tokens tokens) {
-    Properties properties = new Properties();
-    if (Files.isRegularFile(configFile)) {
-      try (InputStream is = Files.newInputStream(configFile)) {
-        properties.load(is);
-      } catch (IOException e) {
-        throw new RuntimeFailureException("Unable to read the configuration file [" + configFile + "]. Message was [" + e.getMessage() + "]", e);
-      }
-    }
-
+    Properties properties = read();
     properties.setProperty(ACCESS_TOKEN_KEY, tokens.accessToken());
     if (tokens.refreshToken() != null) {
       properties.setProperty(REFRESH_TOKEN_KEY, tokens.refreshToken());
     }
 
+    write(properties);
+  }
+
+  private Properties read() {
+    Properties properties = new Properties();
+    if (Files.isRegularFile(configFile)) {
+      try (InputStream is = Files.newInputStream(configFile)) {
+        properties.load(is);
+      } catch (IOException e) {
+        throw new RuntimeFailureException("Unable to read the configuration file [" + configFile + "]. Message was [" + e.getMessage() + "]", e);
+      }
+    }
+
+    return properties;
+  }
+
+  private void restrictPermissions(Path file) throws IOException {
+    if (file.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+      Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+    }
+  }
+
+  private void write(Properties properties) {
     Path parent = configFile.getParent();
     Path directory = parent != null ? parent : configFile.toAbsolutePath().getParent();
     Path temp = null;
@@ -92,12 +120,6 @@ public class CredentialStore {
           // The temp file is best-effort cleanup; nothing actionable if it cannot be removed.
         }
       }
-    }
-  }
-
-  private void restrictPermissions(Path file) throws IOException {
-    if (file.getFileSystem().supportedFileAttributeViews().contains("posix")) {
-      Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
     }
   }
 }

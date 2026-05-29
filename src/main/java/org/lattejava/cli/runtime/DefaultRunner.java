@@ -12,6 +12,7 @@ import org.lattejava.cli.command.Command;
 import org.lattejava.cli.command.InitCommand;
 import org.lattejava.cli.command.InstallCommand;
 import org.lattejava.cli.command.LoginCommand;
+import org.lattejava.cli.command.LogoutCommand;
 import org.lattejava.cli.command.UpgradeCommand;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.parser.ParseException;
@@ -41,6 +42,7 @@ public class DefaultRunner implements Runner {
       "init", new InitCommand(),
       "install", new InstallCommand(),
       "login", new LoginCommand(),
+      "logout", new LogoutCommand(),
       "upgrade", new UpgradeCommand()
   );
 

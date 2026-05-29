@@ -103,6 +103,8 @@ public class Main {
     output.infoln("   login           Logs into the Latte IdP and stores the auth tokens");
     output.infoln("                   Usage: latte login [issuer-url]");
     output.infoln("                   Defaults to the production IdP; pass a URL for local testing");
+    output.infoln("   logout          Logs out by deleting the stored auth tokens");
+    output.infoln("                   Usage: latte logout");
     output.infoln("   upgrade         Upgrades runtime, plugins, or dependencies");
     output.infoln("                   Usage: latte upgrade <parameter>");
     output.infoln("                   Run 'latte upgrade help' for details");
