@@ -20,83 +20,70 @@ import static org.testng.Assert.assertTrue;
 
 /**
  * Tests the FileSet class.
+ * <p>
+ * These tests run against the frozen fixture tree under {@code src/test/resources/archive-fixture/main} rather than the
+ * live project source, so the exact counts and file lists never drift as the project changes.
  *
  * @author Brian Pontarelli
  */
 public class FileSetTest extends BaseUnitTest {
+  private static final Path mainFixture = Paths.get("src/test/resources/archive-fixture/main");
+
   @Test
   public void toFileInfos() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"));
+    FileSet fileSet = new FileSet(projectDir.resolve(mainFixture));
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 137);
+    assertEquals(infos.size(), 6);
     // Spot-check a few known files are present
     List<Path> actual = infos.stream().map((info) -> info.origin).toList();
-    assertTrue(actual.contains(projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java")));
-    assertTrue(actual.contains(projectDir.resolve("src/main/java/org/lattejava/io/Copier.java")));
+    assertTrue(actual.contains(projectDir.resolve(mainFixture).resolve("com/example/app/App.java")));
+    assertTrue(actual.contains(projectDir.resolve(mainFixture).resolve("com/example/app/io/Reader.java")));
     List<Path> relatives = infos.stream().map((info) -> info.relative).toList();
-    assertTrue(relatives.contains(Paths.get("org/lattejava/io/FileSet.java")));
-    assertTrue(relatives.contains(Paths.get("org/lattejava/io/Copier.java")));
+    assertTrue(relatives.contains(Paths.get("com/example/app/App.java")));
+    assertTrue(relatives.contains(Paths.get("com/example/app/io/Reader.java")));
   }
 
   @Test
   public void toFileInfosWithExcludePatterns() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), null, List.of(Pattern.compile(".*/jar/.*")));
+    FileSet fileSet = new FileSet(projectDir.resolve(mainFixture), null, List.of(Pattern.compile(".*/jar/.*")));
     List<FileInfo> infos = fileSet.toFileInfos();
-    assertEquals(infos.size(), 135);
+    assertEquals(infos.size(), 4);
     // Verify jar files are excluded
     List<Path> origins = infos.stream().map((info) -> info.origin).toList();
     assertTrue(origins.stream().noneMatch(p -> p.toString().contains("/jar/")));
     // Spot-check non-jar files are still present
-    assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/Copier.java")));
-    assertTrue(origins.contains(projectDir.resolve("src/main/java/org/lattejava/io/tar/TarBuilder.java")));
+    assertTrue(origins.contains(projectDir.resolve(mainFixture).resolve("com/example/app/Util.java")));
+    assertTrue(origins.contains(projectDir.resolve(mainFixture).resolve("com/example/app/io/Writer.java")));
   }
 
   @Test
   public void toFileInfosWithIncludeAndExcludePatterns() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), List.of(Pattern.compile(".*/io/.*")),
-        List.of(Pattern.compile(".*FileSet\\.java")));
+    FileSet fileSet = new FileSet(projectDir.resolve(mainFixture), List.of(Pattern.compile(".*/io/.*")),
+        List.of(Pattern.compile(".*Reader\\.java")));
     List<FileInfo> infos = fileSet.toFileInfos();
     assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
-        projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/Directory.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/FileInfo.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/FileTools.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/Filter.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/Tools.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/jar/JarBuilder.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/jar/JarTools.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/tar/TarBuilder.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/tar/TarTools.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/zip/ZipBuilder.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/zip/ZipTools.java")
+        projectDir.resolve(mainFixture).resolve("com/example/app/io/Writer.java"),
+        projectDir.resolve(mainFixture).resolve("com/example/app/io/jar/JarHelper.java"),
+        projectDir.resolve(mainFixture).resolve("com/example/app/io/jar/JarTool.java")
     ));
     assertEquals(infos.stream().map((info) -> info.relative).collect(Collectors.toList()), asList(
-        Paths.get("org/lattejava/io/Copier.java"),
-        Paths.get("org/lattejava/io/Directory.java"),
-        Paths.get("org/lattejava/io/FileInfo.java"),
-        Paths.get("org/lattejava/io/FileTools.java"),
-        Paths.get("org/lattejava/io/Filter.java"),
-        Paths.get("org/lattejava/io/Tools.java"),
-        Paths.get("org/lattejava/io/jar/JarBuilder.java"),
-        Paths.get("org/lattejava/io/jar/JarTools.java"),
-        Paths.get("org/lattejava/io/tar/TarBuilder.java"),
-        Paths.get("org/lattejava/io/tar/TarTools.java"),
-        Paths.get("org/lattejava/io/zip/ZipBuilder.java"),
-        Paths.get("org/lattejava/io/zip/ZipTools.java")
+        Paths.get("com/example/app/io/Writer.java"),
+        Paths.get("com/example/app/io/jar/JarHelper.java"),
+        Paths.get("com/example/app/io/jar/JarTool.java")
     ));
   }
 
   @Test
   public void toFileInfosWithIncludePatterns() throws Exception {
-    FileSet fileSet = new FileSet(projectDir.resolve("src/main/java"), List.of(Pattern.compile(".*/jar/.*")), null);
+    FileSet fileSet = new FileSet(projectDir.resolve(mainFixture), List.of(Pattern.compile(".*/jar/.*")), null);
     List<FileInfo> infos = fileSet.toFileInfos();
     assertEquals(infos.stream().map((info) -> info.origin).collect(Collectors.toList()), Arrays.asList(
-        projectDir.resolve("src/main/java/org/lattejava/io/jar/JarBuilder.java"),
-        projectDir.resolve("src/main/java/org/lattejava/io/jar/JarTools.java")
+        projectDir.resolve(mainFixture).resolve("com/example/app/io/jar/JarHelper.java"),
+        projectDir.resolve(mainFixture).resolve("com/example/app/io/jar/JarTool.java")
     ));
     assertEquals(infos.stream().map((info) -> info.relative).collect(Collectors.toList()), asList(
-        Paths.get("org/lattejava/io/jar/JarBuilder.java"),
-        Paths.get("org/lattejava/io/jar/JarTools.java")
+        Paths.get("com/example/app/io/jar/JarHelper.java"),
+        Paths.get("com/example/app/io/jar/JarTool.java")
     ));
   }
 }

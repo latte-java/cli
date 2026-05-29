@@ -217,7 +217,7 @@ public class InitCommandTest extends BaseUnitTest {
       // Main module-info
       Path mainModuleInfo = testDir.resolve("src/main/java/module-info.java");
       assertTrue(Files.isRegularFile(mainModuleInfo));
-      assertEquals(Files.readString(mainModuleInfo).trim(), "module org.example.my_lib {\n}".trim());
+      assertEquals(Files.readString(mainModuleInfo).trim(), "module org.example.my_lib {\n  exports org.example.my_lib;\n}".trim());
 
       // Placeholder in the derived package
       Path placeholder = testDir.resolve("src/main/java/org/example/my_lib/Placeholder.java");

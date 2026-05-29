@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.util.zip.GZIPInputStream;
 
@@ -27,10 +28,17 @@ import static org.testng.Assert.fail;
 
 /**
  * Tests the TarBuilder.
+ * <p>
+ * These tests build archives from the frozen fixture tree under {@code src/test/resources/archive-fixture} rather than
+ * the live project source, so the exact entry counts never drift as the project changes.
  *
  * @author Brian Pontarelli
  */
 public class TarBuilderTest extends BaseUnitTest {
+  private static final Path mainFixture = Paths.get("src/test/resources/archive-fixture/main");
+
+  private static final Path testFixture = Paths.get("src/test/resources/archive-fixture/test");
+
   private static void assertTarFileEquals(Path tarFile, String entry, Path original) throws IOException {
     InputStream is = Files.newInputStream(tarFile);
     if (tarFile.toString().endsWith(".gz")) {
@@ -98,19 +106,19 @@ public class TarBuilderTest extends BaseUnitTest {
     TarBuilder builder = new TarBuilder(file);
     builder.storeGroupName = true;
     builder.storeUserName = true;
-    int count = builder.fileSet(new FileSet(projectDir.resolve("src/main/java")))
-                       .fileSet(new FileSet(projectDir.resolve("src/test/java")))
+    int count = builder.fileSet(new FileSet(projectDir.resolve(mainFixture)))
+                       .fileSet(new FileSet(projectDir.resolve(testFixture)))
                        .optionalFileSet(new FileSet(projectDir.resolve("doesNotExist")))
                        .directory(new Directory("test/directory", 0x755, "root", "root", null))
                        .build();
     assertTrue(Files.isReadable(file));
-    assertTarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
-    assertTarFileEquals(file, "org/lattejava/io/FileSet.java", projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
-    assertTarContainsDirectory(file, "org/", null, null, null);
-    assertTarContainsDirectory(file, "org/lattejava/", null, null, null);
-    assertTarContainsDirectory(file, "org/lattejava/io/", null, null, null);
+    assertTarFileEquals(file, "com/example/app/App.java", projectDir.resolve(mainFixture).resolve("com/example/app/App.java"));
+    assertTarFileEquals(file, "com/example/app/io/Reader.java", projectDir.resolve(mainFixture).resolve("com/example/app/io/Reader.java"));
+    assertTarContainsDirectory(file, "com/", null, null, null);
+    assertTarContainsDirectory(file, "com/example/", null, null, null);
+    assertTarContainsDirectory(file, "com/example/app/", null, null, null);
     assertTarContainsDirectory(file, "test/directory/", 0x755, "root", "root");
-    assertEquals(count, 235);
+    assertEquals(count, 14);
   }
 
   @Test
@@ -121,23 +129,23 @@ public class TarBuilderTest extends BaseUnitTest {
     TarBuilder builder = new TarBuilder(file);
     builder.storeGroupName = true;
     builder.storeUserName = true;
-    int count = builder.fileSet(new ArchiveFileSet(projectDir.resolve("src/main/java"), "usr/local/main"))
-                       .fileSet(new ArchiveFileSet(projectDir.resolve("src/test/java"), "usr/local/test"))
+    int count = builder.fileSet(new ArchiveFileSet(projectDir.resolve(mainFixture), "usr/local/main"))
+                       .fileSet(new ArchiveFileSet(projectDir.resolve(testFixture), "usr/local/test"))
                        .optionalFileSet(new FileSet(projectDir.resolve("doesNotExist")))
                        .directory(new Directory("test/directory", 0x755, "root", "root", null))
                        .build();
     assertTrue(Files.isReadable(file));
-    assertTarFileEquals(file, "usr/local/main/org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
-    assertTarFileEquals(file, "usr/local/main/org/lattejava/io/FileSet.java", projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
-    assertTarFileEquals(file, "usr/local/test/org/lattejava/io/FileSetTest.java", projectDir.resolve("src/test/java/org/lattejava/io/FileSetTest.java"));
-    assertTarContainsDirectory(file, "usr/local/main/org/", null, null, null);
-    assertTarContainsDirectory(file, "usr/local/test/org/", null, null, null);
-    assertTarContainsDirectory(file, "usr/local/main/org/lattejava/", null, null, null);
-    assertTarContainsDirectory(file, "usr/local/test/org/lattejava/", null, null, null);
-    assertTarContainsDirectory(file, "usr/local/main/org/lattejava/io/", null, null, null);
-    assertTarContainsDirectory(file, "usr/local/test/org/lattejava/io/", null, null, null);
+    assertTarFileEquals(file, "usr/local/main/com/example/app/App.java", projectDir.resolve(mainFixture).resolve("com/example/app/App.java"));
+    assertTarFileEquals(file, "usr/local/main/com/example/app/io/Reader.java", projectDir.resolve(mainFixture).resolve("com/example/app/io/Reader.java"));
+    assertTarFileEquals(file, "usr/local/test/com/example/app/AppTest.java", projectDir.resolve(testFixture).resolve("com/example/app/AppTest.java"));
+    assertTarContainsDirectory(file, "usr/local/main/com/", null, null, null);
+    assertTarContainsDirectory(file, "usr/local/test/com/", null, null, null);
+    assertTarContainsDirectory(file, "usr/local/main/com/example/", null, null, null);
+    assertTarContainsDirectory(file, "usr/local/test/com/example/", null, null, null);
+    assertTarContainsDirectory(file, "usr/local/main/com/example/app/", null, null, null);
+    assertTarContainsDirectory(file, "usr/local/test/com/example/app/", null, null, null);
     assertTarContainsDirectory(file, "test/directory/", 0x755, "root", "root");
-    assertEquals(count, 265);
+    assertEquals(count, 22);
   }
 
   @Test
@@ -149,14 +157,14 @@ public class TarBuilderTest extends BaseUnitTest {
     builder.storeGroupName = true;
     builder.storeUserName = true;
     builder.compress = true;
-    int count = builder.fileSet(new FileSet(projectDir.resolve("src/main/java")))
-                       .fileSet(new FileSet(projectDir.resolve("src/test/java")))
+    int count = builder.fileSet(new FileSet(projectDir.resolve(mainFixture)))
+                       .fileSet(new FileSet(projectDir.resolve(testFixture)))
                        .optionalFileSet(new FileSet(projectDir.resolve("doesNotExist")))
                        .build();
     assertTrue(Files.isReadable(file));
-    assertTarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
-    assertTarFileEquals(file, "org/lattejava/io/FileSet.java", projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
-    assertEquals(count, 234);
+    assertTarFileEquals(file, "com/example/app/App.java", projectDir.resolve(mainFixture).resolve("com/example/app/App.java"));
+    assertTarFileEquals(file, "com/example/app/io/Reader.java", projectDir.resolve(mainFixture).resolve("com/example/app/io/Reader.java"));
+    assertEquals(count, 13);
   }
 
   @Test
@@ -166,8 +174,8 @@ public class TarBuilderTest extends BaseUnitTest {
     Path file = projectDir.resolve("build/test/tars/test.tar");
     TarBuilder builder = new TarBuilder(file);
     try {
-      builder.fileSet(new FileSet(projectDir.resolve("src/main/java")))
-             .fileSet(new FileSet(projectDir.resolve("src/test/java")))
+      builder.fileSet(new FileSet(projectDir.resolve(mainFixture)))
+             .fileSet(new FileSet(projectDir.resolve(testFixture)))
              .fileSet(new FileSet(projectDir.resolve("doesNotExist")))
              .build();
       fail("Should have failed");
@@ -184,13 +192,13 @@ public class TarBuilderTest extends BaseUnitTest {
     TarBuilder builder = new TarBuilder(file.toString());
     builder.storeGroupName = true;
     builder.storeUserName = true;
-    int count = builder.fileSet(projectDir.resolve("src/main/java").toString())
-                       .fileSet(projectDir.resolve("src/test/java").toString())
+    int count = builder.fileSet(projectDir.resolve(mainFixture).toString())
+                       .fileSet(projectDir.resolve(testFixture).toString())
                        .optionalFileSet("doesNotExist")
                        .build();
     assertTrue(Files.isReadable(file));
-    assertTarFileEquals(file, "org/lattejava/io/Copier.java", projectDir.resolve("src/main/java/org/lattejava/io/Copier.java"));
-    assertTarFileEquals(file, "org/lattejava/io/FileSet.java", projectDir.resolve("src/main/java/org/lattejava/io/FileSet.java"));
-    assertEquals(count, 234);
+    assertTarFileEquals(file, "com/example/app/App.java", projectDir.resolve(mainFixture).resolve("com/example/app/App.java"));
+    assertTarFileEquals(file, "com/example/app/io/Reader.java", projectDir.resolve(mainFixture).resolve("com/example/app/io/Reader.java"));
+    assertEquals(count, 13);
   }
 }
