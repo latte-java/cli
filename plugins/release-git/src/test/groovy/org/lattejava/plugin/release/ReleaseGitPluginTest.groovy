@@ -13,6 +13,8 @@ import org.lattejava.dep.workflow.FetchWorkflow
 import org.lattejava.dep.workflow.PublishWorkflow
 import org.lattejava.dep.workflow.Workflow
 import org.lattejava.dep.workflow.process.CacheProcess
+import org.lattejava.dep.workflow.process.Process
+import org.lattejava.dep.workflow.process.PublishReadiness
 import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
@@ -135,6 +137,30 @@ class ReleaseGitPluginTest {
     } catch (e) {
       // Expected
       assertTrue(e.message.contains("Unable to pull from remote Git repository"))
+    }
+
+    assertReleaseDidNotRun()
+  }
+
+  @Test
+  void releaseFailsWhenPublishNotReady() throws Exception {
+    project.dependencies = null
+    setupPublications(project, mainPub, mainPubSource, testPub, testPubSource)
+
+    // Replace the publish workflow with a process that reports it cannot publish.
+    Process notReadyProcess = [
+        verifyPublishReadiness: { Project p -> PublishReadiness.notReady("You are not authorized to publish to the group [${p.group}].".toString()) },
+        fetch                 : { item, workflow -> null },
+        publish               : { fetchResult -> null }
+    ] as Process
+    project.publishWorkflow = new PublishWorkflow(notReadyProcess)
+
+    ReleaseGitPlugin plugin = new ReleaseGitPlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.release()
+      fail("Should have failed")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("not authorized to publish"), e.message)
     }
 
     assertReleaseDidNotRun()

@@ -9,11 +9,13 @@ import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.lattejava.BaseUnitTest;
 import org.lattejava.cli.auth.CredentialStore;
 import org.lattejava.cli.auth.Tokens;
+import org.lattejava.cli.domain.Project;
 import org.lattejava.dep.domain.ResolvableItem;
 import org.lattejava.dep.workflow.PublishWorkflow;
 import org.lattejava.output.SystemOutOutput;
@@ -22,6 +24,7 @@ import org.testng.annotations.Test;
 import com.sun.net.httpserver.HttpServer;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -101,6 +104,82 @@ public class LatteProcessTest extends BaseUnitTest {
       assertNull(result);
       assertEquals(new String(uploaded.get(), StandardCharsets.UTF_8), "artifact-bytes");
       assertTrue(requestedKey.get().replace("\\/", "/").contains("org/example/myproject/1.0.0/myproject-1.0.0.jar"), requestedKey.get());
+
+      Tokens persisted = new CredentialStore(configFile).load();
+      assertEquals(persisted.accessToken(), "new-AT");
+      assertEquals(persisted.refreshToken(), "new-RT");
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  public void verifyPublishReadinessFailsWhenNotLoggedIn() throws Exception {
+    Path configFile = Files.createTempDirectory("latte-process-test").resolve("config.properties");
+    LatteProcess process = new LatteProcess(output, "http://localhost:8940", configFile,
+        new PublishAPIClient("http://localhost:8940", HttpClient.newHttpClient()));
+
+    Project project = new Project(Paths.get(""), output);
+    project.group = "org.example";
+
+    PublishReadiness readiness = process.verifyPublishReadiness(project);
+
+    assertFalse(readiness.ready());
+    assertTrue(readiness.message().contains("latte login"), readiness.message());
+  }
+
+  @Test
+  public void verifyPublishReadinessReadyWhenPermitted() throws Exception {
+    Path configFile = Files.createTempDirectory("latte-process-test").resolve("config.properties");
+    new CredentialStore(configFile).store(new Tokens("AT", "RT"));
+
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8941), 0);
+    server.createContext("/api/v1/publish/org.example", exchange -> {
+      exchange.sendResponseHeaders(200, -1);
+      exchange.getResponseBody().close();
+    });
+    server.start();
+
+    try {
+      LatteProcess process = new LatteProcess(output, "http://localhost:8941", configFile,
+          new PublishAPIClient("http://localhost:8941", HttpClient.newHttpClient()));
+
+      Project project = new Project(Paths.get(""), output);
+      project.group = "org.example";
+
+      PublishReadiness readiness = process.verifyPublishReadiness(project);
+
+      assertTrue(readiness.ready());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  public void verifyPublishReadinessNotReadyWhenForbiddenAndPersistsRefreshedTokens() throws Exception {
+    Path configFile = Files.createTempDirectory("latte-process-test").resolve("config.properties");
+    new CredentialStore(configFile).store(new Tokens("AT", "RT"));
+
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8942), 0);
+    server.createContext("/api/v1/publish/org.example", exchange -> {
+      exchange.getResponseHeaders().add("X-Access-Token", "new-AT");
+      exchange.getResponseHeaders().add("X-Refresh-Token", "new-RT");
+      exchange.sendResponseHeaders(403, -1);
+      exchange.getResponseBody().close();
+    });
+    server.start();
+
+    try {
+      LatteProcess process = new LatteProcess(output, "http://localhost:8942", configFile,
+          new PublishAPIClient("http://localhost:8942", HttpClient.newHttpClient()));
+
+      Project project = new Project(Paths.get(""), output);
+      project.group = "org.example";
+
+      PublishReadiness readiness = process.verifyPublishReadiness(project);
+
+      assertFalse(readiness.ready());
+      assertTrue(readiness.message().contains("org.example"), readiness.message());
 
       Tokens persisted = new CredentialStore(configFile).load();
       assertEquals(persisted.accessToken(), "new-AT");

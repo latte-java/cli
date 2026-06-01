@@ -6,6 +6,7 @@ package org.lattejava.dep.workflow.process;
 
 import java.nio.file.Path;
 
+import org.lattejava.cli.domain.Project;
 import org.lattejava.dep.domain.ResolvableItem;
 import org.lattejava.dep.workflow.PublishWorkflow;
 
@@ -45,4 +46,17 @@ public interface Process {
    * @throws ProcessFailureException If there was any issue publishing.
    */
   Path publish(FetchResult fetchResult) throws ProcessFailureException;
+
+  /**
+   * Verifies that this process is able to publish artifacts for the given project. Processes that publish to a remote
+   * location should confirm the caller's credentials and permissions here, so a release can fail before any
+   * irreversible step (such as creating a Git tag). The default implementation reports ready, which is correct for
+   * processes that have no remote publish step (caches and fetch-only processes).
+   *
+   * @param project The project being released. Implementations typically use {@link Project#group} to scope the check.
+   * @return A {@link PublishReadiness} describing whether this process can publish and, if not, why.
+   */
+  default PublishReadiness verifyPublishReadiness(Project project) {
+    return PublishReadiness.READY;
+  }
 }

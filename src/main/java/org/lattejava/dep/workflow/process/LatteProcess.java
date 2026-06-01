@@ -12,6 +12,7 @@ import java.time.Duration;
 
 import org.lattejava.cli.auth.CredentialStore;
 import org.lattejava.cli.auth.Tokens;
+import org.lattejava.cli.domain.Project;
 import org.lattejava.dep.domain.ResolvableItem;
 import org.lattejava.dep.workflow.PublishWorkflow;
 import org.lattejava.output.Output;
@@ -102,5 +103,21 @@ public class LatteProcess implements Process {
   @Override
   public String toString() {
     return "Latte(" + apiURL + ")";
+  }
+
+  @Override
+  public PublishReadiness verifyPublishReadiness(Project project) {
+    CredentialStore credentialStore = new CredentialStore(configFile);
+    Tokens tokens = credentialStore.load();
+    if (tokens.accessToken() == null) {
+      return PublishReadiness.notReady("You are not logged in to the Latte repository. Run [latte login] before releasing.");
+    }
+
+    PublishAPIClient.PermissionResponse response = client.verifyPublishPermission(project.group, tokens);
+    if (response.refreshedTokens() != null) {
+      credentialStore.store(response.refreshedTokens());
+    }
+
+    return response.readiness();
   }
 }

@@ -16,6 +16,7 @@ import org.testng.annotations.Test;
 import com.sun.net.httpserver.HttpServer;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -176,6 +177,74 @@ public class PublishAPIClientTest extends BaseUnitTest {
       fail("Should have thrown");
     } catch (ProcessFailureException e) {
       assertTrue(e.getMessage().contains("500"), e.getMessage());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  public void verifyPublishPermissionCapturesRefreshedTokens() throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8932), 0);
+    server.createContext("/api/v1/publish/org.example", exchange -> {
+      exchange.getResponseHeaders().add("X-Access-Token", "new-AT");
+      exchange.getResponseHeaders().add("X-Refresh-Token", "new-RT");
+      respond(exchange, 200, "");
+    });
+    server.start();
+
+    try {
+      PublishAPIClient client = new PublishAPIClient("http://localhost:8932", HttpClient.newHttpClient());
+      PublishAPIClient.PermissionResponse response = client.verifyPublishPermission("org.example", new Tokens("AT", "RT"));
+
+      assertTrue(response.readiness().ready());
+      assertEquals(response.refreshedTokens().accessToken(), "new-AT");
+      assertEquals(response.refreshedTokens().refreshToken(), "new-RT");
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  public void verifyPublishPermissionReportsNotReadyOnForbidden() throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8931), 0);
+    server.createContext("/api/v1/publish/org.example", exchange -> respond(exchange, 403, ""));
+    server.start();
+
+    try {
+      PublishAPIClient client = new PublishAPIClient("http://localhost:8931", HttpClient.newHttpClient());
+      PublishAPIClient.PermissionResponse response = client.verifyPublishPermission("org.example", new Tokens("AT", "RT"));
+
+      assertFalse(response.readiness().ready());
+      assertTrue(response.readiness().message().contains("org.example"), response.readiness().message());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  public void verifyPublishPermissionSendsHEADWithAuthorization() throws Exception {
+    AtomicReference<String> method = new AtomicReference<>();
+    AtomicReference<String> authorization = new AtomicReference<>();
+    AtomicReference<String> refreshHeader = new AtomicReference<>();
+
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8930), 0);
+    server.createContext("/api/v1/publish/org.example", exchange -> {
+      method.set(exchange.getRequestMethod());
+      authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
+      refreshHeader.set(exchange.getRequestHeaders().getFirst("X-Refresh-Token"));
+      respond(exchange, 200, "");
+    });
+    server.start();
+
+    try {
+      PublishAPIClient client = new PublishAPIClient("http://localhost:8930", HttpClient.newHttpClient());
+      PublishAPIClient.PermissionResponse response = client.verifyPublishPermission("org.example", new Tokens("AT", "RT"));
+
+      assertEquals(method.get(), "HEAD");
+      assertEquals(authorization.get(), "Bearer AT");
+      assertEquals(refreshHeader.get(), "RT");
+      assertTrue(response.readiness().ready());
+      assertNull(response.readiness().message());
     } finally {
       server.stop(0);
     }

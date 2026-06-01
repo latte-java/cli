@@ -78,7 +78,7 @@ import static org.testng.Assert.assertTrue;
 public class PublishReadinessTest extends BaseUnitTest {
   @Test
   public void factories() {
-    PublishReadiness ready = PublishReadiness.ready();
+    PublishReadiness ready = PublishReadiness.READY;
     assertTrue(ready.ready());
     assertNull(ready.message());
 
@@ -116,12 +116,9 @@ package org.lattejava.dep.workflow.process;
  * @author Brian Pontarelli
  */
 public record PublishReadiness(boolean ready, String message) {
-  /**
-   * @return A ready result with no message.
-   */
-  public static PublishReadiness ready() {
-    return new PublishReadiness(true, null);
-  }
+  /** A ready result with no message. (A constant, not a {@code ready()} factory, since the record already
+      auto-generates a {@code ready()} accessor for the boolean component.) */
+  public static final PublishReadiness READY = new PublishReadiness(true, null);
 
   /**
    * @param message The reason publishing would fail.
@@ -205,7 +202,7 @@ Then add this default method to the `Process` interface (place after the existin
    * @return A {@link PublishReadiness} describing whether this process can publish and, if not, why.
    */
   default PublishReadiness verifyPublishReadiness(Project project) {
-    return PublishReadiness.ready();
+    return PublishReadiness.READY;
   }
 ```
 
@@ -358,7 +355,7 @@ In `src/main/java/org/lattejava/dep/workflow/process/PublishAPIClient.java`:
     }
 
     PublishReadiness readiness = response.statusCode() == 200
-        ? PublishReadiness.ready()
+        ? PublishReadiness.READY
         : PublishReadiness.notReady(describeError(response.statusCode(), group, response.body()));
 
     return new PermissionResponse(readiness, refreshed);
@@ -666,5 +663,5 @@ git status
 ## Self-Review Notes (resolved)
 
 - **Spec coverage:** PublishReadiness (Task 1), Process default (Task 2), HEAD client method + 401 reword (Task 3), LatteProcess override (Task 4), release-git step before tag (Task 5), tests for each + full verification (Task 6). All spec sections mapped.
-- **Type consistency:** `PublishReadiness(ready, message)` / `ready()` / `notReady(msg)`; `PublishAPIClient.verifyPublishPermission(group, tokens) -> PermissionResponse(readiness, refreshedTokens)`; `Process.verifyPublishReadiness(Project) -> PublishReadiness` — names used identically across tasks.
+- **Type consistency:** `PublishReadiness(ready, message)` — ready case is the constant `PublishReadiness.READY` (not a factory method, to avoid colliding with the auto-generated `ready()` accessor), not-ready case is `PublishReadiness.notReady(msg)`; `PublishAPIClient.verifyPublishPermission(group, tokens) -> PermissionResponse(readiness, refreshedTokens)`; `Process.verifyPublishReadiness(Project) -> PublishReadiness` — names used identically across tasks.
 - **No placeholders:** every code and test step shows full code and exact run commands.

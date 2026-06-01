@@ -19,7 +19,8 @@ import org.lattejava.cli.auth.*;
  * and uploads the artifact bytes to that URL. The API authenticates the caller with the access token and, when needed,
  * refreshes it server-side using the refresh token; any rotated tokens come back in the {@code X-Access-Token} and
  * {@code X-Refresh-Token} response headers and are surfaced on the {@link PresignResponse} so the caller can persist
- * them.
+ * them. It also verifies publish permission for a group with an authenticated {@code HEAD} request via
+ * {@link #verifyPublishPermission}, returning the verdict and any rotated tokens on a {@link PermissionResponse}.
  *
  * @author Brian Pontarelli
  */
@@ -128,6 +129,50 @@ public class PublishAPIClient {
     }
   }
 
+  /**
+   * Verifies that the caller is permitted to publish to the given group using an authenticated HEAD request. This does
+   * not request a presigned URL or change anything server-side; it only confirms the access token is valid and the
+   * caller is an authorized publisher for the group.
+   *
+   * @param group  The artifact group to check publish permission for.
+   * @param tokens The caller's current access and refresh tokens.
+   * @return The readiness verdict and any tokens the server rotated during the request.
+   */
+  public PermissionResponse verifyPublishPermission(String group, Tokens tokens) {
+    HttpRequest.Builder builder = HttpRequest.newBuilder()
+                                             .uri(URI.create(apiURL + "/api/v1/publish/" + group))
+                                             .header("Authorization", "Bearer " + tokens.accessToken())
+                                             .header("Accept", "application/json")
+                                             .timeout(Duration.ofSeconds(30))
+                                             .method("HEAD", HttpRequest.BodyPublishers.noBody());
+    if (tokens.refreshToken() != null) {
+      builder.header("X-Refresh-Token", tokens.refreshToken());
+    }
+
+    HttpResponse<String> response;
+    try {
+      response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    } catch (IOException e) {
+      throw new ProcessFailureException("The publish permission check to the Latte repository failed. Message was [" + e.getMessage() + "]", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ProcessFailureException("The publish permission check to the Latte repository was interrupted.");
+    }
+
+    Tokens refreshed = null;
+    String newAccessToken = response.headers().firstValue("X-Access-Token").orElse(null);
+    if (newAccessToken != null) {
+      String newRefreshToken = response.headers().firstValue("X-Refresh-Token").orElse(tokens.refreshToken());
+      refreshed = new Tokens(newAccessToken, newRefreshToken);
+    }
+
+    PublishReadiness readiness = response.statusCode() == 200
+        ? PublishReadiness.READY
+        : PublishReadiness.notReady(describeError(response.statusCode(), group, response.body()));
+
+    return new PermissionResponse(readiness, refreshed);
+  }
+
   private void collectMessages(JSONArray errors, List<String> collected) {
     for (Object error : errors) {
       if (error instanceof JSONObject e && e.get("message") != null) {
@@ -142,11 +187,11 @@ public class PublishAPIClient {
    */
   private String describeError(int status, String group, String body) {
     return switch (status) {
-      case 400 -> "The Latte repository rejected the publish request: " + messages(body);
-      case 401 -> "Your Latte login has expired or is invalid. Run [latte login] and try publishing again.";
+      case 400 -> "The Latte repository rejected the request: " + messages(body);
+      case 401 -> "Your Latte login has expired or is invalid. Run [latte login] and try again.";
       case 403 -> "You are not authorized to publish to the group [" + group + "]. The group must be verified and you must be an active owner or contributor." + serverDetail(body);
       case 404 -> "The Latte publish API was not found at [" + apiURL + "]. Check the configured [apiURL].";
-      case 500 -> "The Latte repository could not generate an upload URL (server error). Please try again later.";
+      case 500 -> "The Latte repository encountered a server error. Please try again later.";
       case 503 -> "The Latte identity provider is temporarily unavailable. Please try again shortly.";
       default -> "Publishing to the Latte repository failed with HTTP [" + status + "]: " + body;
     };
@@ -198,6 +243,16 @@ public class PublishAPIClient {
       // No usable detail.
     }
     return "";
+  }
+
+  /**
+   * The result of a publish-permission check: the readiness verdict, and any tokens the server rotated during the
+   * request.
+   *
+   * @param readiness       Whether the caller can publish to the group.
+   * @param refreshedTokens The refreshed tokens, or {@code null} if the server did not refresh.
+   */
+  public record PermissionResponse(PublishReadiness readiness, Tokens refreshedTokens) {
   }
 
   /**

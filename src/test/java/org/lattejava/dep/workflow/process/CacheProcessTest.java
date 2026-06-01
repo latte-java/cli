@@ -6,9 +6,11 @@ package org.lattejava.dep.workflow.process;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.lattejava.BaseUnitTest;
+import org.lattejava.cli.domain.Project;
 import org.lattejava.dep.PathTools;
 import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.License;
@@ -265,5 +267,17 @@ public class CacheProcessTest extends BaseUnitTest {
         List.of("nonexistent-1.0.0-sources.jar"));
     FetchResult result = process.fetch(item, null);
     assertNull(result);
+  }
+
+  @Test
+  public void verifyPublishReadinessDefaultsToReady() {
+    CacheProcess process = new CacheProcess(output, null, null, null);
+    Project project = new Project(Paths.get(""), output);
+    project.group = "org.example";
+
+    PublishReadiness readiness = process.verifyPublishReadiness(project);
+
+    assertTrue(readiness.ready());
+    assertNull(readiness.message());
   }
 }

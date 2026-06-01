@@ -7,6 +7,7 @@ package org.lattejava.plugin.release
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.dep.workflow.process.PublishReadiness
 import org.lattejava.output.Output
 import org.lattejava.plugin.dep.DependencyPlugin
 
@@ -39,6 +40,7 @@ class ReleaseGitPlugin extends BaseGroovyPlugin {
     checkIfTagIsAvailable(git)
     checkDependenciesForIntegrationVersions()
     checkPluginsForIntegrationVersions()
+    verifyPublishReadiness()
     tag(git)
     publish()
   }
@@ -59,6 +61,17 @@ class ReleaseGitPlugin extends BaseGroovyPlugin {
     } catch (RuntimeException e) {
       fail("Unable to create Git tag for the release. Error is [%s]", e.getMessage())
     }
+  }
+
+  private void verifyPublishReadiness() {
+    output.infoln("Verifying publish readiness")
+
+    project.publishWorkflow.getProcesses().each({ process ->
+      PublishReadiness readiness = process.verifyPublishReadiness(project)
+      if (!readiness.ready()) {
+        fail("Unable to release. [${readiness.message()}]")
+      }
+    })
   }
 
   private void checkPluginsForIntegrationVersions() {
