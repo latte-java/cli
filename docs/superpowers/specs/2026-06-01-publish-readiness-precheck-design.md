@@ -105,9 +105,11 @@ Mirrors the token-load / refresh-persist pattern already used in `publish()`.
 - Network/interruption failures throw `ProcessFailureException`, consistent with the
   other client methods.
 
-The 401 message in `describeError` is reworded to read naturally in both publish and
-release contexts (e.g. "Your Latte login has expired or is invalid. Run [latte login]
-and try again."). The existing `requestPresignedURL` path keeps the same wording.
+`describeError` is shared by both `requestPresignedURL` and `verifyPublishPermission`.
+Its 401 message is reworded once to read naturally in both publish and release
+contexts (e.g. "Your Latte login has expired or is invalid. Run [latte login] and try
+again." — dropping the publish-specific "and try publishing again"). Because the
+mapping is shared, this single wording applies to both paths; no per-path branching.
 
 Returns a new record mirroring `PresignResponse`:
 
