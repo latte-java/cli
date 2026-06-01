@@ -87,6 +87,13 @@ public class InitCommand implements Command {
     return result;
   }
 
+  private static RuntimeConfiguration upgradeConfiguration(String subcommand) {
+    RuntimeConfiguration configuration = new RuntimeConfiguration();
+    configuration.args.add(subcommand);
+    configuration.switches.add("no-warnings");
+    return configuration;
+  }
+
   @Override
   public void run(RuntimeConfiguration configuration, Output output, Project project) {
     Path projectDir = project != null ? project.directory : Path.of("");
@@ -100,6 +107,10 @@ public class InitCommand implements Command {
     Map<String, String> vars = deriveVariables(group, name, license);
 
     copyTemplate(templateDir, projectDir, vars);
+
+    if (!configuration.switches.has("no-upgrade")) {
+      upgradeVersions(output, projectDir);
+    }
 
     output.infoln("Created project [%s:%s] from template [%s]", group, name, templateDir.getFileName());
   }
@@ -221,6 +232,18 @@ public class InitCommand implements Command {
       throw new RuntimeFailureException("Template [" + templateName + "] not found at [" + namedDir + "]. Is Latte installed correctly?");
     }
     return namedDir;
+  }
+
+  private void upgradeVersions(Output output, Path projectDir) {
+    Path projectFile = projectDir.resolve("project.latte");
+    if (!Files.isRegularFile(projectFile)) {
+      return;
+    }
+
+    Project project = new Project(projectDir, output);
+    Command upgrade = DefaultRunner.COMMANDS.get("upgrade");
+    upgrade.run(upgradeConfiguration("plugins"), output, project);
+    upgrade.run(upgradeConfiguration("dependencies"), output, project);
   }
 
   private record PendingFile(Path source, Path target, String relativeResolved) {

@@ -25,9 +25,7 @@ import org.lattejava.cli.parser.groovy.ProjectFileTools;
 import org.lattejava.cli.runtime.Main;
 import org.lattejava.cli.runtime.RuntimeConfiguration;
 import org.lattejava.cli.runtime.RuntimeFailureException;
-import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.ArtifactID;
-import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.io.FileTools;
 import org.lattejava.io.tar.TarTools;
 import org.lattejava.net.RepositoryTools;
@@ -44,6 +42,50 @@ public class UpgradeCommand implements Command {
                                                          .followRedirects(HttpClient.Redirect.NORMAL)
                                                          .build();
 
+  /**
+   * Upgrades the version segment of every {@code <methodName>(id: "group:project:version")} call in the source to the
+   * latest version reported by the repository, editing only the version substring so surrounding text, comments, and
+   * trailing closures are preserved.
+   *
+   * @param content    The project.latte source.
+   * @param methodName The call to upgrade (e.g. "loadPlugin" or "dependency").
+   * @param label      A human-readable noun for log messages (e.g. "Plugin" or "Dependency").
+   * @param noWarnings When true, suppresses the "not found, skipping" lines.
+   * @param output     The output for progress messages.
+   * @return The (possibly) modified source.
+   */
+  private static String upgradeArtifactCalls(String content, String methodName, String label, boolean noWarnings, Output output) {
+    List<GroovySourceTools.StringLiteral> literals = GroovySourceTools.findMethodCallStringArguments(content, methodName);
+
+    // Process in reverse order so character offsets remain valid after each replacement.
+    for (int i = literals.size() - 1; i >= 0; i--) {
+      GroovySourceTools.StringLiteral literal = literals.get(i);
+      String value = literal.value();
+      int lastColon = value.lastIndexOf(':');
+      if (lastColon == -1) {
+        continue;
+      }
+
+      String artifactId = value.substring(0, lastColon);
+      String currentVersion = value.substring(lastColon + 1);
+      String latestVersion = RepositoryTools.queryLatestVersion(artifactId);
+
+      if (latestVersion != null && !latestVersion.equals(currentVersion)) {
+        output.infoln("Upgrading %s [%s] from %s to %s", label, artifactId, currentVersion, latestVersion);
+        String newValue = "\"" + artifactId + ":" + latestVersion + "\"";
+        content = content.substring(0, literal.start()) + newValue + content.substring(literal.end());
+      } else if (latestVersion == null) {
+        if (!noWarnings) {
+          output.infoln("%s [%s:%s] not found in repository, skipping", label, artifactId, currentVersion);
+        }
+      } else {
+        output.infoln("%s [%s] already at latest version %s", label, artifactId, currentVersion);
+      }
+    }
+
+    return content;
+  }
+
   @Override
   public void run(RuntimeConfiguration configuration, Output output, Project project) {
     if (configuration.args.isEmpty()) {
@@ -51,18 +93,19 @@ public class UpgradeCommand implements Command {
       return;
     }
 
+    boolean noWarnings = configuration.switches.has("no-warnings");
     String subcommand = configuration.args.getFirst();
     switch (subcommand) {
       case "help" -> printHelp(output);
       case "runtime" -> upgradeRuntime(output);
-      case "plugins" -> upgradePlugins(output, project);
+      case "plugins" -> upgradePlugins(output, project, noWarnings);
       case "dependency" -> upgradeDependency(configuration, output, project);
-      case "dependencies" -> upgradeDependencies(output, project);
+      case "dependencies" -> upgradeDependencies(output, project, noWarnings);
       case "all" -> {
         upgradeRuntime(output);
         if (project != null) {
-          upgradePlugins(output, project);
-          upgradeDependencies(output, project);
+          upgradePlugins(output, project, noWarnings);
+          upgradeDependencies(output, project, noWarnings);
         }
       }
       default ->
@@ -83,39 +126,22 @@ public class UpgradeCommand implements Command {
     output.infoln("   dependencies     Upgrades all project dependencies");
     output.infoln("   help             Displays this help message");
     output.infoln("");
+    output.infoln("Switches:");
+    output.infoln("");
+    output.infoln("   --no-warnings    Suppresses 'not found, skipping' messages for artifacts not in the Latte repository");
+    output.infoln("");
   }
 
-  private void upgradeDependencies(Output output, Project project) {
+  private void upgradeDependencies(Output output, Project project, boolean noWarnings) {
     if (project == null) {
       throw new RuntimeFailureException("The 'dependencies' upgrade requires a project.latte file.");
     }
-    if (project.dependencies == null) {
-      output.infoln("No dependencies found in project.latte.");
-      return;
-    }
 
-    boolean updated = false;
-    for (DependencyGroup group : project.dependencies.groups.values()) {
-      for (int i = 0; i < group.dependencies.size(); i++) {
-        Artifact existing = group.dependencies.get(i);
-        String artifactId = existing.id.group + ":" + existing.id.project;
-        String latestVersion = RepositoryTools.queryLatestVersion(artifactId);
-
-        if (latestVersion != null && !latestVersion.equals(existing.version.toString())) {
-          output.infoln("Upgrading [%s] from %s to %s in [%s] group", artifactId, existing.version, latestVersion, group.name);
-          group.dependencies.set(i, new Artifact(artifactId + ":" + latestVersion));
-          updated = true;
-        } else if (latestVersion == null) {
-          output.infoln("Dependency [%s:%s] not found in Latte repository, skipping. (Maven artifacts currently need to be manually upgraded)", artifactId, existing.version);
-        } else {
-          output.infoln("Dependency [%s] already at latest version %s", artifactId, existing.version);
-        }
-      }
-    }
-
-    if (updated) {
-      Path projectFile = project.directory.resolve("project.latte");
-      ProjectFileTools.writeDependencies(projectFile, project.dependencies);
+    Path projectFile = project.directory.resolve("project.latte");
+    String content = ProjectFileTools.readProjectFile(projectFile);
+    String updated = upgradeArtifactCalls(content, "dependency", "Dependency", noWarnings, output);
+    if (!updated.equals(content)) {
+      ProjectFileTools.writeProjectFile(projectFile, updated);
     }
   }
 
@@ -127,98 +153,69 @@ public class UpgradeCommand implements Command {
       throw new RuntimeFailureException("Usage: latte upgrade dependency <artifact-id> [version]");
     }
 
-    // Parse the artifact ID
     ArtifactID id;
     try {
       id = new ArtifactID(configuration.args.get(1));
     } catch (Exception e) {
       throw new RuntimeFailureException("Invalid dependency [" + configuration.args.get(1) + "]. Expected format: group:name");
     }
+    String artifactId = id.group + ":" + id.project;
 
-    // Version is the third arg (after "dependency"), or resolve from the repository
+    Path projectFile = project.directory.resolve("project.latte");
+    String content = ProjectFileTools.readProjectFile(projectFile);
+
+    List<GroovySourceTools.StringLiteral> literals = GroovySourceTools.findMethodCallStringArguments(content, "dependency");
+    if (literals.isEmpty()) {
+      throw new RuntimeFailureException("No dependencies found in project.latte.");
+    }
+
+    GroovySourceTools.StringLiteral match = null;
+    String currentVersion = null;
+    for (GroovySourceTools.StringLiteral literal : literals) {
+      String value = literal.value();
+      int lastColon = value.lastIndexOf(':');
+      if (lastColon == -1) {
+        continue;
+      }
+      if (value.substring(0, lastColon).equals(artifactId)) {
+        match = literal;
+        currentVersion = value.substring(lastColon + 1);
+        break;
+      }
+    }
+
+    if (match == null) {
+      throw new RuntimeFailureException("Dependency [" + artifactId + "] not found in any dependency group.");
+    }
+
     String version;
     if (configuration.args.size() > 2) {
       version = configuration.args.get(2);
     } else {
-      output.infoln("Resolving latest version for [%s:%s]...", id.group, id.project);
-      version = RepositoryTools.queryLatestVersion(id.group + ":" + id.project);
+      output.infoln("Resolving latest version for [%s]...", artifactId);
+      version = RepositoryTools.queryLatestVersion(artifactId);
       if (version == null) {
-        throw new RuntimeFailureException("Could not find artifact [" + id.group + ":" + id.project + "] in the repository.");
+        throw new RuntimeFailureException("Could not find artifact [" + artifactId + "] in the repository.");
       }
       output.infoln("Resolved to version [%s]", version);
     }
 
-    String dependencySpec = id.group + ":" + id.project + ":" + version;
-    Artifact artifact;
-    try {
-      artifact = new Artifact(dependencySpec);
-    } catch (Exception e) {
-      throw new RuntimeFailureException("Invalid dependency [" + dependencySpec + "]. " + e.getMessage());
-    }
-
-    if (project.dependencies == null) {
-      throw new RuntimeFailureException("No dependencies found in project.latte.");
-    }
-
-    boolean found = false;
-    for (DependencyGroup group : project.dependencies.groups.values()) {
-      for (int i = 0; i < group.dependencies.size(); i++) {
-        Artifact existing = group.dependencies.get(i);
-        if (existing.id.equals(artifact.id)) {
-          group.dependencies.set(i, artifact);
-          found = true;
-          output.infoln("Upgrading [%s] from %s to %s in [%s] group", artifact.id, existing.version, artifact.version, group.name);
-          break;
-        }
-      }
-    }
-
-    if (!found) {
-      throw new RuntimeFailureException("Dependency [" + artifact.id + "] not found in any dependency group.");
-    }
-
-    Path projectFile = project.directory.resolve("project.latte");
-    ProjectFileTools.writeDependencies(projectFile, project.dependencies);
+    String newValue = "\"" + artifactId + ":" + version + "\"";
+    String updated = content.substring(0, match.start()) + newValue + content.substring(match.end());
+    output.infoln("Upgrading [%s] from %s to %s", artifactId, currentVersion, version);
+    ProjectFileTools.writeProjectFile(projectFile, updated);
   }
 
-  private void upgradePlugins(Output output, Project project) {
+  private void upgradePlugins(Output output, Project project, boolean noWarnings) {
     if (project == null) {
       throw new RuntimeFailureException("The 'plugins' upgrade requires a project.latte file.");
     }
 
     Path projectFile = project.directory.resolve("project.latte");
     String content = ProjectFileTools.readProjectFile(projectFile);
-
-    List<GroovySourceTools.StringLiteral> literals = GroovySourceTools.findMethodCallStringArguments(content, "loadPlugin");
-    boolean updated = false;
-
-    // Process in reverse order so character offsets remain valid after each replacement
-    for (int i = literals.size() - 1; i >= 0; i--) {
-      GroovySourceTools.StringLiteral literal = literals.get(i);
-      String value = literal.value(); // e.g. "org.lattejava.plugin:dependency:0.1.0"
-      int lastColon = value.lastIndexOf(':');
-      if (lastColon == -1) {
-        continue;
-      }
-
-      String artifactId = value.substring(0, lastColon);
-      String currentVersion = value.substring(lastColon + 1);
-      String latestVersion = RepositoryTools.queryLatestVersion(artifactId);
-
-      if (latestVersion != null && !latestVersion.equals(currentVersion)) {
-        output.infoln("Upgrading plugin [%s] from %s to %s", artifactId, currentVersion, latestVersion);
-        String newValue = "\"" + artifactId + ":" + latestVersion + "\"";
-        content = content.substring(0, literal.start()) + newValue + content.substring(literal.end());
-        updated = true;
-      } else if (latestVersion == null) {
-        output.infoln("Plugin [%s:%s] not found in repository, skipping", artifactId, currentVersion);
-      } else {
-        output.infoln("Plugin [%s] already at latest version %s", artifactId, currentVersion);
-      }
-    }
-
-    if (updated) {
-      ProjectFileTools.writeProjectFile(projectFile, content);
+    String updated = upgradeArtifactCalls(content, "loadPlugin", "Plugin", noWarnings, output);
+    if (!updated.equals(content)) {
+      ProjectFileTools.writeProjectFile(projectFile, updated);
     }
   }
 

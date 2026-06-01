@@ -7,6 +7,7 @@ package org.lattejava.cli.command;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.lattejava.BaseUnitTest;
@@ -23,6 +24,7 @@ import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.domain.Version;
 import org.lattejava.io.FileTools;
+import org.lattejava.output.Output;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -59,6 +61,16 @@ public class UpgradeCommandTest extends BaseUnitTest {
       dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.1.0")
       java = loadPlugin(id: "org.lattejava.plugin:java:0.1.0")
       release = loadPlugin(id: "org.lattejava.plugin:release-git:0.1.0")
+      """;
+
+  private static final String NOT_FOUND_PROJECT = """
+      project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+        dependencies {
+          group(name: "compile") {
+            dependency(id: "org.nonexistent:fake-lib:1.0.0")
+          }
+        }
+      }
       """;
 
   private Path testDir;
@@ -420,6 +432,43 @@ public class UpgradeCommandTest extends BaseUnitTest {
     assertEquals(fakeDep.version, new Version("1.0.0"));
   }
 
+  @Test
+  public void upgradeDependenciesNoWarningsSuppressesNotFound() throws IOException {
+    // A nonexistent artifact yields null from queryLatestVersion in every case: online the API
+    // reports it missing, offline the call fails — both return null — so this test is deterministic.
+    // (Like the existing upgradePluginsSkipsUnknown test, it does make a live API call.)
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, NOT_FOUND_PROJECT);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependencies");
+    config.switches.add("no-warnings");
+
+    CapturingOutput captured = new CapturingOutput();
+    new UpgradeCommand().run(config, captured, project);
+
+    assertTrue(captured.infos.stream().noneMatch(m -> m.contains("not found")),
+        "Expected no 'not found' line with --no-warnings, got: " + captured.infos);
+    assertEquals(Files.readString(projectFile), NOT_FOUND_PROJECT);
+  }
+
+  @Test
+  public void upgradeDependenciesWarnsForNotFoundByDefault() throws IOException {
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, NOT_FOUND_PROJECT);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependencies");
+
+    CapturingOutput captured = new CapturingOutput();
+    new UpgradeCommand().run(config, captured, project);
+
+    assertTrue(captured.infos.stream().anyMatch(m -> m.contains("not found")),
+        "Expected a 'not found' line without --no-warnings, got: " + captured.infos);
+  }
+
   // ---- upgradePlugins tests ----
 
   @Test
@@ -760,5 +809,27 @@ public class UpgradeCommandTest extends BaseUnitTest {
             new Artifact("org.testng:testng:6.8.7"))
     );
     return project;
+  }
+
+  /** Captures info-level messages so tests can assert on (or on the absence of) log lines. */
+  private static class CapturingOutput implements Output {
+    final List<String> infos = new ArrayList<>();
+
+    public Output debug(String message, Object... values) { return this; }
+    public Output debug(Throwable t) { return this; }
+    public Output debugln(String message, Object... values) { return this; }
+    public Output disableDebug() { return this; }
+    public Output enableDebug() { return this; }
+    public Output error(String message, Object... values) { return this; }
+    public Output errorln(String message, Object... values) { return this; }
+    public Output info(String message, Object... values) { infos.add(fmt(message, values)); return this; }
+    public Output infoln(String message, Object... values) { infos.add(fmt(message, values)); return this; }
+    public Output infoln(int color, String message, Object... values) { infos.add(fmt(message, values)); return this; }
+    public Output warning(String message, Object... values) { return this; }
+    public Output warningln(String message, Object... values) { return this; }
+
+    private String fmt(String message, Object... values) {
+      return values.length == 0 ? message : String.format(message, values);
+    }
   }
 }

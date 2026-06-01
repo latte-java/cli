@@ -207,9 +207,11 @@ public class InitCommandTest extends BaseUnitTest {
     String originalHome = System.getProperty("latte.home");
     System.setProperty("latte.home", "src/main");
     try {
+      RuntimeConfiguration config = new RuntimeConfiguration();
+      config.switches.add("no-upgrade");
       Scanner scanner = new Scanner("org.example\nmy-lib\nMIT\n");
       InitCommand command = new InitCommand(scanner);
-      command.run(new RuntimeConfiguration(), output, new Project(testDir, output));
+      command.run(config, output, new Project(testDir, output));
 
       // project.latte
       assertTrue(Files.isRegularFile(testDir.resolve("project.latte")));
@@ -250,6 +252,43 @@ public class InitCommandTest extends BaseUnitTest {
   }
 
   @Test
+  public void initNoUpgradeLeavesTemplateVersions() throws IOException {
+    // Template with a deliberately old plugin version; --no-upgrade must leave it untouched.
+    Files.writeString(templateDir.resolve("project.latte"), """
+        project(group: "${group}", name: "${name}", version: "0.1.0", licenses: ["${license}"]) {
+        }
+        java = loadPlugin(id: "org.lattejava.plugin:java:0.0.1")
+        """);
+
+    RuntimeConfiguration config = configWithTemplate();
+    config.switches.add("no-upgrade");
+    Scanner scanner = new Scanner("org.example\nmy-lib\nMIT\n");
+    new InitCommand(scanner).run(config, output, new Project(testDir, output));
+
+    String content = Files.readString(testDir.resolve("project.latte"));
+    assertTrue(content.contains("org.lattejava.plugin:java:0.0.1"),
+        "--no-upgrade must leave the template plugin version untouched, got: " + content);
+  }
+
+  @Test
+  public void initUpgradesPluginsByDefault() throws IOException {
+    // Live-network integration test (consistent with UpgradeCommandTest.upgradePluginsUpgradesAll):
+    // a real plugin pinned to an old version should be bumped past it after init.
+    Files.writeString(templateDir.resolve("project.latte"), """
+        project(group: "${group}", name: "${name}", version: "0.1.0", licenses: ["${license}"]) {
+        }
+        java = loadPlugin(id: "org.lattejava.plugin:java:0.1.0")
+        """);
+
+    Scanner scanner = new Scanner("org.example\nmy-lib\nMIT\n");
+    new InitCommand(scanner).run(configWithTemplate(), output, new Project(testDir, output));
+
+    String content = Files.readString(testDir.resolve("project.latte"));
+    assertFalse(content.contains("org.lattejava.plugin:java:0.1.0"),
+        "init should have upgraded the java plugin past 0.1.0, got: " + content);
+  }
+
+  @Test
   public void initOverrideDefaults() throws IOException {
     Path namedDir = testDir.resolve("my-cool-project");
     Files.createDirectories(namedDir);
@@ -270,6 +309,7 @@ public class InitCommandTest extends BaseUnitTest {
     try {
       RuntimeConfiguration config = new RuntimeConfiguration();
       config.args.add("web");
+      config.switches.add("no-upgrade");
 
       Scanner scanner = new Scanner("org.example\nmy-web\nMIT\n");
       InitCommand command = new InitCommand(scanner);

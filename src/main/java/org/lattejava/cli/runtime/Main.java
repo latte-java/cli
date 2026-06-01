@@ -97,6 +97,7 @@ public class Main {
     output.infoln("");
     output.infoln("   init            Initializes a new Latte project in the current directory");
     output.infoln("                   Options: --template=<path>  Use a custom project template");
+    output.infoln("                            --no-upgrade       Keep the template's plugin and dependency versions");
     output.infoln("   install         Adds a dependency and downloads it");
     output.infoln("                   Usage: latte install <artifact-id> [version] [group]");
     output.infoln("                   Resolves latest version if omitted. Group defaults to compile");
@@ -108,6 +109,7 @@ public class Main {
     output.infoln("   upgrade         Upgrades runtime, plugins, or dependencies");
     output.infoln("                   Usage: latte upgrade <parameter>");
     output.infoln("                   Run 'latte upgrade help' for details");
+    output.infoln("                   Options: --no-warnings  Don't output warnings for missing artifacts");
     output.infoln("");
     output.infoln("Switches:");
     output.infoln("");
