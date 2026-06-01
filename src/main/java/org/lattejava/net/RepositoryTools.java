@@ -4,17 +4,13 @@
  */
 package org.lattejava.net;
 
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
+import java.net.*;
+import java.net.http.*;
+import java.nio.charset.*;
+import java.time.*;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.json.simple.*;
+import org.json.simple.parser.*;
 
 /**
  * Utilities for querying the Latte repository search API.
@@ -37,7 +33,7 @@ public class RepositoryTools {
     try {
       String encodedId = URLEncoder.encode(artifactId, StandardCharsets.UTF_8);
       HttpRequest request = HttpRequest.newBuilder()
-                                       .uri(URI.create("https://api.lattejava.org/repository/search?id=" + encodedId + "&latest=true"))
+                                       .uri(URI.create("https://api.lattejava.org/api/v1/repository/search?id=" + encodedId + "&latest=true"))
                                        .GET()
                                        .timeout(Duration.ofMillis(10_000))
                                        .build();
