@@ -26,17 +26,17 @@ Release all Latte plugins in dependency order. Each plugin is updated, committed
 
    **b. Check if the plugin was already released** by checking for a git tag in the format `<plugin-name>-<version>` and checking the Latte repository search API at `https://api.lattejava.org/api/v1/repository/search?id=org.lattejava.plugin:<plugin-name>&latest=true`. The API response returns JSON that contains the latest version of the artifact in the repository in the "versions" property. The Git tag and the artifact must both exist for the plugin to be considered released. If the plugin was already released, skip to the next plugin.
 
-   **b. Run `latte upgrade dependencies`** to upgrade all dependencies to their latest versions.
+   **c. Run `latte upgrade dependencies`** to upgrade all dependencies to their latest versions.
 
-   **c. Run `latte upgrade plugins`** to upgrade all loadPlugin references to their latest versions.
+   **d. Run `latte upgrade plugins`** to upgrade all loadPlugin references to their latest versions.
 
-   **d. Commit and push** the changes to `project.latte`:
+   **e. Commit and push** the changes to `project.latte`:
    ```
    git add project.latte
    git commit -m "chore: <name> plugin version updated to <version>"
    git push
    ```
-   **e. Run `latte release`** from the plugin directory to publish the release.
+   **f. Run `latte release`** from the plugin directory to publish the release.
 
 4. If any step fails for any plugin, **stop immediately** and report which plugin and step failed. Do not continue to the next plugin.
 
