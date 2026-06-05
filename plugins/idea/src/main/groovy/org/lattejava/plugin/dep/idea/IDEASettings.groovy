@@ -4,9 +4,9 @@
  */
 package org.lattejava.plugin.dep.idea
 
-import java.nio.file.Paths
-
 import org.lattejava.cli.domain.Project
+
+import java.nio.file.Paths
 
 /**
  * Settings for the IDEA plugin.
@@ -52,6 +52,7 @@ class IDEASettings {
    */
   Map<String, List<Map<String, Object>>> dependenciesMap = [
       "PROVIDED": [
+          [group: "compile-processors", transitive: false, fetchSource: true],
           [group: "provided", transitive: true, fetchSource: true, transitiveGroups: ["provided", "compile", "runtime"]]
       ],
       "COMPILE": [

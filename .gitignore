@@ -10,3 +10,5 @@ replay_pid*
 
 # Worktrees
 .claude/worktrees
+
+.fish

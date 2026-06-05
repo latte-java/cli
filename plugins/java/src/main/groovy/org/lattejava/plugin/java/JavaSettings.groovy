@@ -44,6 +44,7 @@ class JavaSettings {
    */
   List<Map<String, Object>> mainDependencies = [
       [group: "compile", transitive: false, fetchSource: false],
+      [group: "compile-processors", transitive: false, fetchSource: false],
       [group: "provided", transitive: false, fetchSource: false]
   ]
 
