@@ -482,6 +482,9 @@ class JavaPlugin extends BaseGroovyPlugin {
     // moduleBuild: this never affects the -classpath/--module-path selection above.
     Classpath processorClasspath = resolveRunClasspath(settings.processorDependencies, [], [])
     String processorArgs = processorClasspath.toString("--processor-module-path ")
+    if (!processorArgs.isEmpty()) {
+      processorArgs += " -s ${layout.generatedOutputDirectory}"
+    }
 
     String command = "${javacPath} ${settings.compilerArguments} ${pathArgs} ${processorArgs} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"
     output.debugln("Executing compiler command [%s]", command)

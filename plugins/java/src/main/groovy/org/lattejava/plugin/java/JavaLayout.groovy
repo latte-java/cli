@@ -22,6 +22,12 @@ class JavaLayout {
   Path docDirectory = buildDirectory.resolve("doc")
 
   /**
+   * The output directory for generated classes. This is used by annotation processors, but can also be used by other
+   * plugins or generation tools (i.e. jOOQ).
+   */
+  Path generatedOutputDirectory = Paths.get("src/generated/java")
+
+  /**
    * The jar build directory. Defaults to {@code build/jars}.
    */
   Path jarOutputDirectory = buildDirectory.resolve("jars")

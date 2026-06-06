@@ -508,6 +508,10 @@ class JavaPluginTest {
     output.enableDebug()
     JavaPlugin plugin = setupPluginForTestProject("test-processor", output)
 
+    // Keep processor-generated sources under build/ (cleaned by clean(), gitignored) instead of the
+    // default src/generated/java, so running this test never pollutes the source tree.
+    plugin.layout.generatedOutputDirectory = Paths.get("build/generated-sources")
+
     plugin.clean()
     plugin.compileMain()
 
@@ -529,6 +533,47 @@ class JavaPluginTest {
     plainPlugin.compileMain()
     assertFalse(plainOutput.commands.any { it.contains("--processor-module-path") },
         "Expected no --processor-module-path for a project without a compile-processors group; commands:\n" + plainOutput.commands.join("\n"))
+  }
+
+  @Test
+  void processorGeneratedOutputDirectory() throws Exception {
+    FileTools.prune(projectDir.resolve("build/cache"))
+
+    RecordingOutput output = new RecordingOutput(true)
+    output.enableDebug()
+    JavaPlugin plugin = setupPluginForTestProject("test-processor", output)
+
+    // The default generatedOutputDirectory points at src/generated/java.
+    assertEquals(plugin.layout.generatedOutputDirectory, Paths.get("src/generated/java"))
+
+    // Route annotation-processor generated sources under build/ so clean() handles cleanup and the
+    // source tree stays pristine. This also proves the -s path is driven by the layout field.
+    plugin.layout.generatedOutputDirectory = Paths.get("build/generated-sources")
+
+    plugin.clean()
+    plugin.compileMain()
+
+    // The javac command directed annotation-processor output at the configured generated directory.
+    assertTrue(output.commands.any { it.contains("-s build/generated-sources") },
+        "Expected the javac command to contain [-s build/generated-sources]; commands:\n" + output.commands.join("\n"))
+
+    // The record-builder processor actually wrote the generated source into that directory.
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/generated-sources/org/lattejava/test/PointBuilder.java")),
+        "Expected the processor-generated PointBuilder.java in the generated output directory")
+
+    // And the generated source still compiled into the normal main build directory.
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/main/org/lattejava/test/PointBuilder.class")),
+        "Expected PointBuilder.class to be compiled into the main build dir")
+
+    // Regression guard: a project that declares no compile-processors group runs no processors, so
+    // no -s flag is emitted and the javac command is unchanged from prior behavior.
+    RecordingOutput plainOutput = new RecordingOutput(true)
+    plainOutput.enableDebug()
+    JavaPlugin plainPlugin = setupPluginForTestProject("test-project", plainOutput)
+    plainPlugin.clean()
+    plainPlugin.compileMain()
+    assertFalse(plainOutput.commands.any { it.contains(" -s ") },
+        "Expected no -s flag for a project without a compile-processors group; commands:\n" + plainOutput.commands.join("\n"))
   }
 
   private static JavaPlugin compileAndJarTestProject(String projectName) {
