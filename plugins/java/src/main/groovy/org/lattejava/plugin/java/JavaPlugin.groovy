@@ -119,7 +119,8 @@ class JavaPlugin extends BaseGroovyPlugin {
    */
   void compileMain() {
     init()
-    compileInternal(layout.mainSourceDirectory, layout.mainBuildDirectory, settings.mainDependencies, "", layout.mainBuildDirectory)
+    compileInternal(layout.mainSourceDirectory, layout.mainBuildDirectory, layout.mainGeneratedOutputDirectory,
+        settings.mainDependencies, "", layout.mainBuildDirectory)
     copyResources(layout.mainResourceDirectory, layout.mainBuildDirectory)
   }
 
@@ -149,7 +150,8 @@ class JavaPlugin extends BaseGroovyPlugin {
       // in-progress test module on the path at the same location being compiled, which would
       // conflict with the source being compiled. Incremental recompiles resolve sibling test
       // classes via -sourcepath (set inside compileInternal) rather than precompiled classes.
-      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.testDependencies, "", layout.mainBuildDirectory)
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, layout.testGeneratedOutputDirectory,
+          settings.testDependencies, "", layout.mainBuildDirectory)
     } else if (settings.moduleBuild) {
       String moduleName = resolveModuleName()
       // Test-only deps (e.g. TestNG) go on -classpath so they land in the unnamed module,
@@ -159,9 +161,11 @@ class JavaPlugin extends BaseGroovyPlugin {
             .each { deps -> dependencies(deps) }
       }.toString("-classpath ")
       String moduleArgs = "${testClasspath} --patch-module ${moduleName}=${layout.testSourceDirectory} --add-reads ${moduleName}=ALL-UNNAMED"
-      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.mainDependencies, moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, layout.testGeneratedOutputDirectory,
+          settings.mainDependencies, moduleArgs, layout.mainBuildDirectory, layout.testBuildDirectory)
     } else {
-      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, settings.testDependencies, "", layout.mainBuildDirectory, layout.testBuildDirectory)
+      compileInternal(layout.testSourceDirectory, layout.testBuildDirectory, layout.testGeneratedOutputDirectory,
+          settings.testDependencies, "", layout.mainBuildDirectory, layout.testBuildDirectory)
     }
     copyResources(layout.testResourceDirectory, layout.testBuildDirectory)
   }
@@ -451,9 +455,13 @@ class JavaPlugin extends BaseGroovyPlugin {
    *
    * @param sourceDirectory The source directory that contains the Java source files.
    * @param buildDirectory The build directory to compile the Java files to.
+   * @param generatedOutputDirectory The locate where annotation processor output goes.
    * @param dependencies The dependencies to resolve and include on the compile classpath.
+   * @param extraArgs Any additional arguments added to the command-line.
+   * @param additionalClasspath Any additional classpath entries.
    */
-  private void compileInternal(Path sourceDirectory, Path buildDirectory, List<Map<String, Object>> dependencies, String extraArgs, Path... additionalClasspath) {
+  private void compileInternal(Path sourceDirectory, Path buildDirectory, Path generatedOutputDirectory,
+                               List<Map<String, Object>> dependencies, String extraArgs, Path... additionalClasspath) {
     initialize()
 
     Path resolvedSourceDir = project.directory.resolve(sourceDirectory)
@@ -483,7 +491,7 @@ class JavaPlugin extends BaseGroovyPlugin {
     Classpath processorClasspath = resolveRunClasspath(settings.processorDependencies, [], [])
     String processorArgs = processorClasspath.toString("--processor-module-path ")
     if (!processorArgs.isEmpty()) {
-      processorArgs += " -s ${layout.generatedOutputDirectory}"
+      processorArgs += " -s ${generatedOutputDirectory}"
     }
 
     String command = "${javacPath} ${settings.compilerArguments} ${pathArgs} ${processorArgs} ${extraArgs} -sourcepath ${sourceDirectory} -d ${buildDirectory} ${filesToCompile.join(" ")}"

@@ -501,28 +501,30 @@ class JavaPluginTest {
   }
 
   @Test
-  void processorModulePath() throws Exception {
+  void processorWithCustomOutputDirectory() throws Exception {
     FileTools.prune(projectDir.resolve("build/cache"))
 
     RecordingOutput output = new RecordingOutput(true)
     output.enableDebug()
     JavaPlugin plugin = setupPluginForTestProject("test-processor", output)
-
-    // Keep processor-generated sources under build/ (cleaned by clean(), gitignored) instead of the
-    // default src/generated/java, so running this test never pollutes the source tree.
-    plugin.layout.generatedOutputDirectory = Paths.get("build/generated-sources")
+    plugin.layout.mainGeneratedOutputDirectory = Paths.get("build/generated-sources")
+    plugin.layout.testGeneratedOutputDirectory = Paths.get("build/generated-test-sources")
 
     plugin.clean()
     plugin.compileMain()
 
-    // The record-builder annotation processor ran via --processor-module-path (auto-discovered
-    // through ServiceLoader) and generated an observable artifact.
-    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/main/org/lattejava/test/PointBuilder.class")),
-        "Expected the record-builder processor to generate PointBuilder.class")
+    assertTrue(output.commands.any { it.contains("--processor-module-path") })
+    assertTrue(output.commands.any { it.contains("-s build/generated-sources") })
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/main/org/lattejava/test/PointBuilder.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/generated-sources/org/lattejava/test/PointBuilder.java")))
 
-    // The constructed javac command opted into module-path processor discovery.
-    assertTrue(output.commands.any { it.contains("--processor-module-path") },
-        "Expected the javac command to contain --processor-module-path; commands:\n" + output.commands.join("\n"))
+    output.clear()
+    plugin.compileTest()
+
+    assertTrue(output.commands.any { it.contains("--processor-module-path") }, "Expected the javac command to contain --processor-module-path; commands:\n" + output.commands.join("\n"))
+    assertTrue(output.commands.any { it.contains("-s build/generated-test-sources") })
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/test/org/lattejava/test/tests/TesterBuilder.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/generated-test-sources/org/lattejava/test/tests/TesterBuilder.java")))
 
     // Regression guard: a project that declares no compile-processors group emits no
     // --processor-module-path flag, leaving the javac command unchanged from prior behavior.
@@ -536,34 +538,31 @@ class JavaPluginTest {
   }
 
   @Test
-  void processorGeneratedOutputDirectory() throws Exception {
+  void processorStandard() throws Exception {
     FileTools.prune(projectDir.resolve("build/cache"))
 
     RecordingOutput output = new RecordingOutput(true)
     output.enableDebug()
     JavaPlugin plugin = setupPluginForTestProject("test-processor", output)
 
-    // The default generatedOutputDirectory points at src/generated/java.
-    assertEquals(plugin.layout.generatedOutputDirectory, Paths.get("src/generated/java"))
-
-    // Route annotation-processor generated sources under build/ so clean() handles cleanup and the
-    // source tree stays pristine. This also proves the -s path is driven by the layout field.
-    plugin.layout.generatedOutputDirectory = Paths.get("build/generated-sources")
+    // The default generatedOutputDirectory points at build/generated/main.
+    assertEquals(plugin.layout.mainGeneratedOutputDirectory, Paths.get("build/generated/main"))
 
     plugin.clean()
     plugin.compileMain()
 
-    // The javac command directed annotation-processor output at the configured generated directory.
-    assertTrue(output.commands.any { it.contains("-s build/generated-sources") },
-        "Expected the javac command to contain [-s build/generated-sources]; commands:\n" + output.commands.join("\n"))
+    assertTrue(output.commands.any { it.contains("--processor-module-path") })
+    assertTrue(output.commands.any { it.contains("-s build/generated/main") })
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/generated/main/org/lattejava/test/PointBuilder.java")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/main/org/lattejava/test/PointBuilder.class")))
 
-    // The record-builder processor actually wrote the generated source into that directory.
-    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/generated-sources/org/lattejava/test/PointBuilder.java")),
-        "Expected the processor-generated PointBuilder.java in the generated output directory")
+    output.clear()
+    plugin.compileTest()
 
-    // And the generated source still compiled into the normal main build directory.
-    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/main/org/lattejava/test/PointBuilder.class")),
-        "Expected PointBuilder.class to be compiled into the main build dir")
+    assertTrue(output.commands.any { it.contains("--processor-module-path") })
+    assertTrue(output.commands.any { it.contains("-s build/generated/test") })
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/classes/test/org/lattejava/test/tests/TesterBuilder.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("test-processor/build/generated/test/org/lattejava/test/tests/TesterBuilder.java")))
 
     // Regression guard: a project that declares no compile-processors group runs no processors, so
     // no -s flag is emitted and the javac command is unchanged from prior behavior.
@@ -689,6 +688,10 @@ class JavaPluginTest {
       super(colorize)
     }
 
+    void clear() {
+      commands = []
+    }
+
     @Override
     Output debugln(String message, Object... values) {
       commands.add(values.length > 0 ? String.format(message, values) : message)
@@ -727,5 +730,4 @@ class JavaPluginTest {
 //    assertEquals(jarEntry.getLastModifiedTime(), Files.getLastModifiedTime(original));
 //    assertEquals(jarEntry.getTime(), Files.getLastModifiedTime(original).toMillis());
   }
-
 }

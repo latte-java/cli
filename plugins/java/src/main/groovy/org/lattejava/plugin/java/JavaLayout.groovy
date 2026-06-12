@@ -25,7 +25,7 @@ class JavaLayout {
    * The output directory for generated classes. This is used by annotation processors, but can also be used by other
    * plugins or generation tools (i.e. jOOQ).
    */
-  Path generatedOutputDirectory = Paths.get("src/generated/java")
+  Path mainGeneratedOutputDirectory = Paths.get("build/generated/main")
 
   /**
    * The jar build directory. Defaults to {@code build/jars}.
@@ -61,4 +61,10 @@ class JavaLayout {
    * The test build directory. Defaults to {@code build/classes/test}.
    */
   Path testBuildDirectory = buildDirectory.resolve("classes/test")
+
+  /**
+   * The output directory for test generated classes. This is used by annotation processors, but can also be used by
+   * other plugins or generation tools (i.e. jOOQ).
+   */
+  Path testGeneratedOutputDirectory = Paths.get("build/generated/test")
 }
