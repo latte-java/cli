@@ -82,6 +82,7 @@ class JavaSettings {
    */
   List<Map<String, Object>> testDependencies = [
       [group: "compile", transitive: false, fetchSource: false],
+      [group: "compile-processors", transitive: false, fetchSource: false],
       [group: "test-compile", transitive: false, fetchSource: false],
       [group: "provided", transitive: false, fetchSource: false]
   ]
