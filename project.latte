@@ -28,12 +28,12 @@ project(group: "org.lattejava", name: "cli", version: "0.4.0", licenses: ["MIT"]
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.3.0")
-file = loadPlugin(id: "org.lattejava.plugin:file:0.3.0")
-idea = loadPlugin(id: "org.lattejava.plugin:idea:0.3.0")
-java = loadPlugin(id: "org.lattejava.plugin:java:0.3.0")
-javaTestNG = loadPlugin(id: "org.lattejava.plugin:java-testng:0.3.0")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.3.0")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.4.0")
+file = loadPlugin(id: "org.lattejava.plugin:file:0.4.1")
+idea = loadPlugin(id: "org.lattejava.plugin:idea:0.4.1")
+java = loadPlugin(id: "org.lattejava.plugin:java:0.4.4")
+javaTestNG = loadPlugin(id: "org.lattejava.plugin:java-testng:0.4.0")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.4.0")
 
 // Plugin settings
 java.settings.javaVersion = "25"
@@ -44,6 +44,7 @@ target(name: "clean", description: "Cleans the project") {
 }
 
 target(name: "build", description: "Compiles the project") {
+  file.execute("git config core.hooksPath .githooks")
   java.compile()
   java.jar()
 }
