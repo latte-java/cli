@@ -6,6 +6,7 @@ package org.lattejava.plugin.file
 
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.dep.domain.License
 import org.lattejava.domain.Version
 import org.lattejava.io.FileTools
@@ -133,6 +134,63 @@ class FilePluginTest {
     assertFalse(Files.isRegularFile(projectDir.resolve("build/test/file3-1.0-{integration}.[second].txt")))
     assertFalse(Files.isRegularFile(projectDir.resolve("build/test/file4-1.0.[second].txt")))
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/file5.txt")))
+  }
+
+  @Test
+  void executeSingleStringCommand() throws Exception {
+    PrintStream originalOut = System.out
+    ByteArrayOutputStream captured = new ByteArrayOutputStream()
+    System.setOut(new PrintStream(captured))
+    try {
+      plugin.execute("echo hello world")
+    } finally {
+      System.setOut(originalOut)
+    }
+
+    assertEquals(captured.toString().trim(), "hello world")
+  }
+
+  @Test
+  void executeVarargsCommand() throws Exception {
+    PrintStream originalOut = System.out
+    ByteArrayOutputStream captured = new ByteArrayOutputStream()
+    System.setOut(new PrintStream(captured))
+    try {
+      plugin.execute("echo", "hello", "world")
+    } finally {
+      System.setOut(originalOut)
+    }
+
+    assertEquals(captured.toString().trim(), "hello world")
+  }
+
+  @Test
+  void executePipesStderr() throws Exception {
+    PrintStream originalErr = System.err
+    ByteArrayOutputStream captured = new ByteArrayOutputStream()
+    System.setErr(new PrintStream(captured))
+    try {
+      plugin.execute("sh", "-c", "echo oops 1>&2")
+    } finally {
+      System.setErr(originalErr)
+    }
+
+    assertEquals(captured.toString().trim(), "oops")
+  }
+
+  @Test(expectedExceptions = RuntimeFailureException.class)
+  void executeFailsBuildOnNonZeroExit() throws Exception {
+    plugin.execute("sh", "-c", "exit 3")
+  }
+
+  @Test(expectedExceptions = RuntimeFailureException.class)
+  void executeFailsBuildOnMissingCommand() throws Exception {
+    plugin.execute("this-command-does-not-exist-12345")
+  }
+
+  @Test(expectedExceptions = RuntimeFailureException.class)
+  void executeFailsBuildOnEmptyCommand() throws Exception {
+    plugin.execute()
   }
 
   @Test

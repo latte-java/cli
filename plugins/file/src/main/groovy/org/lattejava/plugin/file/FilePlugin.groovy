@@ -131,6 +131,47 @@ class FilePlugin extends BaseGroovyPlugin {
   }
 
   /**
+   * Executes (forks) an external command, piping the command's standard output and standard error to
+   * {@link System#out} and {@link System#err}. This waits for the command to complete and fails the build if the
+   * command exits with a non-zero status code.
+   * <p>
+   * The command may be supplied as a single String that is split on whitespace, or as the individual command and
+   * arguments. Here are examples of calling this method:
+   * <p>
+   * <pre>
+   *   file.execute("some-command --option --option2=value foo bar")
+   *   file.execute("some-command", "--option", "--option2=value", "foo", "bar")
+   * </pre>
+   *
+   * @param command The command and its arguments.
+   */
+  void execute(String... command) {
+    List<String> args = (command != null && command.length == 1) ? command[0].trim().tokenize() : (command as List)
+    if (args == null || args.isEmpty()) {
+      fail("You must supply a command to execute like this:\n\n" +
+          "  file.execute(\"some-command --option --option2=value foo bar\")")
+    }
+
+    ProcessBuilder builder = new ProcessBuilder(args)
+    builder.directory(project.directory.toAbsolutePath().toFile())
+
+    try {
+      output.infoln("Executing [%s]", args.join(" "))
+
+      Process process = builder.start()
+      process.waitForProcessOutput((OutputStream) System.out, (OutputStream) System.err)
+
+      int exitCode = process.exitValue()
+      if (exitCode != 0) {
+        fail("Command [${args.join(" ")}] failed with exit code [${exitCode}]")
+      }
+    } catch (IOException e) {
+      output.debug(e)
+      fail("Unable to execute command [${args.join(" ")}]: ${e.getMessage()}")
+    }
+  }
+
+  /**
    * Creates a JAR file from various files. This uses the {@link JarDelegate} class to handle Closure methods.
    * <p>
    * Here is an example of calling this method:
