@@ -186,6 +186,13 @@ class FilePluginTest {
   @Test(expectedExceptions = RuntimeFailureException.class)
   void executeFailsBuildOnMissingCommand() throws Exception {
     plugin.execute("this-command-does-not-exist-12345")
+    plugin.executeIgnoreFailure("this-command-does-not-exist-12345") // Still fails because command is invalid
+  }
+
+  @Test
+  void executeIgnoreFailureOnNonZeroExit() throws Exception {
+    int status = plugin.executeIgnoreFailure("sh", "-c", "exit 3") // No output
+    assertEquals(status, 3)
   }
 
   @Test(expectedExceptions = RuntimeFailureException.class)
