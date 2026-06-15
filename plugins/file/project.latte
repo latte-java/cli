@@ -7,8 +7,7 @@ project(group: "org.lattejava.plugin", name: "file", version: "0.4.1", licenses:
     standard()
   }
   publishWorkflow {
-    s3(endpoint: global.latteRepositoryS3URL, bucket: "latte-repository",
-       accessKeyId: global.latteRepositoryS3AccessKeyID, secretAccessKey: global.latteRepositoryS3SecretAccessKey)
+    latte()
   }
 
   dependencies {
