@@ -11,7 +11,6 @@ package org.lattejava.dep.workflow.process;
  *
  * @param ready   Whether the process is able to publish.
  * @param message The reason publishing would fail, or {@code null} when ready.
- *
  * @author Brian Pontarelli
  */
 public record PublishReadiness(boolean ready, String message) {

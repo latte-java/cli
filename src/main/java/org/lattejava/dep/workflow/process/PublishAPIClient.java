@@ -189,7 +189,8 @@ public class PublishAPIClient {
     return switch (status) {
       case 400 -> "The Latte repository rejected the request: " + messages(body);
       case 401 -> "Your Latte login has expired or is invalid. Run [latte login] and try again.";
-      case 403 -> "You are not authorized to publish to the group [" + group + "]. The group must be verified and you must be an active owner or contributor." + serverDetail(body);
+      case 403 ->
+          "You are not authorized to publish to the group [" + group + "]. The group must be verified and you must be an active owner or contributor." + serverDetail(body);
       case 404 -> "The Latte publish API was not found at [" + apiURL + "]. Check the configured [apiURL].";
       case 500 -> "The Latte repository encountered a server error. Please try again later.";
       case 503 -> "The Latte identity provider is temporarily unavailable. Please try again shortly.";
