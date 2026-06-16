@@ -25,7 +25,6 @@ import java.nio.file.StandardCopyOption
  * @author Brian Pontarelli
  */
 class FilePlugin extends BaseGroovyPlugin {
-
   FilePlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
     super(project, runtimeConfiguration, output)
   }
@@ -42,7 +41,7 @@ class FilePlugin extends BaseGroovyPlugin {
    *   }
    * </pre>
    *
-   * @param attributes The named attributes (to and files are required).
+   * @param attributes The named attributes (to is required).
    */
   void append(Map<String, Object> attributes, @DelegatesTo(AppendDelegate.class) Closure closure) {
     AppendDelegate delegate = new AppendDelegate(project, attributes)
@@ -138,36 +137,57 @@ class FilePlugin extends BaseGroovyPlugin {
    * The command may be supplied as a single String that is split on whitespace, or as the individual command and
    * arguments. Here are examples of calling this method:
    * <p>
+   * Optionally, you can pass the attribute <code>ignoreFailures</code> as a boolean to control if the build is failed
+   * when the sub-process has a non-zero return code.
    * <pre>
-   *   file.execute("some-command --option --option2=value foo bar")
-   *   file.execute("some-command", "--option", "--option2=value", "foo", "bar")
+   *   file.execute(cmd: "some-command --option --option2=value foo bar")
+   *   file.execute(cmd: ["some-command", "--option", "--option2=value", "foo", "bar"])
+   *   file.execute(cmd: ["some-command", "--option", "--option2=value", "foo", "bar"], ignoreFailures: true)
    * </pre>
    *
-   * @param command The command and its arguments.
+   * @param attributes The named attributes passed to the method (cmd is required).
+   * @return The return code of the sub-process.
    */
-  void execute(String... command) {
-    List<String> args = (command != null && command.length == 1) ? command[0].trim().tokenize() : (command as List)
-    executeInternal(args, false)
-  }
+  int execute(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["cmd", "ignoreFailures"], ["cmd"], ["ignoreFailures": Boolean.class])) {
+      fail("You must supply the [cmd] attributes like this:\n\n" +
+          "  file.execute(cmd: \"bash foo bar\")")
+    }
 
-  /**
-   * Executes (forks) an external command, piping the command's standard output and standard error to
-   * {@link System#out} and {@link System#err}. This waits for the command to complete, but doesn't fail the build if
-   * the command exits with a non-zero status code.
-   * <p>
-   * The command may be supplied as a single String that is split on whitespace, or as the individual command and
-   * arguments. Here are examples of calling this method:
-   * <p>
-   * <pre>
-   *   file.executeIgnoreFailure("some-command --option --option2=value foo bar")
-   *   file.executeIgnoreFailure("some-command", "--option", "--option2=value", "foo", "bar")
-   * </pre>
-   *
-   * @param command The command and its arguments.
-   */
-  int executeIgnoreFailure(String... command) {
-    List<String> args = (command != null && command.length == 1) ? command[0].trim().tokenize() : (command as List)
-    return executeInternal(args, true)
+    Object command = attributes.get("cmd");
+    List<String> args
+    if (command instanceof String[]) {
+      args = (command as List)
+    } else if (command instanceof String) {
+      args = command.trim().tokenize()
+    } else if (command instanceof List) {
+      args = command
+    }
+    if (args == null || args.isEmpty()) {
+      fail("You must supply a command to execute like this:\n\n" +
+          "  file.execute(cmd: \"some-command --option --option2=value foo bar\")")
+    }
+
+    boolean ignoreFailures = attributes.containsKey("ignoreFailures") && attributes.get("ignoreFailures") == true
+    ProcessBuilder builder = new ProcessBuilder(args)
+    builder.directory(project.directory.toAbsolutePath().toFile())
+
+    try {
+      output.infoln("Executing [%s]", args.join(" "))
+
+      Process process = builder.start()
+      process.waitForProcessOutput((OutputStream) System.out, (OutputStream) System.err)
+
+      int exitCode = process.exitValue()
+      if (!ignoreFailures && exitCode != 0) {
+        fail("Command [${args.join(" ")}] failed with exit code [${exitCode}]")
+      }
+
+      return exitCode
+    } catch (IOException e) {
+      output.debug(e)
+      fail("Unable to execute command [${args.join(" ")}]: ${e.getMessage()}")
+    }
   }
 
   /**
@@ -468,33 +488,6 @@ class FilePlugin extends BaseGroovyPlugin {
       output.debug(e)
       fail(e.getMessage())
       return 0
-    }
-  }
-
-  private int executeInternal(List<String> args, boolean ignoreFailure) {
-    if (args == null || args.isEmpty()) {
-      fail("You must supply a command to execute like this:\n\n" +
-          "  file.execute(\"some-command --option --option2=value foo bar\")")
-    }
-
-    ProcessBuilder builder = new ProcessBuilder(args)
-    builder.directory(project.directory.toAbsolutePath().toFile())
-
-    try {
-      output.infoln("Executing [%s]", args.join(" "))
-
-      Process process = builder.start()
-      process.waitForProcessOutput((OutputStream) System.out, (OutputStream) System.err)
-
-      int exitCode = process.exitValue()
-      if (!ignoreFailure && exitCode != 0) {
-        fail("Command [${args.join(" ")}] failed with exit code [${exitCode}]")
-      }
-
-      return exitCode
-    } catch (IOException e) {
-      output.debug(e)
-      fail("Unable to execute command [${args.join(" ")}]: ${e.getMessage()}")
     }
   }
 }

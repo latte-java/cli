@@ -142,7 +142,7 @@ class FilePluginTest {
     ByteArrayOutputStream captured = new ByteArrayOutputStream()
     System.setOut(new PrintStream(captured))
     try {
-      plugin.execute("echo hello world")
+      plugin.execute(cmd: "echo hello world")
     } finally {
       System.setOut(originalOut)
     }
@@ -156,7 +156,7 @@ class FilePluginTest {
     ByteArrayOutputStream captured = new ByteArrayOutputStream()
     System.setOut(new PrintStream(captured))
     try {
-      plugin.execute("echo", "hello", "world")
+      plugin.execute(cmd: ["echo", "hello", "world"])
     } finally {
       System.setOut(originalOut)
     }
@@ -170,7 +170,7 @@ class FilePluginTest {
     ByteArrayOutputStream captured = new ByteArrayOutputStream()
     System.setErr(new PrintStream(captured))
     try {
-      plugin.execute("sh", "-c", "echo oops 1>&2")
+      plugin.execute(cmd: ["sh", "-c", "echo oops 1>&2"])
     } finally {
       System.setErr(originalErr)
     }
@@ -180,18 +180,18 @@ class FilePluginTest {
 
   @Test(expectedExceptions = RuntimeFailureException.class)
   void executeFailsBuildOnNonZeroExit() throws Exception {
-    plugin.execute("sh", "-c", "exit 3")
+    plugin.execute(cmd: ["sh", "-c", "exit 3"])
   }
 
   @Test(expectedExceptions = RuntimeFailureException.class)
   void executeFailsBuildOnMissingCommand() throws Exception {
-    plugin.execute("this-command-does-not-exist-12345")
+    plugin.execute(cmd: "this-command-does-not-exist-12345")
     plugin.executeIgnoreFailure("this-command-does-not-exist-12345") // Still fails because command is invalid
   }
 
   @Test
   void executeIgnoreFailureOnNonZeroExit() throws Exception {
-    int status = plugin.executeIgnoreFailure("sh", "-c", "exit 3") // No output
+    int status = plugin.execute(cmd: ["sh", "-c", "exit 3"], ignoreFailures: true) // No output
     assertEquals(status, 3)
   }
 
