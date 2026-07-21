@@ -3,7 +3,7 @@ package ${package}.tests;
 import module org.lattejava.web;
 import module org.testng;
 
-import org.lattejava.app.Main;
+import ${package}.Main;
 
 @Test
 public class MainTest {

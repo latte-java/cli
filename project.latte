@@ -2,7 +2,7 @@
  * Copyright (c) 2026 The Latte Project
  * SPDX-License-Identifier: MIT
  */
-project(group: "org.lattejava", name: "cli", version: "0.4.0", licenses: ["MIT"]) {
+project(group: "org.lattejava", name: "cli", version: "0.4.1", licenses: ["MIT"]) {
   workflow {
     standard()
   }
@@ -44,7 +44,7 @@ target(name: "clean", description: "Cleans the project") {
 }
 
 target(name: "build", description: "Compiles the project") {
-  file.execute("git config core.hooksPath .githooks")
+  file.execute(cmd: "git config core.hooksPath .githooks")
   java.compile()
   java.jar()
 }

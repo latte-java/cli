@@ -15,7 +15,7 @@ public class Main {
   }
 
   public void main() {
-    web.install(new SecurityHeaders())
+    web.install(SecurityHeaders.defaults())
        .baseDir(Path.of("web"))
        .files("/static")
        .get("/", templates::html)
