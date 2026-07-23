@@ -2,7 +2,7 @@
  * Copyright (c) 2014-2026 The Latte Project
  * SPDX-License-Identifier: MIT
  */
-project(group: "org.lattejava.plugin", name: "database", version: "0.4.0", licenses: ["MIT"]) {
+project(group: "org.lattejava.plugin", name: "database", version: "0.4.1", licenses: ["MIT"]) {
   workflow {
     standard()
   }
@@ -16,7 +16,7 @@ project(group: "org.lattejava.plugin", name: "database", version: "0.4.0", licen
     }
     group(name: "compile") {
       dependency(id: "com.mysql:mysql-connector-j:9.6.0")
-      dependency(id: "org.liquibase:liquibase-core:5.0.2")
+      dependency(id: "org.liquibase:liquibase-core:5.0.3")
       dependency(id: "org.postgresql:postgresql:42.7.10")
     }
     group(name: "test-compile", export: false) {

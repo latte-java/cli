@@ -6,6 +6,7 @@ package org.lattejava.plugin.database
 
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.dep.domain.License
 import org.lattejava.domain.Version
 import org.lattejava.output.Output
@@ -19,6 +20,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import static org.testng.Assert.assertEquals
+import static org.testng.Assert.assertTrue
+import static org.testng.Assert.fail
 
 /**
  * Tests the database plugin.
@@ -124,6 +127,53 @@ class DatabasePluginTest {
   }
 
   @Test
+  void compareFailsWhenTypeNotDefined() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.compare(left: "database_plugin", right: "database_plugin_test")
+      fail("Should have failed because the database type is not defined")
+    } catch (RuntimeFailureException e) {
+      assertTypeNotDefinedMessage(e)
+    }
+  }
+
+  @Test
+  void createDatabaseFailsWhenTypeNotDefined() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.createDatabase()
+      fail("Should have failed because the database type is not defined")
+    } catch (RuntimeFailureException e) {
+      assertTypeNotDefinedMessage(e)
+    }
+  }
+
+  @Test
+  void executeFailsWhenTypeNotDefined() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.execute(file: "src/test/resources/test-mysql.sql")
+      fail("Should have failed because the database type is not defined")
+    } catch (RuntimeFailureException e) {
+      assertTypeNotDefinedMessage(e)
+    }
+  }
+
+  @Test
+  void postgresqlEnsureEqualIgnoresColumnOrder() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    plugin.settings.createUsername = "postgres"
+    plugin.createMainDatabase()
+    plugin.execute(file: "src/test/resources/test-postgresql-column-order-left.sql")
+
+    plugin.createTestDatabase()
+    plugin.execute(file: "src/test/resources/test-postgresql-column-order-right.sql")
+
+    plugin.ensureEqual(left: "database", right: "database_test")
+  }
+
+  @Test
   void postgresqlDatabase() throws Exception {
     DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
     plugin.settings.type = "postgresql"
@@ -139,5 +189,10 @@ class DatabasePluginTest {
  public | test | table | dev
 (1 row)""".trim())
     assertEquals((long) process.exitValue(), 0)
+  }
+
+  private static void assertTypeNotDefinedMessage(RuntimeFailureException e) {
+    assertTrue(e.message.contains("database.settings.type = \"mysql\""), "Message was [${e.message}]")
+    assertTrue(e.message.contains("database.settings.type = \"postgresql\""), "Message was [${e.message}]")
   }
 }

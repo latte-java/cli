@@ -4,23 +4,11 @@
  */
 package org.lattejava.plugin.database
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.sql.Connection
-
-import org.postgresql.jdbc2.optional.SimpleDataSource
-import org.lattejava.cli.domain.Project
-import org.lattejava.io.FileTools
-import org.lattejava.output.Output
-import org.lattejava.cli.parser.groovy.GroovyTools
-import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
-import org.lattejava.cli.runtime.RuntimeConfiguration
-
 import com.mysql.cj.jdbc.MysqlDataSource
+import liquibase.GlobalConfiguration
 import liquibase.Liquibase
+import liquibase.Scope
 import liquibase.changelog.DatabaseChangeLog
-import liquibase.configuration.GlobalConfiguration
-import liquibase.configuration.LiquibaseConfiguration
 import liquibase.database.Database
 import liquibase.database.core.MySQLDatabase
 import liquibase.database.core.PostgresDatabase
@@ -29,17 +17,18 @@ import liquibase.diff.DiffResult
 import liquibase.diff.compare.CompareControl
 import liquibase.diff.output.report.DiffToReport
 import liquibase.resource.ClassLoaderResourceAccessor
-import liquibase.structure.core.Column
-import liquibase.structure.core.Data
-import liquibase.structure.core.ForeignKey
-import liquibase.structure.core.Index
-import liquibase.structure.core.PrimaryKey
-import liquibase.structure.core.Schema
-import liquibase.structure.core.Sequence
-import liquibase.structure.core.StoredProcedure
-import liquibase.structure.core.Table
-import liquibase.structure.core.UniqueConstraint
-import liquibase.structure.core.View
+import liquibase.structure.core.*
+import org.lattejava.cli.domain.Project
+import org.lattejava.cli.parser.groovy.GroovyTools
+import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
+import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.io.FileTools
+import org.lattejava.output.Output
+import org.postgresql.ds.PGSimpleDataSource
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.sql.Connection
 
 /**
  * Database plugin.
@@ -74,6 +63,8 @@ class DatabasePlugin extends BaseGroovyPlugin {
    * @return The Liquibase DiffResult.
    */
   DiffResult compare(Map<String, Object> attributes) {
+    ensureTypeDefined()
+
     if (!GroovyTools.hasAttributes(attributes, "left", "right")) {
       fail("You must specify the names of the databases to compare like this:\n\n" +
           "  database.compare(left: \"database1\", right: \"database2\")")
@@ -90,9 +81,9 @@ class DatabasePlugin extends BaseGroovyPlugin {
     CompareControl compareControl = new CompareControl([Column.class, Data.class, ForeignKey.class, Index.class, PrimaryKey.class, Schema.class, Sequence.class, StoredProcedure.class, Table.class, UniqueConstraint.class, View.class] as Set)
 
     // We don't want to diff column order (because we don't order postgres columns and it shouldn't matter that much anyways)
-    LiquibaseConfiguration.getInstance().getConfiguration(GlobalConfiguration.class).setDiffColumnOrder(false)
-
-    return liquibase.diff(leftDatabase, rightDatabase, compareControl)
+    return Scope.child([(GlobalConfiguration.DIFF_COLUMN_ORDER.getKey()): false], {
+      liquibase.diff(leftDatabase, rightDatabase, compareControl)
+    } as Scope.ScopedRunnerWithReturn<DiffResult>)
   }
 
   /**
@@ -133,6 +124,8 @@ class DatabasePlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void createDatabase() {
+    ensureTypeDefined()
+
     output.infoln("Creating database [${settings.name}]")
 
     if (settings.type.toLowerCase() == "mysql") {
@@ -188,6 +181,8 @@ class DatabasePlugin extends BaseGroovyPlugin {
    * </pre>
    */
   void execute(Map<String, Object> attributes) {
+    ensureTypeDefined()
+
     if (!GroovyTools.hasAttributes(attributes, "file")) {
       fail("You must specify the name of the SQL file to execute using the file attribute like this:\n\n  database.execute(file: \"foo.sql\")")
     }
@@ -210,6 +205,18 @@ class DatabasePlugin extends BaseGroovyPlugin {
     }
   }
 
+  /**
+   * Fails the build if the database type has not been defined in the settings.
+   */
+  private void ensureTypeDefined() {
+    if (!settings.type) {
+      fail("You must specify the database type in the settings before calling the database plugin like this:\n\n" +
+          "  database.settings.type = \"mysql\"\n\n" +
+          "or\n\n" +
+          "  database.settings.type = \"postgresql\"")
+    }
+  }
+
   private Database makeLiquibaseDatabase(String name) {
     Database database
     if (settings.type == "mysql") {
@@ -219,7 +226,7 @@ class DatabasePlugin extends BaseGroovyPlugin {
       database = new MySQLDatabase()
       database.setConnection(new JdbcConnection(c))
     } else {
-      SimpleDataSource ds = new SimpleDataSource()
+      PGSimpleDataSource ds = new PGSimpleDataSource()
       ds.setUrl("jdbc:postgresql://localhost:5432/${name}")
       ds.setUser(settings.compareUsername)
       ds.setPassword(settings.comparePassword)
