@@ -2,9 +2,16 @@
  * Copyright (c) 2014-2026 The Latte Project
  * SPDX-License-Identifier: MIT
  */
-project(group: "org.lattejava.plugin", name: "database", version: "0.4.1", licenses: ["MIT"]) {
+project(group: "org.lattejava.plugin", name: "database", version: "0.5.0", licenses: ["MIT"]) {
   workflow {
     standard()
+
+    // jOOQ declares Maven dependencies with non-semantic versions (io.r2dbc:r2dbc-spi + its parent POM).
+    // jOOQ's module-info `requires` r2dbc.spi, so it must be present; these mappings let Latte resolve it.
+    semanticVersions {
+      mapping(id: "io.r2dbc:r2dbc-spi:1.0.0.RELEASE", version: "1.0.0")
+      mapping(id: "io.r2dbc:r2dbc-spi-parent:1.0.0.RELEASE", version: "1.0.0")
+    }
   }
   publishWorkflow {
     latte()
@@ -16,7 +23,7 @@ project(group: "org.lattejava.plugin", name: "database", version: "0.4.1", licen
     }
     group(name: "compile") {
       dependency(id: "com.mysql:mysql-connector-j:9.6.0")
-      dependency(id: "org.liquibase:liquibase-core:5.0.3")
+      dependency(id: "org.jooq:jooq:3.21.6")
       dependency(id: "org.postgresql:postgresql:42.7.10")
     }
     group(name: "test-compile", export: false) {

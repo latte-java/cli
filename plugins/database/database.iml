@@ -80,22 +80,22 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-lang3/3.20.0/commons-lang3-3.20.0.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/commons-io/commons-io/2.20.0/commons-io-2.20.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-lang3/3.20.0/commons-lang3-3.20.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/commons-io/commons-io/2.20.0/commons-io-2.20.0-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/commons-io/commons-io/2.21.0/commons-io-2.21.0.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/commons-io/commons-io/2.21.0/commons-io-2.21.0-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -124,11 +124,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/liquibase/liquibase-core/5.0.2/liquibase-core-5.0.2.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/jooq/jooq/3.21.6/jooq-3.21.6.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/liquibase/liquibase-core/5.0.2/liquibase-core-5.0.2-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/jooq/jooq/3.21.6/jooq-3.21.6-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -201,55 +201,22 @@
     <orderEntry type="module-library" scope="RUNTIME">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/yaml/snakeyaml/2.5/snakeyaml-2.5.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/io/r2dbc/r2dbc-spi/1.0.0.RELEASE/r2dbc-spi-1.0.0.RELEASE.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/yaml/snakeyaml/2.5/snakeyaml-2.5-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/io/r2dbc/r2dbc-spi/1.0.0.RELEASE/r2dbc-spi-1.0.0.RELEASE-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library" scope="RUNTIME">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/com/opencsv/opencsv/5.12.0/opencsv-5.12.0.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/com/opencsv/opencsv/5.12.0/opencsv-5.12.0-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-text/1.15.0/commons-text-1.15.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-text/1.15.0/commons-text-1.15.0-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-collections4/4.5.0/commons-collections4-4.5.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/apache/commons/commons-collections4/4.5.0/commons-collections4-4.5.0-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" scope="RUNTIME">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/javax/xml/bind/jaxb-api/2.3.1/jaxb-api-2.3.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/javax/xml/bind/jaxb-api/2.3.1/jaxb-api-2.3.1-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.m2/repository/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

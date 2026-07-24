@@ -5,19 +5,9 @@
 package org.lattejava.plugin.database
 
 import com.mysql.cj.jdbc.MysqlDataSource
-import liquibase.GlobalConfiguration
-import liquibase.Liquibase
-import liquibase.Scope
-import liquibase.changelog.DatabaseChangeLog
-import liquibase.database.Database
-import liquibase.database.core.MySQLDatabase
-import liquibase.database.core.PostgresDatabase
-import liquibase.database.jvm.JdbcConnection
-import liquibase.diff.DiffResult
-import liquibase.diff.compare.CompareControl
-import liquibase.diff.output.report.DiffToReport
-import liquibase.resource.ClassLoaderResourceAccessor
-import liquibase.structure.core.*
+import org.jooq.*
+import org.jooq.conf.Settings
+import org.jooq.impl.DSL
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.parser.groovy.GroovyTools
 import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
@@ -29,6 +19,7 @@ import org.postgresql.ds.PGSimpleDataSource
 import java.nio.file.Files
 import java.nio.file.Path
 import java.sql.Connection
+import java.sql.SQLException
 
 /**
  * Database plugin.
@@ -44,25 +35,23 @@ class DatabasePlugin extends BaseGroovyPlugin {
   }
 
   /**
-   * Compares two databases using Liquibase. This takes two attributes that specify the databases to compare: right and
+   * Compares two databases using jOOQ. This takes two attributes that specify the databases to compare: right and
    * left. Here's how to call this method:
    * <p>
    * <pre>
    *   database.settings.type = "mysql"
    *   database.settings.compareUsername = "dev"
    *   database.settings.comparePassword = "dev"
-   *   def result = database.compare(left: "database1", right: "database2)
+   *   def result = database.compare(left: "database1", right: "database2")
    *   result.areEqual()
-   *   result.getReferenceSnapshot().getDatabase().close()
-   *   result.getComparisonSnapshot().getDatabase().close()
+   *   result.differences.each { println it }
    * </pre>
-   * <p>
-   * <strong>NOTE:</strong> Callers must take steps to close the database connections inside the DiffResult object.
    *
    * @param attributes The named attributes (left and right are required).
-   * @return The Liquibase DiffResult.
+   * @return The DatabaseComparison whose differences are the DDL statements that would transform the left database
+   *     into the right database.
    */
-  DiffResult compare(Map<String, Object> attributes) {
+  DatabaseComparison compare(Map<String, Object> attributes) {
     ensureTypeDefined()
 
     if (!GroovyTools.hasAttributes(attributes, "left", "right")) {
@@ -73,17 +62,11 @@ class DatabasePlugin extends BaseGroovyPlugin {
     String leftDatabaseName = attributes["left"].toString()
     String rightDatabaseName = attributes["right"].toString()
     output.infoln("Comparing database [${leftDatabaseName}] to [${rightDatabaseName}]")
-    Database leftDatabase = makeLiquibaseDatabase(leftDatabaseName)
-    Database rightDatabase = makeLiquibaseDatabase(rightDatabaseName)
 
-    DatabaseChangeLog databaseChangeLog = new DatabaseChangeLog()
-    Liquibase liquibase = new Liquibase(databaseChangeLog, new ClassLoaderResourceAccessor(), leftDatabase)
-    CompareControl compareControl = new CompareControl([Column.class, Data.class, ForeignKey.class, Index.class, PrimaryKey.class, Schema.class, Sequence.class, StoredProcedure.class, Table.class, UniqueConstraint.class, View.class] as Set)
-
-    // We don't want to diff column order (because we don't order postgres columns and it shouldn't matter that much anyways)
-    return Scope.child([(GlobalConfiguration.DIFF_COLUMN_ORDER.getKey()): false], {
-      liquibase.diff(leftDatabase, rightDatabase, compareControl)
-    } as Scope.ScopedRunnerWithReturn<DiffResult>)
+    Meta leftMeta = snapshotMeta(leftDatabaseName)
+    Meta rightMeta = snapshotMeta(rightDatabaseName)
+    Queries queries = leftMeta.migrateTo(rightMeta)
+    return new DatabaseComparison(differences: queries.queries().collect { it.toString() })
   }
 
   /**
@@ -94,22 +77,17 @@ class DatabasePlugin extends BaseGroovyPlugin {
    *   database.settings.type = "mysql"
    *   database.settings.compareUsername = "dev"
    *   database.settings.comparePassword = "dev"
-   *   database.ensureEqual(left: "database1", right: "database2)
+   *   database.ensureEqual(left: "database1", right: "database2")
    * </pre>
    *
    * @param attributes The named attributes (left and right are required).
    */
   void ensureEqual(Map<String, Object> attributes) {
-    DiffResult result = compare(attributes)
-    try {
-      if (!result.areEqual()) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream()
-        new DiffToReport(result, new PrintStream(baos)).print()
-        fail("Database are not equal. Errors are:\n\n[%s]", baos.toString("UTF-8"))
-      }
-    } finally {
-      result.getReferenceSnapshot().getDatabase().close()
-      result.getComparisonSnapshot().getDatabase().close()
+    DatabaseComparison comparison = compare(attributes)
+    if (!comparison.areEqual()) {
+      fail("%s", "Databases [${attributes['left']}] and [${attributes['right']}] are not equal. " +
+          "To make [${attributes['left']}] match [${attributes['right']}] you would run:\n\n" +
+          comparison.differences.collect { "  " + it }.join("\n"))
     }
   }
 
@@ -217,23 +195,47 @@ class DatabasePlugin extends BaseGroovyPlugin {
     }
   }
 
-  private Database makeLiquibaseDatabase(String name) {
-    Database database
-    if (settings.type == "mysql") {
+  private Connection makeConnection(String databaseName) {
+    if (settings.type.toLowerCase() == "mysql") {
       MysqlDataSource ds = new MysqlDataSource()
-      ds.setURL("jdbc:mysql://localhost:3306/${name}?serverTimezone=UTC&useSSL=false")
-      Connection c = ds.getConnection(settings.compareUsername, settings.comparePassword)
-      database = new MySQLDatabase()
-      database.setConnection(new JdbcConnection(c))
-    } else {
+      ds.setURL("jdbc:mysql://${settings.host}:3306/${databaseName}?serverTimezone=UTC&useSSL=false")
+      return ds.getConnection(settings.compareUsername, settings.comparePassword)
+    } else if (settings.type.toLowerCase() == "postgresql") {
       PGSimpleDataSource ds = new PGSimpleDataSource()
-      ds.setUrl("jdbc:postgresql://localhost:5432/${name}")
+      ds.setUrl("jdbc:postgresql://${settings.host}:5432/${databaseName}")
       ds.setUser(settings.compareUsername)
       ds.setPassword(settings.comparePassword)
-      database = new PostgresDatabase()
-      database.setConnection(new JdbcConnection(ds.getConnection()))
+      return ds.getConnection()
     }
-    return database
+
+    fail("Unsupported database type [${settings.type}]")
+    return null // Not possible but static analysis is dumb
+  }
+
+  /**
+   * Snapshots the schema of the given database as a schema-less jOOQ Meta so that databases with different names can
+   * be compared by content. The snapshot is rendered to DDL without schema qualification and re-parsed.
+   * <p>
+   * MySQL treats each database as its own schema, so {@code database} and {@code database_test} would otherwise
+   * render as differently-named schemas (e.g. {@code create schema `database`}) and always compare as unequal.
+   * {@link DDLFlag#SCHEMA} is left out of the export so the schema-creation statement itself is never rendered,
+   * normalizing the schema name away entirely.
+   */
+  private Meta snapshotMeta(String databaseName) {
+    boolean mysql = settings.type.toLowerCase() == "mysql"
+    String schemaName = mysql ? databaseName : "public"
+    SQLDialect dialect = mysql ? SQLDialect.MYSQL : SQLDialect.POSTGRES
+
+    try (Connection connection = makeConnection(databaseName)) {
+      DSLContext context = DSL.using(connection, new Settings().withRenderSchema(false))
+      DDLExportConfiguration ddlConfig = new DDLExportConfiguration()
+          .flags(DDLFlag.values().findAll { it != DDLFlag.SCHEMA } as DDLFlag[])
+      String ddl = context.meta().filterSchemas { it.name == schemaName }.snapshot().ddl(ddlConfig).toString()
+      return DSL.using(dialect).meta(ddl)
+    } catch (SQLException e) {
+      fail("Unable to connect to database [%s] on host [%s]. Error is [%s]", databaseName, settings.host, e.message)
+      return null // Not possible but static analysis is dumb
+    }
   }
 
   private void execAndWait(List<String> command, boolean ignoreFailure = false) {

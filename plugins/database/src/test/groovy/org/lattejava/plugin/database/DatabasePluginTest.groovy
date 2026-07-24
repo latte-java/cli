@@ -20,6 +20,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import static org.testng.Assert.assertEquals
+import static org.testng.Assert.assertFalse
 import static org.testng.Assert.assertTrue
 import static org.testng.Assert.fail
 
@@ -66,7 +67,27 @@ class DatabasePluginTest {
     plugin.createMainDatabase()
     plugin.execute(file: "src/test/resources/test-mysql.sql")
 
-    plugin.ensureEqual(left: "database_plugin", right: "database_plugin_test")
+    plugin.ensureEqual(left: "database", right: "database_test")
+  }
+
+  @Test
+  void mysqlEnsureEqualFailsWhenDifferent() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "mysql"
+    plugin.settings.createUsername = "root"
+    plugin.createMainDatabase()
+    plugin.execute(file: "src/test/resources/test-mysql.sql")
+
+    plugin.createTestDatabase()
+    plugin.execute(file: "src/test/resources/test-mysql-different.sql")
+
+    try {
+      plugin.ensureEqual(left: "database", right: "database_test")
+      fail("Should have failed because the databases are different")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("not equal"), "Message was [${e.message}]")
+      assertTrue(e.message.contains("name"), "Message was [${e.message}]")
+    }
   }
 
   @Test
@@ -80,7 +101,7 @@ class DatabasePluginTest {
     plugin.createMainDatabase()
     plugin.execute(file: "src/test/resources/test-postgresql.sql")
 
-    plugin.ensureEqual(left: "database_plugin", right: "database_plugin_test")
+    plugin.ensureEqual(left: "database", right: "database_test")
   }
 
   @Test
@@ -138,6 +159,18 @@ class DatabasePluginTest {
   }
 
   @Test
+  void compareFailsWhenTypeUnsupported() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "oracle"
+    try {
+      plugin.compare(left: "database", right: "database_test")
+      fail("Should have failed because the database type is unsupported")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("Unsupported database type [oracle]"), "Message was [${e.message}]")
+    }
+  }
+
+  @Test
   void createDatabaseFailsWhenTypeNotDefined() throws Exception {
     DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
     try {
@@ -171,6 +204,55 @@ class DatabasePluginTest {
     plugin.execute(file: "src/test/resources/test-postgresql-column-order-right.sql")
 
     plugin.ensureEqual(left: "database", right: "database_test")
+  }
+
+  @Test
+  void postgresqlCompareReturnsDifferences() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    plugin.settings.createUsername = "postgres"
+    plugin.createMainDatabase()
+    plugin.execute(file: "src/test/resources/test-postgresql.sql")
+
+    plugin.createTestDatabase()
+    plugin.execute(file: "src/test/resources/test-postgresql-different.sql")
+
+    DatabaseComparison comparison = plugin.compare(left: "database", right: "database_test")
+    assertFalse(comparison.areEqual())
+    assertTrue(comparison.differences.size() > 0, "Differences were [${comparison.differences}]")
+  }
+
+  @Test
+  void postgresqlEnsureEqualFailsWhenDifferent() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    plugin.settings.createUsername = "postgres"
+    plugin.createMainDatabase()
+    plugin.execute(file: "src/test/resources/test-postgresql.sql")
+
+    plugin.createTestDatabase()
+    plugin.execute(file: "src/test/resources/test-postgresql-different.sql")
+
+    try {
+      plugin.ensureEqual(left: "database", right: "database_test")
+      fail("Should have failed because the databases are different")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("not equal"), "Message was [${e.message}]")
+      assertTrue(e.message.contains("name"), "Message was [${e.message}]")
+    }
+  }
+
+  @Test
+  void compareFailsWhenDatabaseUnreachable() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    try {
+      plugin.compare(left: "latte_missing_database", right: "database")
+      fail("Should have failed because the database does not exist")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("[latte_missing_database]"), "Message was [${e.message}]")
+      assertTrue(e.message.contains("[127.0.0.1]"), "Message was [${e.message}]")
+    }
   }
 
   @Test
