@@ -91,6 +91,102 @@ class DatabasePluginTest {
   }
 
   @Test
+  void mysqlMigrate() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "mysql"
+    plugin.settings.name = "database_migrate"
+    plugin.settings.createUsername = "root"
+    plugin.createDatabase()
+
+    plugin.settings.migrationsDirectory = "src/test/resources/migrations-mysql"
+    def applied = plugin.migrate()
+    assertEquals(applied.collect { it.toString() }, ["1.0.0", "1.0.1"])
+
+    Process process = ["mysql", "-udev", "-h127.0.0.1", "-pdev", "-e", "show tables", "-v", "database_migrate"].execute()
+    assertEquals(process.text, "--------------\nshow tables\n--------------\n\nTables_in_database_migrate\nusers\nversions\n")
+    assertEquals((long) process.exitValue(), 0)
+
+    process = ["mysql", "-udev", "-h127.0.0.1", "-pdev", "-N", "-e", "SELECT version FROM versions ORDER BY version", "database_migrate"].execute()
+    assertEquals(process.text, "1.0.0\n1.0.1\n")
+    assertEquals((long) process.exitValue(), 0)
+
+    process = ["mysql", "-udev", "-h127.0.0.1", "-pdev", "-N", "-e", "SELECT column_name FROM information_schema.columns WHERE table_schema = 'database_migrate' AND table_name = 'users' ORDER BY ordinal_position", "database_migrate"].execute()
+    assertEquals(process.text, "id\nname\nemail\n")
+    assertEquals((long) process.exitValue(), 0)
+
+    assertTrue(plugin.migrate().isEmpty())
+  }
+
+  @Test
+  void postgresqlMigrate() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    plugin.settings.name = "database_migrate"
+    plugin.settings.createUsername = "postgres"
+    plugin.createDatabase()
+
+    plugin.settings.migrationsDirectory = "src/test/resources/migrations-postgresql"
+    plugin.settings.migrationTable = "schema_versions"
+    def applied = plugin.migrate()
+    assertEquals(applied.collect { it.toString() }, ["1.0.0", "1.0.1"])
+
+    Process process = ["psql", "-Udev", "-h127.0.0.1", "-tA", "-c",
+                       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name",
+                       "database_migrate"].execute()
+    assertEquals(process.text, "schema_versions\nusers\n")
+    assertEquals((long) process.exitValue(), 0)
+
+    process = ["psql", "-Udev", "-h127.0.0.1", "-tA", "-c",
+               "SELECT version FROM schema_versions ORDER BY version", "database_migrate"].execute()
+    assertEquals(process.text, "1.0.0\n1.0.1\n")
+    assertEquals((long) process.exitValue(), 0)
+
+    assertTrue(plugin.migrate().isEmpty())
+  }
+
+  @Test
+  void migrateFailsWhenTypeNotDefined() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    try {
+      plugin.migrate()
+      fail("Should have failed because the database type is not defined")
+    } catch (RuntimeFailureException e) {
+      assertTypeNotDefinedMessage(e)
+    }
+  }
+
+  @Test
+  void migrateFailsWhenDirectoryMissing() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    try {
+      plugin.migrate()
+      fail("Should have failed because the default migrations directory does not exist")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("migrationsDirectory"), "Message was [${e.message}]")
+    }
+  }
+
+  @Test
+  void migrateFailsWithDatabaseErrorWhenMigrationInvalid() throws Exception {
+    DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
+    plugin.settings.type = "postgresql"
+    plugin.settings.name = "database_migrate"
+    plugin.settings.createUsername = "postgres"
+    plugin.createDatabase()
+
+    plugin.settings.migrationsDirectory = "src/test/resources/migrations-invalid"
+    try {
+      plugin.migrate()
+      fail("Should have failed because the migration SQL is invalid")
+    } catch (RuntimeFailureException e) {
+      assertTrue(e.message.contains("Migration [1.0.0] failed"), "Message was [${e.message}]")
+      assertTrue(e.message.contains("Database error is ["), "Message was [${e.message}]")
+      assertTrue(e.message.contains("syntax"), "Message was [${e.message}]")
+    }
+  }
+
+  @Test
   void postgresqlEnsureEqual() throws Exception {
     DatabasePlugin plugin = new DatabasePlugin(project, new RuntimeConfiguration(), output)
     plugin.settings.type = "postgresql"

@@ -12,6 +12,9 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.cli.parser.groovy.GroovyTools
 import org.lattejava.cli.plugin.groovy.BaseGroovyPlugin
 import org.lattejava.cli.runtime.RuntimeConfiguration
+import org.lattejava.database.migration.MigrationException
+import org.lattejava.database.migration.Migrator
+import org.lattejava.database.migration.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.postgresql.ds.PGSimpleDataSource
@@ -89,6 +92,47 @@ class DatabasePlugin extends BaseGroovyPlugin {
           "To make [${attributes['left']}] match [${attributes['right']}] you would run:\n\n" +
           comparison.differences.collect { "  " + it }.join("\n"))
     }
+  }
+
+  /**
+   * Runs the SQL migration scripts in {@link DatabaseSettings#migrationsDirectory} against the database named by the
+   * {@link #settings} using the Latte database library. Migrations are files named {@code <semver>.sql} and are
+   * applied in SemVer order over a JDBC connection that uses the execute credentials. Applied versions are recorded
+   * in the {@link DatabaseSettings#migrationTable} table. Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   database.settings.type = "postgresql"
+   *   database.settings.name = "myapp"
+   *   database.migrate()
+   * </pre>
+   *
+   * @return The versions applied by this run, in application order (empty when the database is already up to date).
+   */
+  List<Version> migrate() {
+    ensureTypeDefined()
+
+    Path directory = project.directory.resolve(settings.migrationsDirectory)
+    if (!Files.isDirectory(directory)) {
+      fail("Invalid migration scripts directory [${directory}]. Set the location using:\n\n" +
+          "  database.settings.migrationsDirectory = \"src/main/resources/db\"")
+    }
+
+    output.infoln("Migrating database [${settings.name}]")
+
+    try (Connection connection = makeConnection(settings.name, settings.executeUsername, settings.executePassword)) {
+      List<Version> applied = new Migrator(connection, directory, settings.migrationTable).migrate()
+      if (applied.isEmpty()) {
+        output.infoln("Database [${settings.name}] is already up to date")
+      } else {
+        applied.each { output.infoln("Applied migration [${it}]") }
+      }
+      return applied
+    } catch (SQLException e) {
+      fail("Unable to connect to database [%s] on host [%s]. Error is [%s]", settings.name, settings.host, e.message)
+    } catch (MigrationException e) {
+      fail("%s", e.cause != null ? "${e.message}. Database error is [${e.cause.message}]" : e.message)
+    }
+    return null // Not possible but static analysis is dumb
   }
 
   /**
@@ -195,16 +239,16 @@ class DatabasePlugin extends BaseGroovyPlugin {
     }
   }
 
-  private Connection makeConnection(String databaseName) {
+  private Connection makeConnection(String databaseName, String username, String password) {
     if (settings.type.toLowerCase() == "mysql") {
       MysqlDataSource ds = new MysqlDataSource()
       ds.setURL("jdbc:mysql://${settings.host}:3306/${databaseName}?serverTimezone=UTC&useSSL=false")
-      return ds.getConnection(settings.compareUsername, settings.comparePassword)
+      return ds.getConnection(username, password)
     } else if (settings.type.toLowerCase() == "postgresql") {
       PGSimpleDataSource ds = new PGSimpleDataSource()
       ds.setUrl("jdbc:postgresql://${settings.host}:5432/${databaseName}")
-      ds.setUser(settings.compareUsername)
-      ds.setPassword(settings.comparePassword)
+      ds.setUser(username)
+      ds.setPassword(password)
       return ds.getConnection()
     }
 
@@ -226,7 +270,7 @@ class DatabasePlugin extends BaseGroovyPlugin {
     String schemaName = mysql ? databaseName : "public"
     SQLDialect dialect = mysql ? SQLDialect.MYSQL : SQLDialect.POSTGRES
 
-    try (Connection connection = makeConnection(databaseName)) {
+    try (Connection connection = makeConnection(databaseName, settings.compareUsername, settings.comparePassword)) {
       DSLContext context = DSL.using(connection, new Settings().withRenderSchema(false))
       DDLExportConfiguration ddlConfig = new DDLExportConfiguration()
           .flags(DDLFlag.values().findAll { it != DDLFlag.SCHEMA } as DDLFlag[])

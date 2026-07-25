@@ -28,6 +28,17 @@ class DatabaseSettings {
   String host = "127.0.0.1"
 
   /**
+   * The location of the SQL migration scripts, resolved against the project directory. Defaults to
+   * {@code src/main/resources/db}.
+   */
+  String migrationsDirectory = "src/main/resources/db"
+
+  /**
+   * The name of the table that migrations record applied versions in. Defaults to {@code versions}.
+   */
+  String migrationTable = "versions"
+
+  /**
    * Additional arguments passed to the create statement. Defaults to an empty String.
    */
   String createArguments = ""
