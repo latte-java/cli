@@ -26,7 +26,7 @@ import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.domain.License;
 import org.lattejava.dep.domain.ReifiedArtifact;
 import org.lattejava.dep.ArtifactTools;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.lattejava.output.Output;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

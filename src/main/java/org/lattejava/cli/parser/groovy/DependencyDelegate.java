@@ -12,8 +12,8 @@ import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.ArtifactSpec;
 import org.lattejava.dep.domain.DependencyGroup;
-import org.lattejava.domain.Version;
-import org.lattejava.domain.VersionException;
+import org.lattejava.version.Version;
+import org.lattejava.version.VersionException;
 import org.lattejava.cli.parser.ParseException;
 
 import groovy.lang.Closure;

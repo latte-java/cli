@@ -21,10 +21,10 @@ import org.lattejava.dep.workflow.process.FetchResult;
 import org.lattejava.dep.workflow.process.ItemSource;
 import org.lattejava.dep.workflow.process.NegativeCacheException;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.domain.Version;
-import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
 import org.lattejava.security.ChecksumException;
+import org.lattejava.version.Version;
+import org.lattejava.version.VersionException;
 
 
 /**

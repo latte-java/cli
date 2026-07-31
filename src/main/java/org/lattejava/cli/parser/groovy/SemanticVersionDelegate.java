@@ -6,7 +6,7 @@ package org.lattejava.cli.parser.groovy;
 
 import java.util.Map;
 
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.lattejava.cli.parser.ParseException;
 
 /**

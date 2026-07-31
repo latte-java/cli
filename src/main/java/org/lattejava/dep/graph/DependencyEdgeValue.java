@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.lattejava.dep.domain.License;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 
 /**
  * This class stores the information for edges between artifacts in the graph.

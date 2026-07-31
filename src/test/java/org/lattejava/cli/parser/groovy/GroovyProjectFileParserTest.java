@@ -14,8 +14,8 @@ import org.lattejava.cli.parser.*;
 import org.lattejava.cli.runtime.*;
 import org.lattejava.dep.domain.*;
 import org.lattejava.dep.workflow.process.*;
-import org.lattejava.domain.*;
 import org.lattejava.util.*;
+import org.lattejava.version.*;
 import org.testng.annotations.*;
 
 import static java.util.Arrays.*;

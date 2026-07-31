@@ -24,10 +24,10 @@ import org.lattejava.dep.domain.CompatibilityException;
 import org.lattejava.dep.workflow.ArtifactMetaDataMissingException;
 import org.lattejava.dep.workflow.ArtifactMissingException;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.domain.VersionException;
 import org.lattejava.output.Output;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
+import org.lattejava.version.VersionException;
 
 /**
  * Default runner. This handles global command dispatch, project file parsing, and target execution.

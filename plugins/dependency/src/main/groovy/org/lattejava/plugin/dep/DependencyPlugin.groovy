@@ -21,7 +21,7 @@ import org.lattejava.dep.domain.ResolvedArtifact
 import org.lattejava.dep.graph.DependencyGraph
 import org.lattejava.dep.graph.ResolvedArtifactGraph
 import org.lattejava.cli.domain.Project
-import org.lattejava.domain.Version
+import org.lattejava.version.Version
 import org.lattejava.io.FileTools
 import org.lattejava.lang.Classpath
 import org.lattejava.output.Output

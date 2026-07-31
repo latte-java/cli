@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 
 /**
  * <p>

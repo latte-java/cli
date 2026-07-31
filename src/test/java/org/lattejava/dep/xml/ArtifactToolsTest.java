@@ -19,7 +19,7 @@ import org.lattejava.dep.domain.ArtifactMetaData;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.domain.License;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

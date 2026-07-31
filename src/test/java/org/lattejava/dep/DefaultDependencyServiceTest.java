@@ -4,56 +4,23 @@
  */
 package org.lattejava.dep;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
-import org.lattejava.BaseUnitTest;
-import org.lattejava.dep.DependencyService.TraversalRules;
-import org.lattejava.dep.DependencyService.TraversalRules.GroupTraversalRule;
-import org.lattejava.dep.domain.Artifact;
-import org.lattejava.dep.domain.ArtifactID;
-import org.lattejava.dep.domain.ArtifactMetaData;
-import org.lattejava.dep.domain.CompatibilityException;
-import org.lattejava.dep.domain.Dependencies;
-import org.lattejava.dep.domain.DependencyGroup;
-import org.lattejava.dep.domain.License;
-import org.lattejava.dep.domain.Publication;
-import org.lattejava.dep.domain.ReifiedArtifact;
-import org.lattejava.dep.domain.ResolvedArtifact;
-import org.lattejava.dep.graph.ArtifactGraph;
-import org.lattejava.dep.graph.DependencyEdgeValue;
-import org.lattejava.dep.graph.DependencyGraph;
-import org.lattejava.dep.graph.DependencyGraph.Dependency;
-import org.lattejava.dep.graph.ResolvedArtifactGraph;
-import org.lattejava.dep.workflow.ArtifactMetaDataMissingException;
-import org.lattejava.dep.workflow.ArtifactMissingException;
-import org.lattejava.dep.workflow.FetchWorkflow;
-import org.lattejava.dep.workflow.PublishWorkflow;
-import org.lattejava.dep.workflow.Workflow;
-import org.lattejava.dep.workflow.process.CacheProcess;
-import org.lattejava.dep.workflow.process.MavenProcess;
-import org.lattejava.dep.workflow.process.URLProcess;
-import org.lattejava.domain.Version;
-import org.lattejava.security.Algorithm;
-import org.lattejava.security.Checksum;
-import org.lattejava.security.ChecksumException;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.lattejava.*;
+import org.lattejava.dep.DependencyService.*;
+import org.lattejava.dep.DependencyService.TraversalRules.*;
+import org.lattejava.dep.domain.*;
+import org.lattejava.dep.graph.*;
+import org.lattejava.dep.graph.DependencyGraph.*;
+import org.lattejava.dep.workflow.*;
+import org.lattejava.dep.workflow.process.*;
+import org.lattejava.security.*;
+import org.lattejava.version.*;
+import org.testng.annotations.*;
 
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 /**
  * Tests the default dependency service.

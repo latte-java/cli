@@ -24,8 +24,8 @@ import org.lattejava.dep.domain.ArtifactSpec;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.domain.License;
-import org.lattejava.domain.Version;
-import org.lattejava.domain.VersionException;
+import org.lattejava.version.Version;
+import org.lattejava.version.VersionException;
 
 /**
  * This class is a toolkit for handling artifact operations.

@@ -11,9 +11,9 @@ import org.lattejava.cli.parser.*;
 import org.lattejava.dep.workflow.*;
 import org.lattejava.dep.workflow.process.*;
 import org.lattejava.dep.workflow.process.Process;
-import org.lattejava.domain.*;
 import org.lattejava.output.*;
 import org.lattejava.util.*;
+import org.lattejava.version.*;
 
 /**
  * Groovy delegate that captures the Workflow configuration from the project file. The methods of this class capture the

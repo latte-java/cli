@@ -16,9 +16,9 @@ import org.lattejava.dep.domain.ArtifactID;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
 import org.lattejava.dep.workflow.Workflow;
-import org.lattejava.domain.Version;
 import org.lattejava.net.RepositoryTools;
 import org.lattejava.output.Output;
+import org.lattejava.version.Version;
 
 /**
  * Installs a dependency by adding it to the {@code project.latte} file and downloading the artifact and source JAR.

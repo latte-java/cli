@@ -12,8 +12,8 @@ import org.lattejava.BaseUnitTest;
 import org.lattejava.dep.domain.Artifact;
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
-import org.lattejava.domain.Version;
 import org.lattejava.output.SystemOutOutput;
+import org.lattejava.version.Version;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;

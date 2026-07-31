@@ -23,7 +23,7 @@ import org.lattejava.dep.domain.ReifiedArtifact;
 import org.lattejava.dep.workflow.FetchWorkflow;
 import org.lattejava.dep.workflow.PublishWorkflow;
 import org.lattejava.dep.workflow.Workflow;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

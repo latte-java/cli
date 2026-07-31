@@ -2,7 +2,7 @@
  * Copyright (c) 2014-2026 The Latte Project
  * SPDX-License-Identifier: MIT
  */
-project(group: "org.lattejava.plugin", name: "file", version: "0.4.3", licenses: ["MIT"]) {
+project(group: "org.lattejava.plugin", name: "file", version: "0.6.0", licenses: ["MIT"]) {
   workflow {
     standard()
   }
@@ -12,7 +12,8 @@ project(group: "org.lattejava.plugin", name: "file", version: "0.4.3", licenses:
 
   dependencies {
     group(name: "provided") {
-      dependency(id: "org.lattejava:cli:0.4.0")
+      dependency(id: "org.lattejava:cli:0.6.0-{integration}")
+      dependency(id: "org.lattejava:version:0.6.0-{integration}")
     }
     group(name: "test-compile", export: false) {
       dependency(id: "org.testng:testng:7.12.0")

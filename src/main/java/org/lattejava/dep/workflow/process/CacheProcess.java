@@ -11,8 +11,8 @@ import java.nio.file.Paths;
 
 import org.lattejava.dep.domain.ResolvableItem;
 import org.lattejava.dep.workflow.PublishWorkflow;
-import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
+import org.lattejava.version.Version;
 
 /**
  * This is an implementation of the Process that uses local caches to fetch and publish artifacts. It manages up to

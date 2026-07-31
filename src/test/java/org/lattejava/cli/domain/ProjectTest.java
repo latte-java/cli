@@ -7,7 +7,7 @@ package org.lattejava.cli.domain;
 import org.lattejava.BaseUnitTest;
 import org.lattejava.dep.domain.License;
 import org.lattejava.dep.domain.ReifiedArtifact;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

@@ -33,12 +33,12 @@ import org.lattejava.dep.workflow.Workflow;
 import org.lattejava.dep.workflow.process.FetchResult;
 import org.lattejava.dep.workflow.process.ItemSource;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.domain.Version;
 import org.lattejava.output.Output;
 import org.lattejava.security.Checksum;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 import org.lattejava.util.Graph.Edge;
+import org.lattejava.version.Version;
 
 import static java.util.Arrays.asList;
 

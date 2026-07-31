@@ -15,7 +15,7 @@ import org.lattejava.dep.workflow.ArtifactMissingException;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
 import org.lattejava.cli.domain.Project;
 import org.lattejava.cli.domain.Target;
-import org.lattejava.domain.VersionException;
+import org.lattejava.version.VersionException;
 import org.lattejava.output.Output;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;

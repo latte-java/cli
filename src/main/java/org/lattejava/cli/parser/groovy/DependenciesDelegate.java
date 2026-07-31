@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.lattejava.dep.domain.Dependencies;
 import org.lattejava.dep.domain.DependencyGroup;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.lattejava.cli.parser.ParseException;
 
 import groovy.lang.Closure;

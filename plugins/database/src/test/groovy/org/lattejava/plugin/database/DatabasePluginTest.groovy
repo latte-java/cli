@@ -8,7 +8,7 @@ import org.lattejava.cli.domain.Project
 import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.lattejava.cli.runtime.RuntimeFailureException
 import org.lattejava.dep.domain.License
-import org.lattejava.domain.Version
+import org.lattejava.version.Version
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput
 import org.testng.annotations.BeforeMethod

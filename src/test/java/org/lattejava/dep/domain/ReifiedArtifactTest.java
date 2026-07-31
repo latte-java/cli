@@ -5,7 +5,7 @@
 package org.lattejava.dep.domain;
 
 import org.lattejava.BaseUnitTest;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

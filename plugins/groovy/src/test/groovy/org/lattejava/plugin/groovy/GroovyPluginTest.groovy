@@ -11,7 +11,7 @@ import org.lattejava.dep.workflow.FetchWorkflow
 import org.lattejava.dep.workflow.PublishWorkflow
 import org.lattejava.dep.workflow.Workflow
 import org.lattejava.dep.workflow.process.CacheProcess
-import org.lattejava.domain.Version
+import org.lattejava.version.Version
 import org.lattejava.io.FileTools
 import org.lattejava.output.Output
 import org.lattejava.output.SystemOutOutput

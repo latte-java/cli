@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 
 /**
  * This class defines a resolved artifact, which is an artifact after it has been downloaded as a dependency and is

@@ -13,7 +13,7 @@ import org.lattejava.dep.workflow.Workflow
 import org.lattejava.dep.workflow.process.CacheProcess
 import org.lattejava.dep.workflow.process.MavenProcess
 import org.lattejava.dep.workflow.process.URLProcess
-import org.lattejava.domain.Version
+import org.lattejava.version.Version
 import org.lattejava.io.FileTools
 import org.lattejava.lang.Classpath
 import org.lattejava.output.Output

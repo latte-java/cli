@@ -12,8 +12,8 @@ import org.lattejava.dep.domain.ReifiedArtifact;
 import org.lattejava.dep.graph.DependencyEdgeValue;
 import org.lattejava.dep.graph.DependencyGraph;
 import org.lattejava.dep.graph.DependencyGraph.Dependency;
-import org.lattejava.domain.Version;
 import org.lattejava.output.SystemOutOutput;
+import org.lattejava.version.Version;
 import org.testng.annotations.Test;
 
 /**

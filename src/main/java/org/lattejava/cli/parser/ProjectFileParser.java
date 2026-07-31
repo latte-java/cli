@@ -17,7 +17,7 @@ import org.lattejava.dep.domain.CompatibilityException;
 import org.lattejava.dep.workflow.ArtifactMetaDataMissingException;
 import org.lattejava.dep.workflow.ArtifactMissingException;
 import org.lattejava.dep.workflow.process.ProcessFailureException;
-import org.lattejava.domain.VersionException;
+import org.lattejava.version.VersionException;
 import org.lattejava.security.ChecksumException;
 import org.lattejava.util.CyclicException;
 

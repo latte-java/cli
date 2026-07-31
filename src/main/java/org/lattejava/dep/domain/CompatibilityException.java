@@ -6,7 +6,7 @@ package org.lattejava.dep.domain;
 
 import org.lattejava.dep.graph.DependencyGraph;
 import org.lattejava.dep.graph.DependencyGraph.Dependency;
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 
 /**
  * An exception that is thrown when a Version string cannot be parsed.

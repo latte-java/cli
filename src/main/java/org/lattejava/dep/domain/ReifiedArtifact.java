@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.lattejava.domain.Version;
+import org.lattejava.version.Version;
 
 /**
  * This class defines an artifact that has been completely built by the dependency process. Usually, a Dependency (which
