@@ -286,6 +286,51 @@ public class UpgradeCommandTest extends BaseUnitTest {
     assertEquals(testCompile.dependencies.getFirst().version, new Version("6.8.7"));
   }
 
+  @Test
+  public void upgradeDependencyResolvingLatestDoesNotDowngrade() throws IOException {
+    // No version argument, so the version is resolved from the repository. The repository's latest is older than
+    // the integration pin, so nothing should change.
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.lattejava:cli:99.0.0-{integration}")
+            }
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependency", "org.lattejava:cli");
+
+    new UpgradeCommand().run(config, output, project);
+
+    assertEquals(Files.readString(projectFile), projectContent,
+        "Resolving the latest version must not downgrade an integration pin");
+  }
+
+  @Test
+  public void upgradeDependencyExplicitVersionAllowsDowngrade() throws IOException {
+    Project project = createProject(BASE_PROJECT);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependency", "com.fasterxml.jackson.core:jackson-core", "2.0.0");
+
+    new UpgradeCommand().run(config, output, project);
+
+    String result = Files.readString(testDir.resolve("project.latte"));
+    assertTrue(result.contains("com.fasterxml.jackson.core:jackson-core:2.0.0"),
+        "An explicitly requested version must always be written, even when it is older");
+  }
+
   // ---- upgradeDependencies tests ----
 
   @Test
@@ -430,6 +475,140 @@ public class UpgradeCommandTest extends BaseUnitTest {
                                            .filter(a -> a.id.project.equals("fake-lib"))
                                            .findFirst().orElseThrow();
     assertEquals(fakeDep.version, new Version("1.0.0"));
+  }
+
+  @Test
+  public void upgradeDependenciesDoesNotDowngradeIntegrationVersion() throws IOException {
+    // 99.0.0-{integration} is far beyond anything the repository will ever report, so the repository's latest is
+    // always older. Integration builds never exist in a repository, so the pin must survive untouched.
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.lattejava:version:99.0.0-{integration}")
+            }
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependencies");
+
+    new UpgradeCommand().run(config, output, project);
+
+    assertEquals(Files.readString(projectFile), projectContent,
+        "An integration version newer than the repository's latest must not be downgraded");
+  }
+
+  @Test
+  public void upgradeDependenciesDoesNotDowngradeReleasedVersion() throws IOException {
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.lattejava:cli:99.0.0")
+            }
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependencies");
+
+    new UpgradeCommand().run(config, output, project);
+
+    assertEquals(Files.readString(projectFile), projectContent,
+        "A version newer than the repository's latest must not be downgraded");
+  }
+
+  @Test
+  public void upgradeDependenciesStripsIntegrationWhenNewerReleaseExists() throws IOException {
+    // 0.0.1-{integration} is older than any released version of org.lattejava:cli, so the integration marker
+    // should be stripped and the version rolled forward.
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.lattejava:cli:0.0.1-{integration}")
+            }
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependencies");
+
+    new UpgradeCommand().run(config, output, project);
+
+    String result = Files.readString(projectFile);
+    assertFalse(result.contains(Version.INTEGRATION), "Expected the integration marker to be stripped, got: " + result);
+
+    var literals = GroovySourceTools.findMethodCallStringArguments(result, "dependency");
+    assertEquals(literals.size(), 1);
+    ArtifactSpec spec = new ArtifactSpec(literals.getFirst().value());
+    assertTrue(new Version(spec.version).compareTo(new Version("0.0.1")) > 0,
+        "Expected cli to be upgraded past 0.0.1 but was " + spec.version);
+  }
+
+  @Test
+  public void upgradeDependenciesSkipsUncomparableVersion() throws IOException {
+    // "1.0.0.Final" is not a semantic version, so it cannot be ordered against the repository's latest. Such versions
+    // reach a project through a semanticVersions mapping, and rewriting one would break that mapping.
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+            semanticVersions {
+              mapping(id: "org.lattejava:cli:1.0.0.Final", version: "1.0.0")
+            }
+          }
+
+          dependencies {
+            group(name: "compile") {
+              dependency(id: "org.lattejava:cli:1.0.0.Final")
+            }
+          }
+        }
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("dependencies");
+
+    CapturingOutput captured = new CapturingOutput();
+    new UpgradeCommand().run(config, captured, project);
+
+    assertEquals(Files.readString(projectFile), projectContent,
+        "A version that cannot be parsed must not be rewritten");
+    assertTrue(captured.infos.stream().anyMatch(m -> m.contains("cannot be compared")),
+        "Expected a 'cannot be compared' line, got: " + captured.infos);
   }
 
   @Test
@@ -598,6 +777,31 @@ public class UpgradeCommandTest extends BaseUnitTest {
         assertEquals(spec.version, "1.0.0");
       }
     }
+  }
+
+  @Test
+  public void upgradePluginsDoesNotDowngradeIntegrationVersion() throws IOException {
+    String projectContent = """
+        project(group: "org.example", name: "test", version: "0.1.0", licenses: ["MIT"]) {
+          workflow {
+            standard()
+          }
+        }
+
+        dependency = loadPlugin(id: "org.lattejava.plugin:dependency:99.0.0-{integration}")
+        """;
+
+    Path projectFile = testDir.resolve("project.latte");
+    Files.writeString(projectFile, projectContent);
+    Project project = new Project(testDir, output);
+
+    RuntimeConfiguration config = new RuntimeConfiguration();
+    config.args = List.of("plugins");
+
+    new UpgradeCommand().run(config, output, project);
+
+    assertEquals(Files.readString(projectFile), projectContent,
+        "An integration plugin version newer than the repository's latest must not be downgraded");
   }
 
   // ---- upgradeRuntime tests ----

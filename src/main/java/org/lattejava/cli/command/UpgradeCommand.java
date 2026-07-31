@@ -30,6 +30,7 @@ import org.lattejava.io.FileTools;
 import org.lattejava.io.tar.TarTools;
 import org.lattejava.net.RepositoryTools;
 import org.lattejava.output.Output;
+import org.lattejava.version.Version;
 
 /**
  * Upgrades the Latte runtime, plugins, or dependencies.
@@ -43,9 +44,63 @@ public class UpgradeCommand implements Command {
                                                          .build();
 
   /**
+   * Parses a version string, returning null when it cannot be parsed. Versions come from a hand-edited project.latte
+   * and from the repository, so they are not guaranteed to be semantic versions.
+   *
+   * @param version The version string to parse.
+   * @return The parsed Version, or null if the string is not a valid semantic version.
+   */
+  private static Version parseVersion(String version) {
+    try {
+      return new Version(version);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Decides whether a version resolved from the repository should replace the version currently pinned in the project
+   * file, logging the reason when it should not.
+   * <p>
+   * Only a strictly newer version is an upgrade. The repository never contains integration builds, so a locally built
+   * {@code -{integration}} version is routinely newer than anything the repository reports; replacing on mere
+   * inequality would silently downgrade it and strip the integration marker. Versions that cannot be parsed cannot be
+   * ordered, so they are left alone.
+   *
+   * @param label          A human-readable noun for log messages (e.g. "Plugin" or "Dependency").
+   * @param artifactId     The artifact ID, used for log messages.
+   * @param currentVersion The version currently pinned in the project file.
+   * @param latestVersion  The latest version reported by the repository.
+   * @param output         The output for progress messages.
+   * @return True if the latest version is strictly newer and should be written, false otherwise.
+   */
+  private static boolean shouldUpgrade(String label, String artifactId, String currentVersion, String latestVersion, Output output) {
+    Version current = parseVersion(currentVersion);
+    Version latest = parseVersion(latestVersion);
+    if (current == null || latest == null) {
+      output.infoln("%s [%s:%s] version cannot be compared to the repository's latest %s, skipping", label, artifactId, currentVersion, latestVersion);
+      return false;
+    }
+
+    int comparison = latest.compareTo(current);
+    if (comparison > 0) {
+      return true;
+    }
+
+    if (comparison == 0) {
+      output.infoln("%s [%s] already at latest version %s", label, artifactId, currentVersion);
+    } else {
+      output.infoln("%s [%s] at %s is newer than the repository's latest %s, leaving unchanged", label, artifactId, currentVersion, latestVersion);
+    }
+
+    return false;
+  }
+
+  /**
    * Upgrades the version segment of every {@code <methodName>(id: "group:project:version")} call in the source to the
    * latest version reported by the repository, editing only the version substring so surrounding text, comments, and
-   * trailing closures are preserved.
+   * trailing closures are preserved. Calls are only rewritten when the repository's latest version is strictly newer,
+   * as decided by {@link #shouldUpgrade}.
    *
    * @param content    The project.latte source.
    * @param methodName The call to upgrade (e.g. "loadPlugin" or "dependency").
@@ -69,17 +124,17 @@ public class UpgradeCommand implements Command {
       String artifactId = value.substring(0, lastColon);
       String currentVersion = value.substring(lastColon + 1);
       String latestVersion = RepositoryTools.queryLatestVersion(artifactId);
-
-      if (latestVersion != null && !latestVersion.equals(currentVersion)) {
-        output.infoln("Upgrading %s [%s] from %s to %s", label, artifactId, currentVersion, latestVersion);
-        String newValue = "\"" + artifactId + ":" + latestVersion + "\"";
-        content = content.substring(0, literal.start()) + newValue + content.substring(literal.end());
-      } else if (latestVersion == null) {
+      if (latestVersion == null) {
         if (!noWarnings) {
           output.infoln("%s [%s:%s] not found in repository, skipping", label, artifactId, currentVersion);
         }
-      } else {
-        output.infoln("%s [%s] already at latest version %s", label, artifactId, currentVersion);
+        continue;
+      }
+
+      if (shouldUpgrade(label, artifactId, currentVersion, latestVersion, output)) {
+        output.infoln("Upgrading %s [%s] from %s to %s", label, artifactId, currentVersion, latestVersion);
+        String newValue = "\"" + artifactId + ":" + latestVersion + "\"";
+        content = content.substring(0, literal.start()) + newValue + content.substring(literal.end());
       }
     }
 
@@ -190,6 +245,7 @@ public class UpgradeCommand implements Command {
 
     String version;
     if (configuration.args.size() > 2) {
+      // An explicitly requested version is always written, even when it is older than what is pinned.
       version = configuration.args.get(2);
     } else {
       output.infoln("Resolving latest version for [%s]...", artifactId);
@@ -198,6 +254,12 @@ public class UpgradeCommand implements Command {
         throw new RuntimeFailureException("Could not find artifact [" + artifactId + "] in the repository.");
       }
       output.infoln("Resolved to version [%s]", version);
+
+      // Same rule as 'upgrade dependencies' — only ever roll forward when the version was resolved rather than asked
+      // for, so an integration build is never silently downgraded to an older release.
+      if (!shouldUpgrade("Dependency", artifactId, currentVersion, version, output)) {
+        return;
+      }
     }
 
     String newValue = "\"" + artifactId + ":" + version + "\"";
