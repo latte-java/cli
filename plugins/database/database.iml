@@ -14,11 +14,11 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.4.0/cli-0.4.0.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.6.0-{integration}/cli-0.6.0-{integration}.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.4.0/cli-0.4.0-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.6.0-{integration}/cli-0.6.0-{integration}-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -107,6 +107,17 @@
         <JAVADOC />
         <SOURCES>
           <root url="jar://$USER_HOME$/.m2/repository/org/apache/groovy/groovy/5.0.5/groovy-5.0.5-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/version/0.6.0/version-0.6.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/version/0.6.0/version-0.6.0-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

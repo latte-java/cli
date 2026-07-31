@@ -14,11 +14,11 @@
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.1.5/cli-0.1.5.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.6.0-{integration}/cli-0.6.0-{integration}.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.1.5/cli-0.1.5-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/cli/0.6.0-{integration}/cli-0.6.0-{integration}-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -110,6 +110,17 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="module-library" scope="PROVIDED">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/version/0.6.0/version-0.6.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/version/0.6.0/version-0.6.0-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -124,22 +135,22 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.1.5/dependency-0.1.5.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.6.0-{integration}/dependency-0.6.0-{integration}.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.1.5/dependency-0.1.5-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/dependency/0.6.0-{integration}/dependency-0.6.0-{integration}-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.5/file-0.1.5.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.6.0-{integration}/file-0.6.0-{integration}.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.1.5/file-0.1.5-src.jar!/" />
+          <root url="jar://$USER_HOME$/.cache/latte/org/lattejava/plugin/file/0.6.0-{integration}/file-0.6.0-{integration}-src.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -173,17 +184,6 @@
         <JAVADOC />
         <SOURCES>
           <root url="jar://$USER_HOME$/.m2/repository/org/jacoco/org.jacoco.core/0.8.13/org.jacoco.core-0.8.13-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -228,6 +228,17 @@
         <JAVADOC />
         <SOURCES>
           <root url="jar://$USER_HOME$/.m2/repository/org/webjars/jquery/3.7.1/jquery-3.7.1-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.m2/repository/org/ow2/asm/asm/9.9.1/asm-9.9.1-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
