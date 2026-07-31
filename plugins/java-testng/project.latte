@@ -17,8 +17,8 @@ project(group: "org.lattejava.plugin", name: "java-testng", version: "0.6.0", li
     }
     group(name: "compile") {
       dependency(id: "org.apache.groovy:groovy-xml:5.0.5")
-      dependency(id: "org.lattejava.plugin:dependency:0.6.0-{integration}")
-      dependency(id: "org.lattejava.plugin:file:0.6.0-{integration}")
+      dependency(id: "org.lattejava.plugin:dependency:0.6.0")
+      dependency(id: "org.lattejava.plugin:file:0.6.0")
       dependency(id: "org.jacoco:org.jacoco.agent:0.8.13")
       dependency(id: "org.jacoco:org.jacoco.core:0.8.13")
       dependency(id: "org.jacoco:org.jacoco.report:0.8.13")
@@ -34,11 +34,11 @@ project(group: "org.lattejava.plugin", name: "java-testng", version: "0.6.0", li
 }
 
 // Plugins
-dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.4.0")
-groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.4.0")
-groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.4.0")
-idea = loadPlugin(id: "org.lattejava.plugin:idea:0.4.0")
-release = loadPlugin(id: "org.lattejava.plugin:release-git:0.4.0")
+dependency = loadPlugin(id: "org.lattejava.plugin:dependency:0.6.0")
+groovy = loadPlugin(id: "org.lattejava.plugin:groovy:0.6.0")
+groovyTestNG = loadPlugin(id: "org.lattejava.plugin:groovy-testng:0.6.0")
+idea = loadPlugin(id: "org.lattejava.plugin:idea:0.6.0")
+release = loadPlugin(id: "org.lattejava.plugin:release-git:0.6.0")
 
 // Plugin settings
 groovy.settings.groovyVersion = "5.0"
