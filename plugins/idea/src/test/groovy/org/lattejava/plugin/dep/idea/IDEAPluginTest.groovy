@@ -4,6 +4,7 @@
  */
 package org.lattejava.plugin.dep.idea
 
+import groovy.xml.XmlParser
 import org.lattejava.cli.domain.Project
 import org.lattejava.cli.runtime.RuntimeConfiguration
 import org.lattejava.dep.domain.Artifact
@@ -165,6 +166,43 @@ class IDEAPluginTest {
     String secondTime = new String(Files.readAllBytes(imlFile))
 
     assertEquals(actual, secondTime)
+  }
+
+  @Test
+  void imlCompileProcessors() throws Exception {
+    // The compile-processors group is resolved transitively into the PROVIDED scope so that IDEA compiles
+    // against the annotation processor and everything it drags in, without leaking any of it into COMPILE
+    // or RUNTIME. This project declares no other groups, so every library in the IML must be PROVIDED.
+    project.dependencies = new Dependencies(
+        new DependencyGroup("compile-processors", true,
+            new Artifact("org.lattejava.test:intermediate:1.0.0")
+        )
+    )
+    project.artifactGraph = null
+    plugin = new IDEAPlugin(project, new RuntimeConfiguration(), output)
+
+    def imlFile = projectDir.resolve("build/test/idea-test.iml")
+    Files.copy(projectDir.resolve("src/test/resources/test.iml"), imlFile)
+
+    plugin.iml()
+
+    Node component = new XmlParser().parse(imlFile.toFile()).component.find { it.@name == "NewModuleRootManager" }
+    List<Node> libraries = component.orderEntry.findAll { it.@type == "module-library" }
+
+    assertEquals(libraries.collect { it.@scope }.unique(), ["PROVIDED"])
+
+    // intermediate is the only direct dependency. The rest are transitive, reached through both the compile
+    // and runtime groups of the intermediate artifacts, and all of them belong in PROVIDED as well.
+    assertEquals(libraries.collect { it.library.CLASSES.root[0].@url }.sort(), [
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/intermediate/1.0.0/intermediate-1.0.0.jar!/',
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/multiple-versions/1.1.0/multiple-versions-1.1.0.jar!/',
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/leaf/1.0.0/leaf1-1.0.0.jar!/',
+        'jar://$MODULE_DIR$/test-deps/integration/org/lattejava/test/integration-build/2.1.1-{integration}/integration-build-2.1.1-{integration}.jar!/',
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/multiple-versions-different-dependencies/1.1.0/multiple-versions-different-dependencies-1.1.0.jar!/',
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/leaf1/1.0.0/leaf1-1.0.0.jar!/',
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/leaf2/1.0.0/leaf2-1.0.0.jar!/',
+        'jar://$MODULE_DIR$/test-deps/latte/org/lattejava/test/leaf3/1.0.0/leaf3-1.0.0.jar!/'
+    ].sort())
   }
 
   @Test

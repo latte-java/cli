@@ -52,7 +52,7 @@ class IDEASettings {
    */
   Map<String, List<Map<String, Object>>> dependenciesMap = [
       "PROVIDED": [
-          [group: "compile-processors", transitive: false, fetchSource: true],
+          [group: "compile-processors", transitive: true, fetchSource: true, transitiveGroups: ["provided", "compile", "runtime"]],
           [group: "provided", transitive: true, fetchSource: true, transitiveGroups: ["provided", "compile", "runtime"]]
       ],
       "COMPILE": [
