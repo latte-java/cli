@@ -22,11 +22,31 @@ import static org.testng.Assert.*;
  */
 public class LoopbackServerTest extends BaseUnitTest {
   @Test
+  public void bindsDistinctEphemeralPorts() {
+    // Two logins running at once must not collide, which is the whole reason the port is ephemeral rather than fixed.
+    LoopbackServer first = new LoopbackServer("good-state");
+    LoopbackServer second = new LoopbackServer("good-state");
+    first.start();
+    second.start();
+
+    try {
+      assertTrue(first.port() > 0, "Port was [" + first.port() + "]");
+      assertTrue(second.port() > 0, "Port was [" + second.port() + "]");
+      assertNotEquals(first.port(), second.port());
+      // The IPv4 loopback literal, not "localhost" — see RFC 8252 section 8.3.
+      assertEquals(first.redirectURI(), "http://127.0.0.1:" + first.port() + "/callback");
+    } finally {
+      first.stop();
+      second.stop();
+    }
+  }
+
+  @Test
   public void capturesCodeWhenStateMatches() throws Exception {
-    LoopbackServer server = new LoopbackServer(8801, "good-state");
+    LoopbackServer server = new LoopbackServer("good-state");
     server.start();
     try {
-      get("http://localhost:8801/callback?code=the-code&state=good-state");
+      get(server.redirectURI() + "?code=the-code&state=good-state");
       assertEquals(server.awaitCode(Duration.ofSeconds(5)), "the-code");
     } finally {
       server.stop();
@@ -39,14 +59,13 @@ public class LoopbackServerTest extends BaseUnitTest {
     // stops the server in its finally block. The full HTML response must reach the browser before the server tears down,
     // otherwise the browser renders a blank/broken page. Looped because the failure is a race.
     for (int i = 0; i < 25; i++) {
-      int port = 8810 + i;
-      LoopbackServer server = new LoopbackServer(port, "good-state");
+      LoopbackServer server = new LoopbackServer("good-state");
       server.start();
 
       HttpResponse<String> response;
       try (var client = HttpClient.newHttpClient()) {
         CompletableFuture<HttpResponse<String>> responseFuture = client.sendAsync(
-            HttpRequest.newBuilder().uri(URI.create("http://localhost:" + port + "/callback?code=the-code&state=good-state")).GET().build(),
+            HttpRequest.newBuilder().uri(URI.create(server.redirectURI() + "?code=the-code&state=good-state")).GET().build(),
             HttpResponse.BodyHandlers.ofString());
         assertEquals(server.awaitCode(Duration.ofSeconds(5)), "the-code");
         server.stop();
@@ -59,11 +78,22 @@ public class LoopbackServerTest extends BaseUnitTest {
   }
 
   @Test
+  public void portThrowsBeforeStart() {
+    LoopbackServer server = new LoopbackServer("good-state");
+    try {
+      server.port();
+      fail("Should have thrown");
+    } catch (IllegalStateException e) {
+      // Expected
+    }
+  }
+
+  @Test
   public void throwsOnErrorParameter() throws Exception {
-    LoopbackServer server = new LoopbackServer(8802, "good-state");
+    LoopbackServer server = new LoopbackServer("good-state");
     server.start();
     try {
-      get("http://localhost:8802/callback?error=access_denied&state=good-state");
+      get(server.redirectURI() + "?error=access_denied&state=good-state");
       server.awaitCode(Duration.ofSeconds(5));
       fail("Should have thrown");
     } catch (RuntimeFailureException e) {
@@ -75,10 +105,10 @@ public class LoopbackServerTest extends BaseUnitTest {
 
   @Test
   public void throwsOnStateMismatch() throws Exception {
-    LoopbackServer server = new LoopbackServer(8803, "good-state");
+    LoopbackServer server = new LoopbackServer("good-state");
     server.start();
     try {
-      get("http://localhost:8803/callback?code=the-code&state=wrong-state");
+      get(server.redirectURI() + "?code=the-code&state=wrong-state");
       server.awaitCode(Duration.ofSeconds(5));
       fail("Should have thrown");
     } catch (RuntimeFailureException e) {
@@ -90,10 +120,10 @@ public class LoopbackServerTest extends BaseUnitTest {
 
   @Test
   public void throwsWhenCodeMissing() throws Exception {
-    LoopbackServer server = new LoopbackServer(8804, "good-state");
+    LoopbackServer server = new LoopbackServer("good-state");
     server.start();
     try {
-      get("http://localhost:8804/callback?state=good-state");
+      get(server.redirectURI() + "?state=good-state");
       server.awaitCode(Duration.ofSeconds(5));
       fail("Should have thrown");
     } catch (RuntimeFailureException e) {

@@ -31,10 +31,19 @@ public class OAuthClient {
     return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
 
-  public Tokens exchangeCode(String code, String codeVerifier) {
+  /**
+   * Exchanges an authorization code for tokens.
+   *
+   * @param code         The authorization code captured on the loopback redirect.
+   * @param codeVerifier The PKCE code verifier that matches the challenge sent on the authorize request.
+   * @param redirectURI  The same loopback redirect URI that was sent on the authorize request. The IdP requires the two
+   *                     to match exactly, so it must carry the ephemeral port the loopback server bound.
+   * @return The tokens.
+   */
+  public Tokens exchangeCode(String code, String codeVerifier, String redirectURI) {
     String form = "grant_type=authorization_code" +
         "&code=" + encode(code) +
-        "&redirect_uri=" + encode(AuthConfiguration.REDIRECT_URI) +
+        "&redirect_uri=" + encode(redirectURI) +
         "&client_id=" + encode(AuthConfiguration.CLIENT_ID) +
         "&code_verifier=" + encode(codeVerifier);
 

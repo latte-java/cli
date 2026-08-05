@@ -22,14 +22,14 @@ public class AuthConfigurationTest extends BaseUnitTest {
   @Test
   public void authorizeURLContainsRequiredParameters() {
     AuthConfiguration config = new AuthConfiguration("http://localhost:9011");
-    String url = config.authorizeURL("the-state", "the-challenge");
+    String url = config.authorizeURL("the-state", "the-challenge", "http://127.0.0.1:54321/callback");
 
     assertTrue(url.startsWith("http://localhost:9011/oauth2/authorize?"), url);
 
     String decoded = URLDecoder.decode(url, StandardCharsets.UTF_8);
     assertTrue(decoded.contains("response_type=code"), decoded);
     assertTrue(decoded.contains("client_id=" + AuthConfiguration.CLIENT_ID), decoded);
-    assertTrue(decoded.contains("redirect_uri=http://localhost:8888/callback"), decoded);
+    assertTrue(decoded.contains("redirect_uri=http://127.0.0.1:54321/callback"), decoded);
     assertTrue(decoded.contains("scope=openid offline_access"), decoded);
     assertTrue(decoded.contains("code_challenge=the-challenge"), decoded);
     assertTrue(decoded.contains("code_challenge_method=S256"), decoded);

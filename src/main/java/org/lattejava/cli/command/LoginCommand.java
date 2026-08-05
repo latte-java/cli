@@ -55,18 +55,22 @@ public class LoginCommand implements Command {
     PKCE pkce = PKCE.generate();
     String state = randomState();
 
-    LoopbackServer server = new LoopbackServer(AuthConfiguration.CALLBACK_PORT, state);
+    LoopbackServer server = new LoopbackServer(state);
     server.start();
+
+    // The OS picks the port at bind time, so the redirect URI is only knowable after start(). The same URI has to go out
+    // on both the authorize request and the token request, so capture it once here.
+    String redirectURI = server.redirectURI();
 
     String code;
     try {
-      browser.open(authConfiguration.authorizeURL(state, pkce.challenge()), output);
+      browser.open(authConfiguration.authorizeURL(state, pkce.challenge(), redirectURI), output);
       code = server.awaitCode(Duration.ofMinutes(2));
     } finally {
       server.stop();
     }
 
-    Tokens tokens = new OAuthClient(authConfiguration).exchangeCode(code, pkce.verifier());
+    Tokens tokens = new OAuthClient(authConfiguration).exchangeCode(code, pkce.verifier(), redirectURI);
     new CredentialStore(configFile).store(tokens);
 
     String email = JWTs.claim(tokens.accessToken(), "email");

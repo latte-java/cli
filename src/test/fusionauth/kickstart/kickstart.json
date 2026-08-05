@@ -62,8 +62,9 @@
           "name": "Latte CLI",
           "oauthConfiguration": {
             "authorizedRedirectURLs": [
-              "http://localhost:8888/callback"
+              "http://127.0.0.1:*/callback"
             ],
+            "authorizedURLValidationPolicy": "AllowWildcards",
             "clientAuthenticationPolicy": "NotRequired",
             "proofKeyForCodeExchangePolicy": "Required",
             "consentMode": "NeverPrompt",

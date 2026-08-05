@@ -29,7 +29,7 @@ public class OAuthClientTest extends BaseUnitTest {
       assertTrue(body.contains("code=the-code"), body);
       assertTrue(body.contains("code_verifier=the-verifier"), body);
       assertTrue(body.contains("client_id=" + AuthConfiguration.CLIENT_ID), body);
-      assertTrue(body.contains("redirect_uri=" + URLEncoder.encode(AuthConfiguration.REDIRECT_URI, StandardCharsets.UTF_8)), body);
+      assertTrue(body.contains("redirect_uri=" + URLEncoder.encode("http://127.0.0.1:54321/callback", StandardCharsets.UTF_8)), body);
 
       byte[] response = "{\"access_token\":\"AT\",\"refresh_token\":\"RT\"}".getBytes(StandardCharsets.UTF_8);
       exchange.sendResponseHeaders(200, response.length);
@@ -40,7 +40,7 @@ public class OAuthClientTest extends BaseUnitTest {
 
     try {
       AuthConfiguration config = new AuthConfiguration("http://localhost:8765");
-      Tokens tokens = new OAuthClient(config).exchangeCode("the-code", "the-verifier");
+      Tokens tokens = new OAuthClient(config).exchangeCode("the-code", "the-verifier", "http://127.0.0.1:54321/callback");
       assertEquals(tokens.accessToken(), "AT");
       assertEquals(tokens.refreshToken(), "RT");
     } finally {
@@ -61,7 +61,7 @@ public class OAuthClientTest extends BaseUnitTest {
 
     try {
       AuthConfiguration config = new AuthConfiguration("http://localhost:8766");
-      new OAuthClient(config).exchangeCode("bad", "verifier");
+      new OAuthClient(config).exchangeCode("bad", "verifier", "http://127.0.0.1:54321/callback");
       fail("Should have thrown");
     } catch (RuntimeFailureException e) {
       assertTrue(e.getMessage().contains("400"), e.getMessage());

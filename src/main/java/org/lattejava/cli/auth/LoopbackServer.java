@@ -17,17 +17,29 @@ import org.lattejava.cli.runtime.*;
 /**
  * A single-use local HTTP server that listens on the loopback interface for the OAuth redirect, validates the
  * {@code state} parameter, and exposes the captured authorization code.
+ * <p>
+ * The server binds an ephemeral port chosen by the operating system rather than a fixed one, so a login never collides
+ * with another process or with a second concurrent {@code latte login}. Because the port is not known until
+ * {@link #start()} has bound it, the redirect URI is derived from the server rather than being a constant, and the IdP
+ * must authorize the whole {@code http://127.0.0.1:*&#47;callback} pattern instead of a single URL.
+ * <p>
+ * The host is the IPv4 loopback literal rather than {@code localhost}, per RFC 8252 section 8.3, which says using
+ * {@code localhost} is NOT RECOMMENDED. The literal guarantees the server can never inadvertently bind a non-loopback
+ * interface, and it skips name resolution altogether — on a dual-stack host {@code localhost} can resolve to {@code ::1}
+ * for one process and {@code 127.0.0.1} for another, so a server bound by name and a browser resolving the same name can
+ * end up on different addresses.
  *
  * @author Brian Pontarelli
  */
 public class LoopbackServer {
+  public static final String CALLBACK_PATH = "/callback";
+  public static final String LOOPBACK_HOST = "127.0.0.1";
+
   private final CompletableFuture<String> codeFuture = new CompletableFuture<>();
   private final String expectedState;
-  private final int port;
   private HttpServer server;
 
-  public LoopbackServer(int port, String expectedState) {
-    this.port = port;
+  public LoopbackServer(String expectedState) {
     this.expectedState = expectedState;
   }
 
@@ -47,13 +59,40 @@ public class LoopbackServer {
     }
   }
 
+  /**
+   * Returns the ephemeral port the operating system assigned when the server was bound. Only valid once {@link #start()}
+   * has been called.
+   *
+   * @return The bound port.
+   */
+  public int port() {
+    if (server == null) {
+      throw new IllegalStateException("The loopback server has not been started, so it has no port yet.");
+    }
+
+    return server.getAddress().getPort();
+  }
+
+  /**
+   * Returns the OAuth redirect URI that points at this server. Only valid once {@link #start()} has been called, since
+   * the port is assigned at bind time.
+   *
+   * @return The redirect URI.
+   */
+  public String redirectURI() {
+    return "http://" + LOOPBACK_HOST + ":" + port() + CALLBACK_PATH;
+  }
+
   public void start() {
     try {
-      server = HttpServer.create(new InetSocketAddress("localhost", port), 0);
+      // Port 0 asks the OS for any free ephemeral port. HttpServer.create binds immediately, so the assigned port is
+      // readable from getAddress() as soon as this returns. Passing the IP literal keeps this an exact-address bind with
+      // no name lookup, so the bound address always matches the host advertised in redirectURI().
+      server = HttpServer.create(new InetSocketAddress(LOOPBACK_HOST, 0), 0);
     } catch (IOException e) {
-      throw new RuntimeFailureException("Could not start the local login server on port [" + port + "]. It may already be in use. Message was [" + e.getMessage() + "]", e);
+      throw new RuntimeFailureException("Could not start the local login server on the loopback interface. Message was [" + e.getMessage() + "]", e);
     }
-    server.createContext("/callback", this::handle);
+    server.createContext(CALLBACK_PATH, this::handle);
     server.start();
   }
 

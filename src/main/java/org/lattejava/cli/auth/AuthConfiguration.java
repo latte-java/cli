@@ -16,10 +16,8 @@ import org.lattejava.cli.runtime.*;
  * @author Brian Pontarelli
  */
 public class AuthConfiguration {
-  public static final int CALLBACK_PORT = 8888;
   public static final String CLIENT_ID = "cc5f3c9e-b28e-4632-bafe-823363669820";
   public static final String DEFAULT_ISSUER = "https://auth.lattejava.org";
-  public static final String REDIRECT_URI = "http://localhost:" + CALLBACK_PORT + "/callback";
   public static final String SCOPES = "openid offline_access";
 
   private final String issuer;
@@ -56,12 +54,13 @@ public class AuthConfiguration {
    *
    * @param state         A random nonce echoed back on the redirect to defend against CSRF.
    * @param codeChallenge The base64url-encoded SHA-256 of the PKCE code verifier.
+   * @param redirectURI   The loopback redirect URI, which includes the ephemeral port the loopback server bound.
    * @return The fully-formed authorize URL.
    */
-  public String authorizeURL(String state, String codeChallenge) {
+  public String authorizeURL(String state, String codeChallenge, String redirectURI) {
     return issuer + "/oauth2/authorize?response_type=code" +
         "&client_id=" + encode(CLIENT_ID) +
-        "&redirect_uri=" + encode(REDIRECT_URI) +
+        "&redirect_uri=" + encode(redirectURI) +
         "&scope=" + encode(SCOPES) +
         "&code_challenge=" + encode(codeChallenge) +
         "&code_challenge_method=S256" +
