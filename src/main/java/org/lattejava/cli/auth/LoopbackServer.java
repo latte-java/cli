@@ -10,9 +10,10 @@ import java.nio.charset.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
 
-import com.sun.net.httpserver.*;
 import org.lattejava.cli.runtime.*;
+import org.lattejava.http.server.*;
 
 /**
  * A single-use local HTTP server that listens on the loopback interface for the OAuth redirect, validates the
@@ -35,9 +36,19 @@ public class LoopbackServer {
   public static final String CALLBACK_PATH = "/callback";
   public static final String LOOPBACK_HOST = "127.0.0.1";
 
+  // The Latte HTTP server narrates its lifecycle at INFO through System.Logger, which the default JUL configuration
+  // prints to the console. A CLI login must not spray "Starting the HTTP server. Buckle up!" across the user's terminal,
+  // so the package logger is pinned to WARNING. The reference is held statically because the LogManager only weakly
+  // retains loggers, and a collected logger would silently revert to the inherited level.
+  private static final Logger httpLogger = Logger.getLogger("org.lattejava.http");
+
+  static {
+    httpLogger.setLevel(Level.WARNING);
+  }
+
   private final CompletableFuture<String> codeFuture = new CompletableFuture<>();
   private final String expectedState;
-  private HttpServer server;
+  private HTTPServer server;
 
   public LoopbackServer(String expectedState) {
     this.expectedState = expectedState;
@@ -70,7 +81,7 @@ public class LoopbackServer {
       throw new IllegalStateException("The loopback server has not been started, so it has no port yet.");
     }
 
-    return server.getAddress().getPort();
+    return server.getActualPort();
   }
 
   /**
@@ -85,45 +96,56 @@ public class LoopbackServer {
 
   public void start() {
     try {
-      // Port 0 asks the OS for any free ephemeral port. HttpServer.create binds immediately, so the assigned port is
-      // readable from getAddress() as soon as this returns. Passing the IP literal keeps this an exact-address bind with
-      // no name lookup, so the bound address always matches the host advertised in redirectURI().
-      server = HttpServer.create(new InetSocketAddress(LOOPBACK_HOST, 0), 0);
-    } catch (IOException e) {
+      // Port 0 asks the OS for any free ephemeral port, which getActualPort() reports back once the listener is bound.
+      // Passing the IP literal to getByName keeps this an exact-address bind with no DNS lookup, so the bound address
+      // always matches the host advertised in redirectURI().
+      server = new HTTPServer().withHandler(this::handle)
+                               .withListener(new HTTPListenerConfiguration(InetAddress.getByName(LOOPBACK_HOST), 0))
+                               .start();
+    } catch (UnknownHostException | IllegalStateException e) {
       throw new RuntimeFailureException("Could not start the local login server on the loopback interface. Message was [" + e.getMessage() + "]", e);
     }
-    server.createContext(CALLBACK_PATH, this::handle);
-    server.start();
   }
 
   public void stop() {
     if (server != null) {
-      server.stop(0);
+      server.close();
     }
   }
 
-  private void handle(HttpExchange exchange) throws IOException {
-    Map<String, String> params = parseQuery(exchange.getRequestURI().getRawQuery());
+  private void handle(HTTPRequest request, HTTPResponse response) throws IOException {
+    // Unlike the JDK server, which only routes registered contexts, the Latte server sends every path to this handler.
+    // Anything that is not the callback is a 404 and must not resolve the future.
+    if (!CALLBACK_PATH.equals(request.getPath())) {
+      response.setStatus(404);
+      response.setContentLength(0);
+      return;
+    }
+
+    // getURLParameter reads the query string only, and the server has already URL-decoded the values.
+    String error = request.getURLParameter("error");
+    String state = request.getURLParameter("state");
 
     String code = null;
     RuntimeFailureException failure = null;
-    if (params.containsKey("error")) {
-      failure = new RuntimeFailureException("Authorization failed with error [" + params.get("error") + "]");
-    } else if (!Objects.equals(expectedState, params.get("state"))) {
+    if (error != null) {
+      failure = new RuntimeFailureException("Authorization failed with error [" + error + "]");
+    } else if (!Objects.equals(expectedState, state)) {
       failure = new RuntimeFailureException("The login response state did not match. This may indicate a CSRF attempt or a stale login.");
-    } else if (params.get("code") == null) {
+    } else if (request.getURLParameter("code") == null) {
       failure = new RuntimeFailureException("The login response did not contain an authorization code.");
     } else {
-      code = params.get("code");
+      code = request.getURLParameter("code");
     }
 
     // Send and flush the full response to the browser BEFORE completing the future. Completing the future unblocks the
     // main thread in awaitCode, which immediately stops the server in its finally block; if that happened first the
     // server would tear down while this response was still in flight and the browser would render a broken page.
     byte[] body = loadPage(failure == null).getBytes(StandardCharsets.UTF_8);
-    exchange.getResponseHeaders().add("Content-Type", "text/html; charset=utf-8");
-    exchange.sendResponseHeaders(200, body.length);
-    try (OutputStream out = exchange.getResponseBody()) {
+    response.setStatus(200);
+    response.setContentType("text/html; charset=utf-8");
+    response.setContentLength(body.length);
+    try (OutputStream out = response.getOutputStream()) {
       out.write(body);
     }
 
@@ -132,22 +154,6 @@ public class LoopbackServer {
     } else {
       codeFuture.complete(code);
     }
-  }
-
-  private Map<String, String> parseQuery(String query) {
-    Map<String, String> result = new HashMap<>();
-    if (query == null || query.isEmpty()) {
-      return result;
-    }
-
-    for (String pair : query.split("&")) {
-      int equals = pair.indexOf('=');
-      if (equals > 0) {
-        result.put(pair.substring(0, equals), pair.substring(equals + 1));
-      }
-    }
-
-    return result;
   }
 
   /**

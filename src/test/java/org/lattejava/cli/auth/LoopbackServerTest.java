@@ -54,6 +54,20 @@ public class LoopbackServerTest extends BaseUnitTest {
   }
 
   @Test
+  public void decodesPercentEncodedCode() throws Exception {
+    // The hand-rolled query parser this replaced returned raw, still-encoded values. The Latte server decodes them, so
+    // a code containing reserved characters arrives intact rather than being double-encoded into the token request.
+    LoopbackServer server = new LoopbackServer("good-state");
+    server.start();
+    try {
+      get(server.redirectURI() + "?code=a%2Fb%2Bc%3Dd&state=good-state");
+      assertEquals(server.awaitCode(Duration.ofSeconds(5)), "a/b+c=d");
+    } finally {
+      server.stop();
+    }
+  }
+
+  @Test
   public void deliversFullResponseEvenWhenServerStopsImmediately() throws Exception {
     // Mirrors LoginCommand: the browser request is in flight while the main thread awaits the code and then immediately
     // stops the server in its finally block. The full HTML response must reach the browser before the server tears down,
@@ -74,6 +88,23 @@ public class LoopbackServerTest extends BaseUnitTest {
 
       assertEquals(response.statusCode(), 200, "Iteration [" + i + "]");
       assertTrue(response.body().contains("ON THE HOUSE"), "Iteration [" + i + "] body was [" + response.body() + "]");
+    }
+  }
+
+  @Test
+  public void ignoresOtherPaths() throws Exception {
+    // The JDK server only dispatched its one registered context; the Latte server hands every path to the single
+    // handler, so the handler itself has to turn away anything that is not the callback instead of resolving the login.
+    LoopbackServer server = new LoopbackServer("good-state");
+    server.start();
+    try {
+      assertEquals(get("http://127.0.0.1:" + server.port() + "/favicon.ico?code=nope&state=good-state").statusCode(), 404);
+
+      // The future is still open, so the real callback still completes the login.
+      get(server.redirectURI() + "?code=the-code&state=good-state");
+      assertEquals(server.awaitCode(Duration.ofSeconds(5)), "the-code");
+    } finally {
+      server.stop();
     }
   }
 
@@ -133,9 +164,9 @@ public class LoopbackServerTest extends BaseUnitTest {
     }
   }
 
-  private void get(String url) throws Exception {
+  private HttpResponse<String> get(String url) throws Exception {
     try (var client = HttpClient.newHttpClient()) {
-      client.send(
+      return client.send(
           HttpRequest.newBuilder().uri(URI.create(url)).GET().build(),
           HttpResponse.BodyHandlers.ofString()
       );
