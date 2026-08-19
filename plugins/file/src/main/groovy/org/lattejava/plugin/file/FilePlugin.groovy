@@ -158,8 +158,8 @@ class FilePlugin extends BaseGroovyPlugin {
     List<String> args
     if (command instanceof String[]) {
       args = (command as List)
-    } else if (command instanceof String) {
-      args = command.trim().tokenize()
+    } else if (command instanceof CharSequence) {
+      args = command.toString().trim().tokenize()
     } else if (command instanceof List) {
       args = command
     }
